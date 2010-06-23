@@ -1,0 +1,7 @@
+.. include:: <isotech.txt>
+
+.. |prob| replace:: float |isin| [0.0, 1.0]
+.. |esec| replace:: ``esec``
+.. |esdl_url| replace:: `http://code.google.com/p/esec/wiki/ESDL`_
+
+.. _`http://code.google.com/p/esec/wiki/ESDL`: http://code.google.com/p/esec/wiki/ESDL
