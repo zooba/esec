@@ -330,7 +330,7 @@ class TgpSpecies(Species):
     _instr_trans_sin = Instruction(math.sin, 1, 'sin')
     _instr_trans_cos = Instruction(math.cos, 1, 'cos')
     _instr_trans_exp = Instruction(_safe_exp, 1, 'exp')
-    _instr_trans_log = Instruction(lambda a: (math.log(a) if a else 0.0), 1, 'log')
+    _instr_trans_log = Instruction(lambda a: (math.log(abs(a)) if a else 0.0), 1, 'log')
     
     boolean_instructions = (_instr_bool_and, _instr_bool_or, _instr_bool_xor, _instr_bool_not, _instr_bool_if)
     '''The set of boolean instructions.'''
