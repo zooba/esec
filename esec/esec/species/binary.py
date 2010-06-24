@@ -272,7 +272,7 @@ class BinarySpecies(Species):
             yield BinaryRealIndividual([_bit() for _ in xrange(self._len(length, shortest, longest))], self, \
                                        resolution, offset, bits_per_value)
     
-    def init_random_integer(self, length=None, shortest=10, longest=10, resolution=0, offset=0, bits_per_value=None):
+    def init_random_integer(self, length=None, shortest=10, longest=10, resolution=1, offset=0, bits_per_value=None):
         '''Returns instances of `BinaryIntegerIndividual` initialised with random bitstrings.
         
         :Parameters:
