@@ -433,7 +433,7 @@ class TgpSpecies(Species):
         return _rnd(0, adf_index)
 
     
-    def init_boolean_tgp(self, terminals=2, deepest=10, adfs=0, constants=False, terminal_prob=0.5):
+    def init_boolean_tgp(self, terminals=0, deepest=10, adfs=0, constants=False, terminal_prob=0.5):
         '''Creates tree-based genetic programming (TGP) programs made from
         `boolean_instructions`.
         
@@ -480,7 +480,7 @@ class TgpSpecies(Species):
                 instructions, instruction_set, terminals, \
                 constant_bounds, int)
     
-    def init_real_tgp(self, terminals=2, deepest=10, adfs=0, terminal_prob=0.5, transcendentals=False, \
+    def init_real_tgp(self, terminals=0, deepest=10, adfs=0, terminal_prob=0.5, transcendentals=False, \
                       lowest_constant=None, highest_constant=None):
         '''Creates tree-based genetic programming (TGP) programs made from
         `real_instructions` and, optionally, `transcendental_instructions`.
@@ -543,7 +543,7 @@ class TgpSpecies(Species):
                 instructions, instruction_set, terminals, \
                 constant_bounds, float)
     
-    def init_integer_tgp(self, terminals=2, deepest=10, adfs=0, terminal_prob=0.5, \
+    def init_integer_tgp(self, terminals=0, deepest=10, adfs=0, terminal_prob=0.5, \
                         lowest_constant=None, highest_constant=None):
         '''Creates tree-based genetic programming (TGP) programs made from
         `integer_instructions`.
