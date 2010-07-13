@@ -571,7 +571,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
     def on_post_reset(self, sender):
         '''Displays the state of the initial population.'''
         rep = self.report
-        if rep and not self.stop_now:
+        if rep and not self.stop_now and self._stats['groups']:
             values = []
             for value_list in [call(self) for call in rep[2]]:
                 values.extend(value_list)
@@ -665,13 +665,17 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         
         if self.stop_now:
             self.end_code = 'EXCEPTION'
-        elif ('generations' in self.limits and self._stats['generations'] >= self.limits.generations):
+        elif 'generations' in self.limits and 'generations' in self._stats and \
+             self._stats['generations'] >= self.limits.generations:
             self.end_code = 'GEN_LIMIT'
-        elif ('fitness' in self.limits and self._stats['global_max'].fitness >= self.limits.fitness):
+        elif 'fitness' in self.limits and 'global_max' in self._stats and \
+             self._stats['global_max'].fitness >= self.limits.fitness:
             self.end_code = 'FIT_LIMIT'
-        elif ('stable' in self.limits and self._stats['stable_count'] >= self.limits.stable):
+        elif 'stable' in self.limits and 'stable_count' in self._stats and \
+             self._stats['stable_count'] >= self.limits.stable:
             self.end_code = 'STABLE_LIMIT'
-        elif ('unique' in self.limits and self._stats['local_unique'] <= self.limits.unique):
+        elif 'unique' in self.limits and 'local_unique' in self._stats and \
+             self._stats['local_unique'] <= self.limits.unique:
             self.end_code = 'UNIQUE_LIMIT'
         
         return bool(self.end_code)
