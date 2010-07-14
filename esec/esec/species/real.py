@@ -54,7 +54,13 @@ class RealIndividual(Individual):
     def genome_string(self):
         '''Returns a string representation of the genes of this individual.
         '''
-        return '[' + ', '.join(['%.3f' % g for g in self.genome]) + ']'
+        return '[' + ', '.join(['%g' % g for g in self.genome]) + ']'
+    
+    @property
+    def phenome_string(self):
+        '''Returns a string representation of the phenome of this individual.
+        '''
+        return '[' + ', '.join(['%.3f' % p for p in self.phenome]) + ']'
 
 class RealSpecies(Species):
     '''Provides individuals with fixed- or variable-length genomes of
