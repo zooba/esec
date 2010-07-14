@@ -514,7 +514,7 @@ class Rosenbrock(Real):
     '''
     lname = 'Rosenbrock'
     maximise = False
-    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -2.048, 'upper': 2.048 }}
+    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -2.048, 'upper': 2.048 } }
     
     test_cfg = ( '2 -2.048 2.048 -',  '2 -2.048 2.048',
                 '10 -2.048 2.048 -', '10 -2.048 2.048')
@@ -542,16 +542,20 @@ class Rosenbrock(Real):
     def _eval(self, indiv):
         '''n-dimensional case'''
         total = 0
-        for i in xrange(len(indiv)-1):
-            total += 100*(indiv[i+1]-indiv[i]**2)**2 + (indiv[i]-1)**2
+        x = indiv[0]
+        for y in indiv[1:]:
+            total += (1-x)*(1-x) + 100*(y-x*x)*(y-x*x)
+            x = y
         return total
     
     def _eval_invert(self, indiv):
         '''invert n-dimensional case'''
         total = 0
-        for i in xrange(len(indiv)-1):
-            total += 100*(indiv[i+1]-indiv[i]**2)**2 + (indiv[i]-1)**2
-        return total
+        x = indiv[0]
+        for y in indiv[1:]:
+            total += (1-x)*(1-x) + 100*(y-x*x)*(y-x*x)
+            x = y
+        return self.offset - total
 
 #==============================================================================
 class Rastrigin(Real):
@@ -577,11 +581,7 @@ class Rastrigin(Real):
     '''
     lname = 'Rastrigin'
     maximised = False
-    default = {
-        'size': { 'exact': 2 },
-        'bounds': { 'lower': -5.12, 'upper': 5.12 },
-        'invert': True
-    }
+    default = { 'size': { 'exact': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 } }
     test_cfg = ('2 -5.12 5.12 hard',)
     strict = { 'size.exact': '*' }
     
@@ -595,7 +595,7 @@ class Rastrigin(Real):
         '''f() = 10*n + sum((x_i)^2 - 10cos(2*pi*x_i))
         '''
         c = 2*pi
-        return -(10*len(indiv) + sum(( x*x - 10*cos(c*x) for x in indiv)))
+        return self.offset - (10*len(indiv) + sum(( x*x - 10*cos(c*x) for x in indiv)))
 
 #==============================================================================
 class Griewangk(Real):
