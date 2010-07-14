@@ -568,6 +568,8 @@ class Rastrigin(Real):
     frequency \omega=2*pi. If altered, this landscape can be used as a simple
     problem generator, although this is rarely done.
     
+    The default setting is to use an inverted landscape for maximisation.
+    
     Standard initialisation range of [-5.12, 5.12]
     Minimum vector of x=[0, 0, ..., 0] results is f(x)=0
     
@@ -575,7 +577,11 @@ class Rastrigin(Real):
     '''
     lname = 'Rastrigin'
     maximised = False
-    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 }}
+    default = {
+        'size': { 'exact': 2 },
+        'bounds': { 'lower': -5.12, 'upper': 5.12 },
+        'invert': True
+    }
     test_cfg = ('2 -5.12 5.12 hard',)
     strict = { 'size.exact': '*' }
     
@@ -583,8 +589,13 @@ class Rastrigin(Real):
         '''f() = 10*n + sum((x_i)^2 - 10cos(2*pi*x_i))
         '''
         c = 2*pi
-        return 10*self.size.exact + sum(( x*x - 10*cos(c*x) for x in indiv))
+        return 10*len(indiv) + sum(( x*x - 10*cos(c*x) for x in indiv))
 
+    def _eval_invert(self, indiv):
+        '''f() = 10*n + sum((x_i)^2 - 10cos(2*pi*x_i))
+        '''
+        c = 2*pi
+        return -(10*len(indiv) + sum(( x*x - 10*cos(c*x) for x in indiv)))
 
 #==============================================================================
 class Griewangk(Real):
