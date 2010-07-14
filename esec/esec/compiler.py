@@ -98,7 +98,6 @@ class Compiler(object):
         
         code_lines = [ _DEFINITIONS ]
         code_lines.extend('%s = _group()' % g for g in self._groups)
-        code_lines.extend('%s = None' % v for v in self._variables)
         
         code_lines.append('__builtins__.update(_globals)')
         code_lines.append('')
@@ -198,6 +197,8 @@ class Compiler(object):
         indent_size = self.indent_size
         opt_sc = self.short_code
         opt_io = self.include_original
+        global_decls = set()
+        collect_globals = True
         
         for (line_no, source_line) in src:
             blanked = self._hide_nested(source_line)
@@ -213,8 +214,11 @@ class Compiler(object):
                 
                 block_name = re.match('[ ]*([a-zA-Z_][a-zA-Z0-9_]*)', parts[2])
                 if block_name:
+                    collect_globals = False
                     yield indent + "def _block_%s():" % block_name.groups()[0].lower()
                     indent += ' ' * indent_size
+                    if global_decls:
+                        yield indent + "global " + ','.join(global_decls)
                 else:
                     raise ESDLSyntaxError('BEGIN requires a block name.', ("ESDL", line_no+1, None, source_line))
             
@@ -260,6 +264,7 @@ class Compiler(object):
                 for dest in dests:
                     dest_count, _, dest = dest.strip().rpartition(' ')
                     self._groups.add(dest)
+                    
                     if dest_count: dest_count = dest_count.strip()
                     if dest_count:
                         if opt_sc and _gen:
@@ -342,6 +347,8 @@ class Compiler(object):
                 if opt_io: yield indent + "# Line %02d: %s" % (line_no+1, source_line)
                 assign = re.match('[ ]*([a-zA-Z_][a-zA-Z0-9_]*)[ ]*=', source_line)
                 if assign:
-                    self._variables.add(assign.groups()[0])
+                    var = assign.groups()[0]
+                    if collect_globals: global_decls.add(var)
+                    self._variables.add(var)
                 yield indent + source_line
 
