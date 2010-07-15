@@ -521,23 +521,6 @@ class Rosenbrock(Real):
     
     def __init__(self, cfg=None, **other_cfg):
         super(Rosenbrock, self).__init__(cfg, **other_cfg)
-        # hook the eval method
-        if self.size.exact == 2:# hook specialised 2D case? or invert
-            self.eval = self._eval2_invert if self.invert else self._eval2
-    
-    def _eval2(self, indiv):
-        '''f(x, y) = (1-x)^2 + 100(y-x^2)^2'''
-        term1 = 1-indiv[0]
-        term2 = (indiv[0]*indiv[0]) - indiv[1]
-        fitness =  (term1*term1) + 100*(term2*term2)
-        return fitness
-    
-    def _eval2_invert(self, indiv):
-        '''f(x, y) = OFFSET - ((1-x)^2 + 100(y-x^2)^2)'''
-        term1 = 1-indiv[0]
-        term2 = (indiv[0]*indiv[0])-indiv[1]
-        fitness =  (term1*term1) + 100*(term2*term2)
-        return self.offset - fitness
     
     def _eval(self, indiv):
         '''n-dimensional case'''
