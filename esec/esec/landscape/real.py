@@ -649,7 +649,7 @@ class Ackley(Real):
         '''f(x) = 20 + e - 20exp(-0.2 * sqrt((1/n)*sum(x_i^2)))
                          - exp((1/n)*sum(cos(2*pi*x_i)))
         '''
-        n = float(self.size.exact)
+        n = float(len(indiv))
         c = 2*pi
         s1 = s2 = 0
         for x in indiv:
@@ -686,7 +686,7 @@ class Schwefel(Real):
     def _eval(self, indiv):
         '''f(x) = 418.9829*n + sum(x_i * sin(sqrt(abs(x_i))))
         '''
-        return 418.9829*self.size.exact + sum([x * sin(sqrt(fabs(x))) for x in indiv])
+        return 418.9829*len(indiv) + sum(x * sin(sqrt(fabs(x))) for x in indiv)
 
 
 #==============================================================================
