@@ -274,17 +274,15 @@ class RealSpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        def _mutate(indiv, gene):
-            '''Returns a potentially mutated gene.'''
-            assert isinstance(indiv, RealIndividual), "Want `RealIndividual`, not `%s`" % type(indiv)
-            if do_all_gene or frand() < per_gene_rate:
-                return frand() * (indiv.bounds[1] - indiv.bounds[0]) + indiv.bounds[0]
-            else:
-                return gene
-        
         for indiv in src:
+            assert isinstance(indiv, RealIndividual), "Want `RealIndividual`, not `%s`" % type(indiv)
+            
             if do_all_indiv or frand() < per_indiv_rate:
-                yield type(indiv)([_mutate(indiv, g) for g in indiv.genome], indiv, statistic={ 'mutated': 1 })
+                new_genes = list(indiv.genome)
+                for i in xrange(len(new_genes)):
+                    if do_all_gene or frand() < per_gene_rate:
+                        new_genes[i] = frand() * (indiv.bounds[1] - indiv.bounds[0]) + indiv.bounds[0]
+                yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1 })
             else:
                 yield indiv
     
@@ -321,21 +319,20 @@ class RealSpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        def _mutate(indiv, gene, step_size_sum):
-            '''Returns a potentially mutated gene.'''
-            assert isinstance(indiv, RealIndividual), "Want `RealIndividual`, not `%s`" % type(indiv)
-            if do_all_gene or frand() < per_gene_rate:
-                step_size_sum[0] += step_size
-                new_gene = gene + (step_size if frand() < positive_rate else -step_size)
-                return indiv.bounds[0] if new_gene < indiv.bounds[0] else \
-                       indiv.bounds[1] if new_gene > indiv.bounds[1] else new_gene
-            else:
-                return gene
-        
         for indiv in src:
+            assert isinstance(indiv, RealIndividual), "Want `RealIndividual`, not `%s`" % type(indiv)
+            
             if do_all_indiv or frand() < per_indiv_rate:
-                step_size_sum = [0]
-                new_genes = [_mutate(indiv, g, step_size_sum) for g in indiv.genome]
+                step_size_sum = 0
+                new_genes = list(indiv.genome)
+                for i, gene in enumerate(new_genes):
+                    if do_all_gene or frand() < per_gene_rate:
+                        step_size_sum += step_size
+                        new_gene = gene + (step_size if frand() < positive_rate else -step_size)
+                        new_genes[i] = indiv.bounds[0] if new_gene < indiv.bounds[0] else \
+                                       indiv.bounds[1] if new_gene > indiv.bounds[1] else \
+                                       new_gene
+                
                 yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1, 'step_sum': step_size_sum[0] })
             else:
                 yield indiv
@@ -378,22 +375,22 @@ class RealSpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        def _mutate(indiv, gene, step_size_sum):
-            '''Returns a potentially mutated gene.'''
-            assert isinstance(indiv, RealIndividual), "Want `RealIndividual`, not `%s`" % type(indiv)
-            if do_all_gene or frand() < per_gene_rate:
-                step = gauss(0, sigma)
-                step_size_sum[0] += step
-                new_gene = gene + step
-                return indiv.bounds[0] if new_gene < indiv.bounds[0] else \
-                       indiv.bounds[1] if new_gene > indiv.bounds[1] else new_gene
-            else:
-                return gene
-        
         for indiv in src:
+            assert isinstance(indiv, RealIndividual), "Want `RealIndividual`, not `%s`" % type(indiv)
+            
             if do_all_indiv or frand() < per_indiv_rate:
-                step_size_sum = [0]
-                new_genes = [_mutate(indiv, g, step_size_sum) for g in indiv.genome]
-                yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1, 'step_sum': step_size_sum[0] })
+                step_size_sum = 0
+                
+                new_genes = list(indiv.genome)
+                for i, gene in enumerate(new_genes):
+                    if do_all_gene or frand() < per_gene_rate:
+                        step = gauss(0, sigma)
+                        step_size_sum += step
+                        new_gene = gene + step
+                        new_genes[i] = indiv.bounds[0] if new_gene <= indiv.bounds[0] else \
+                                       indiv.bounds[1] if new_gene >= indiv.bounds[1] else \
+                                       new_gene
+                
+                yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1, 'step_sum': step_size_sum })
             else:
                 yield indiv

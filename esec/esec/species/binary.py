@@ -389,16 +389,14 @@ class BinarySpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        def _mutate(gene):
-            '''Returns a potentially mutated gene value.'''
-            if do_all_gene or frand() < per_gene_rate:
-                return 0 if frand <= 0.5 else 1
-            else:
-                return gene
-        
         for indiv in src:
             if do_all_indiv or frand() < per_indiv_rate:
-                yield type(indiv)([_mutate(g) for g in indiv.genome], indiv, statistic={ 'mutated': 1 })
+                new_genes = list(indiv.genome)
+                for i in xrange(len(new_genes)):
+                    if do_all_gene or frand() < per_gene_rate:
+                        new_genes[i] = 0 if frand() < 0.5 else 1
+                
+                yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1 })
             else:
                 yield indiv
     
@@ -427,16 +425,14 @@ class BinarySpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        def _mutate(gene):
-            '''Returns a potentially mutated gene value.'''
-            if do_all_gene or frand() < per_gene_rate:
-                return gene if frand <= 0.5 else (1 - gene)
-            else:
-                return gene
-        
         for indiv in src:
             if do_all_indiv or frand() < per_indiv_rate:
-                yield type(indiv)([_mutate(g) for g in indiv.genome], indiv, statistic={ 'mutated': 1 })
+                new_genes = list(indiv.genome)
+                for i, gene in enumerate(new_genes):
+                    if do_all_gene or frand() < per_gene_rate:
+                        new_genes[i] = 1 - gene
+                
+                yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1 })
             else:
                 yield indiv
     
