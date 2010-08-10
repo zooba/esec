@@ -145,6 +145,8 @@ def _load_module(folder, mod_name):
     detail than `ImportError`.
     '''
     try:
+        if '.' in mod_name:
+            mod_name = mod_name.replace('.', '_')
         scoped_name = folder + '.' + mod_name
         mod = __import__(scoped_name)
         if not mod:
