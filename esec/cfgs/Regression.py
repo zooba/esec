@@ -84,9 +84,6 @@ rvp_tests = [
     ('RVP.SixHumpCamelBack', std_dialects, [None]),
     ('RVP.FMS',             std_dialects, [None]),
 ]
-if not is_ironpython():
-    # RVP.MSG will always fail under IronPython (numpy is not supported)
-    rvp_tests.append(('RVP.MSG',             std_dialects, [None, { 'landscape': { 'size': { 'exact': 10 } } }]))
 
 tgp_tests = [
     ('TGP.Multiplexer',         ['TGP_BOOL_%d'], [None]),
