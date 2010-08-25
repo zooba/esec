@@ -54,6 +54,7 @@ class System(object):
             'rank_sus':             selectors.RankProportionalSUS,
             
             
+            'crossover_uniform':        OnIndividial('crossover_uniform', recombiners.Uniform),
             'crossover_one':            OnIndividual('crossover_one', recombiners.OnePointSame),
             'crossover_one_different':  OnIndividual('crossover_one_different', recombiners.OnePointDifferent),
             'crossover_tuple':          OnIndividual('crossover_tuple', recombiners.PerGeneTuple),
