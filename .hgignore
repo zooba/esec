@@ -1,0 +1,3 @@
+glob:*.pyc
+glob:*.pyo
+glob:esec/html
