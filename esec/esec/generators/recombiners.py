@@ -9,6 +9,68 @@ type validation, all constructors should use ``type`` on an existing
 `Individual` to ensure the correct derivation is used.
 '''
 
+def Uniform(src, per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5):
+    '''Performs uniform crossover by selecting genes at random from
+    one of two individuals.
+    
+    Returns a sequence of crossed individuals based on the individuals
+    in `src`. The resulting sequence will contain as many individuals
+    as `src` (unless `src` contains an odd number, in which case one
+    less will be returned).
+    
+    .. include:: epydoc_include.txt
+    
+    :Parameters:
+      src : iterable(`Individual`)
+        A sequence of individuals. Individuals are taken two at a time
+        from this sequence, recombined to produce two new individuals,
+        and yielded separately.
+      
+      per_pair_rate : |prob|
+        The probability of any particular pair of individuals being
+        recombined. If two individuals are not recombined, they are
+        returned unmodified. If this is ``None``, the value of
+        `per_indiv_rate` is used.
+      
+      per_indiv_rate : |prob|
+        A synonym for `per_pair_rate`.
+      
+      per_gene_rate : |prob|
+        The probability of any particular pair of genes being swapped.
+    '''
+    if per_pair_rate == None: per_pair_rate = per_indiv_rate
+    if per_pair_rate <= 0.0:
+        for indiv in src: yield indiv
+        raise StopIteration
+    
+    do_all_pairs = (per_pair_rate >= 1.0)
+    
+    frand = rand.random     #pylint: disable=E0602
+    irand = rand.randrange  #pylint: disable=E0602
+    group = list(src)
+    
+    for i1_pre, i2_pre in zip(group[::2], group[1::2]):
+        if do_all_pairs or frand() < per_pair_rate:
+            genome1, genome2 = i1_pre.genome, i2_pre.genome
+            
+            new_genes1 = []
+            new_genes2 = []
+            for g1, g2 in zip(genome1, genome2):
+                if frand() < per_gene_rate:
+                    new_genes1.append(g2)
+                    new_genes2.append(g1)
+                else:
+                    new_genes1.append(g1)
+                    new_genes2.append(g2)
+            
+            i1_post = type(i1_pre)(new_genes1, i1_pre, statistic={ 'recombined': 1 })
+            i2_post = type(i2_pre)(new_genes2, i2_pre, statistic={ 'recombined': 1 })
+            yield i1_post
+            yield i2_post
+        else:
+            yield i1_pre
+            yield i2_pre
+
 def OnePointSame(src, per_pair_rate=None, per_indiv_rate=1.0):
     '''Performs single-point crossover by selecting a single point
     common to both individuals and exchanging the sequence of genes
