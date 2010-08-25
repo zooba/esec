@@ -140,7 +140,7 @@ def WorstOnly(src):
     return Worst(src, True)
 
 
-def Tournament(src, k=2, replacement=True):
+def Tournament(src, k=2, replacement=True, greediness=1.0):
     '''Returns a sequence of individuals selected using tournament
     selection. `k` individuals are selected at random and the individual
     with the best fitness is returned.
@@ -162,9 +162,15 @@ def Tournament(src, k=2, replacement=True):
         individuals remain and the total number of individuals
         is equal to the number in `src`.
         If ``True``, the generator will never terminate.
+      
+      greediness : |prob|
+        The probability of the most fit individual being
+        selected. If this does not occur, one of the remaining
+        individuals is selected at random.
     '''
     assert k >= 2, "k must be at least 2"
     irand = rand.randrange      #pylint: disable=E0602
+    frand = rand.random         #pylint: disable=E0602
     # WITH REPLACEMENT
     if replacement:
         def _iter(_src):
@@ -173,7 +179,11 @@ def Tournament(src, k=2, replacement=True):
             while True:
                 pool = [_src[irand(size)] for _ in xrange(k)]
                 winner = max(pool, key=_key_fitness)
-                yield winner
+                if greediness >= 1.0 or frand() < greediness:
+                    yield winner
+                else:
+                    pool.remove(winner)
+                    yield pool[irand(len(pool))]
         return _iter(list(src))
     # WITHOUT REPLACEMENT
     else:
@@ -182,13 +192,17 @@ def Tournament(src, k=2, replacement=True):
             if len(_src) >= k:
                 pool_index = [irand(len(_src)) for _ in xrange(k)]
                 winner_index = max(pool_index, key=lambda i: _src[i].fitness)
-                return winner_index
+                if greediness >= 1.0 or frand() < greediness:
+                    return winner_index
+                else:
+                    pool_index.remove(winner_index)
+                    return pool_index[irand(len(pool_index))]
             else:
                 # Now everyone's a winner (in fitness order)!
                 return 0
         return NoReplacementSelector(src, _func)
 
-def BinaryTournament(src, replacement=True):
+def BinaryTournament(src, replacement=True, greediness=1.0):
     '''Returns a sequence of individuals selected using binary tournament
     selection. Two individuals are selected at random and the individual
     with the best fitness is returned.
@@ -205,8 +219,13 @@ def BinaryTournament(src, replacement=True):
         individuals remain and the total number of individuals
         is equal to the number in `src`.
         If ``True``, the generator will never terminate.
+      
+      greediness : |prob|
+        The probability of the most fit individual being
+        selected. If this does not occur, one of the remaining
+        individuals is selected at random.
     '''
-    return Tournament(src, 2, replacement)
+    return Tournament(src, 2, replacement, greediness)
 
 def UniformRandom(src, replacement=True):
     '''Returns a sequence of individuals selected randomly, without regards
