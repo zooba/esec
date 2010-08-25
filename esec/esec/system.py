@@ -184,11 +184,6 @@ class System(object):
             exec self._code in self._context
             
             self.monitor.on_post_reset(self)
-            
-            # Check whether we found the ideal solution in the first go
-            if self.monitor.should_terminate(self):
-                self.monitor.on_run_end(self)
-                return
         except KeyboardInterrupt:
             raise
         except:
