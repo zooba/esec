@@ -11,7 +11,7 @@ from esec.utils import ConfigDict
 import sys
 import os, os.path
 if os.name == 'nt':
-    from ctypes import windll, c_ulonglong, byref
+    from ctypes import windll, c_ulonglong, c_void_p, byref
 from time import clock
 
 class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
@@ -702,6 +702,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
     
     # define a platform specific _get_ms() function, used by _time() below
     if os.name == 'nt':
+        windll.kernel32.GetProcessTimes.argtypes = [ c_void_p ] * 5
         def _get_ms(self):
             '''Returns the number of milliseconds the process has been active for.
             '''
