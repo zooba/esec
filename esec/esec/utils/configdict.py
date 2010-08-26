@@ -50,7 +50,9 @@ class ConfigDict(object):
         if data:
             if isinstance(data, (dict, ConfigDict)):
                 for key, value in data.items():
-                    if isinstance(value, (dict, ConfigDict)):
+                    if isinstance(value, dict) and all(isinstance(i, str) for i in value.iterkeys()):
+                        value = ConfigDict(value)
+                    elif isinstance(value, ConfigDict):
                         value = ConfigDict(value)
                     self._dict[key] = value
             elif isinstance(data, str):
