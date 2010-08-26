@@ -401,7 +401,7 @@ def esec_batch(options):
         warn('Output folder already exists and may contain output from a previous run (%s)' % pathbase)
     
     # Is this a tag summary run?
-    if batch_cfg.tag_run:
+    if batch_cfg.include_tags or batch_cfg.exclude_tags:
         # Generate a summary file of cfgids, tags and format strings
         tags_file = open(os.path.join(pathbase, '_tags' + extension), 'w')
         if batch_cfg.csv:
@@ -418,7 +418,7 @@ def esec_batch(options):
     for i, (tags, names, config, settings, fmt) in enumerate(batch):
         # Use cfgid instead of converting i repeatedly
         cfgid = '%04d' % i
-        if batch_cfg.tag_run:
+        if batch_cfg.include_tags or batch_cfg.exclude_tags:
             if tags:
                 # Write the summary of cfgid, tags and format string.
                 if batch_cfg.csv:
@@ -434,7 +434,6 @@ def esec_batch(options):
                     tags_file.write('%d,,"%s"\n' % (i, fmt))
                 else:
                     tags_file.write("%s; ; %s\n" % (cfgid, fmt))
-            continue
         # Start and stop limits?
         if i < batch_cfg.start_at: continue
         if i > batch_cfg.stop_at: break
@@ -524,7 +523,7 @@ def esec_batch(options):
             print '--> DRY RUN DONE <--'
         
         # Write the summary to the super summary file.
-        if summary_file:
+        if summary_file and not batch_cfg.dry_run:
             summary_lines = summary_buffer.getvalue().splitlines()[:2]
             if batch_cfg.csv:
                 if i == 0:
@@ -537,7 +536,7 @@ def esec_batch(options):
             summary_file.flush()
         
     # Save the tag data
-    if batch_cfg.tag_run:
+    if batch_cfg.include_tags or batch_cfg.exclude_tags:
         tags_file.write("#\n# Summary of cfgid's per tag\n#\n")
         if batch_cfg.csv:
             for tag in sorted(summary_tags.keys()):
