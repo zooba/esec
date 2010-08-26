@@ -118,7 +118,10 @@ class Landscape(object):
         
         self.cfg.overlay(cfg)
         for key, value in other_cfg.iteritems():
-            self.cfg.set_by_name(key.replace('_', '.'), value)
+            if key in self.syntax:
+                self.cfg.set_by_name(key, value)
+            elif key.partition('_')[0] in self.syntax:
+                self.cfg.set_by_name(key.replace('_', '.'), value)
         
         cfg_validate(self.cfg, self.syntax, self.ltype + ':' + self.lname)
         
