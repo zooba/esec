@@ -147,7 +147,7 @@ class Landscape(object):
         # auto-bind _eval or _eval_invert. Subclasses can alter later.
         #pylint: disable=E1101
         if not hasattr(self, 'eval'):
-            if self.invert:
+            if self.invert ^ (not self.maximise):
                 if hasattr(self, '_eval_invert'):
                     self.eval = self._eval_invert
                 elif hasattr(self, '_eval'):

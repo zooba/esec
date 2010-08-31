@@ -562,7 +562,7 @@ class Rastrigin(Real):
     Qualities: minimisation, multimodal, not normalised, unconstrained.
     '''
     lname = 'Rastrigin'
-    maximised = False
+    maximise = False
     default = { 'size': { 'exact': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 } }
     test_cfg = ('2 -5.12 5.12 hard',)
     strict = { 'size.exact': '*' }
