@@ -176,12 +176,12 @@ def batch():
                     for c in testconfigs:
                         cfg = ConfigDict(config)
                         if c: cfg.overlay(c)
-                        yield ([], '%s+%s' % (k, d2), cfg, None, None)
+                        yield ([k.partition('.')[0]], '%s+%s' % (k, d2), cfg, None, None)
                     i += 1
                     d2 = d % i
             else:
                 for c in testconfigs:
                     cfg = ConfigDict(config)
                     if c: cfg.overlay(c)
-                    yield ([], '%s+%s' % (k, d), cfg, None, None)
+                    yield ([k.partition('.')[0]], '%s+%s' % (k, d), cfg, None, None)
         
