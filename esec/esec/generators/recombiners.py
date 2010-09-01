@@ -233,10 +233,10 @@ def PerGeneTuple(src, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=None
         A synonym for `per_indiv_rate`.
       
       per_gene_rate : |prob| [optional]
-        The probability of selecting a gene from the first individual
-        in the joined individual. If the gene is not selected, a gene
-        is selected from one of the other individuals with equal
-        probability.
+        The probability of not selecting a gene from the first
+        individual in the joined individual. If the gene is not
+        selected, a gene is selected from one of the other individuals
+        with equal probability.
         If omitted, a gene is selected from any individual with equal
         probability. If set to 1.0 or higher, the first individual in
         each joined individual is returned unmodified.
@@ -264,7 +264,7 @@ def PerGeneTuple(src, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=None
                 if len_genes == 0: break
                 elif len_genes == 1: new_genes.append(genes[0])
                 elif equal_per_gene_rate: new_genes.append(choice(genes))
-                elif frand() < per_gene_rate: new_genes.append(genes[0])
+                elif frand() >= per_gene_rate: new_genes.append(genes[0])
                 else: new_genes.append(choice(genes[1:]))
             yield type(indiv[0])(new_genes, indiv[0], statistic={ 'recombined': 1 })
         else:
