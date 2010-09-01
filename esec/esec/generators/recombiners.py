@@ -46,22 +46,18 @@ def Uniform(src, per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5):
     do_all_pairs = (per_pair_rate >= 1.0)
     
     frand = rand.random     #pylint: disable=E0602
-    irand = rand.randrange  #pylint: disable=E0602
     group = list(src)
     
     for i1_pre, i2_pre in zip(group[::2], group[1::2]):
         if do_all_pairs or frand() < per_pair_rate:
             genome1, genome2 = i1_pre.genome, i2_pre.genome
             
-            new_genes1 = []
-            new_genes2 = []
-            for g1, g2 in zip(genome1, genome2):
+            new_genes1 = list(genome1)
+            new_genes2 = list(genome2)
+            for i in xrange(len(new_genes1)):
                 if frand() < per_gene_rate:
-                    new_genes1.append(g2)
-                    new_genes2.append(g1)
-                else:
-                    new_genes1.append(g1)
-                    new_genes2.append(g2)
+                    new_genes1[i] = genome2[i]
+                    new_genes2[i] = genome1[i]
             
             i1_post = type(i1_pre)(new_genes1, i1_pre, statistic={ 'recombined': 1 })
             i2_post = type(i2_pre)(new_genes2, i2_pre, statistic={ 'recombined': 1 })
