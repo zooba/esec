@@ -342,6 +342,7 @@ def esec_batch(options):
     # Disable pylint complaints about branches and local variables
     #pylint: disable=R0912,R0914
     
+    options.batch, _, tag_names = options.batch.partition('+')
     # A batch file is a normal .py file with a method named "batch" that 
     # returns a sequence of tuples of settings.
     mod = _load_module('cfgs', options.batch)
@@ -380,8 +381,13 @@ def esec_batch(options):
         print >> sys.stderr, '  ' + '\n  '.join('%s: %r' % (key, batch_cfg[key]) for key in other_keys)
         print >> sys.stderr
     
-    batch_cfg.include_tags = set(batch_cfg.include_tags or [])
-    batch_cfg.exclude_tags = set(batch_cfg.exclude_tags or [])
+    batch_cfg.include_tags = set(batch_cfg.include_tags or set())
+    batch_cfg.exclude_tags = set(batch_cfg.exclude_tags or set())
+    
+    if tag_names:
+        tag_names = tag_names.split('+')
+        batch_cfg.include_tags.update(t for t in tag_names if t[0] != '!')
+        batch_cfg.exclude_tags.update(t[1:] for t in tag_names if t[0] == '!')
     
     # Output file extension is '.txt' unless the csv setting is True.
     extension = '.txt'
@@ -578,7 +584,9 @@ def main():
                            'eg. -s "system.size=200; application.run_count=3" ')
     # Batch run setting
     parser.add_option('-b', '--batch', metavar="FILE", default='',
-                      help='The name of a single batch file')
+                      help='The name of a single batch file with optional\n'+
+                           'tags joined by "+". Prefix tags with "!" to\n'+
+                           'exclude them.')
     
     # Keep the processed options and any remaining items
     options, _ = parser.parse_args()
