@@ -92,6 +92,7 @@ class RealSpecies(Species):
         if template: lowest, highest = template.bounds
         
         def _convert_limits(src):
+            '''Produces valid upper/lower bounds lists from the provided input.'''
             if isinstance(src, list): pass
             elif isinstance(src, tuple): src = list(src)
             else: src = [float(src)] * longest
