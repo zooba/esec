@@ -207,6 +207,8 @@ def BinaryTournament(src, replacement=True, greediness=1.0):
     selection. Two individuals are selected at random and the individual
     with the best fitness is returned.
     
+    .. include:: epydoc_include.txt
+    
     :Parameters:
       src : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
