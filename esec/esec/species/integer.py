@@ -404,7 +404,8 @@ class IntegerSpecies(Species):
         count = 0
         while True:
             indiv = next(low_gen)
-            indiv.genome[:] = [count % (high - low) + low for _, low, high in zip(indiv.genome, *bounds)]
+            indiv.genome[:] = [count % (highest - lowest) + lowest for _ in indiv.genome]
+            count += 1
             yield indiv
     
     def mutate_random(self, src, per_indiv_rate=1.0, per_gene_rate=0.1):
