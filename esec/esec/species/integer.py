@@ -31,7 +31,7 @@ class IntegerIndividual(Individual):
             If an `IntegerIndividual` is provided, the values for
             `bounds` are taken from that.
           
-          bounds : tuple ``(lower bound, upper bound)``
+          bounds : ``[lower bounds, upper bounds]``
             The lower and upper limits on values that may be included
             in the genome. It is used to allow mutation operations to
             reintroduce values that are missing from the current
@@ -80,24 +80,36 @@ class IntegerSpecies(Species):
             "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
         
         if template: lowest, highest = template.bounds
-        assert type(highest) is type(lowest), "Highest (%s) and lowest (%s) must be the same type." % \
-               (type(highest).__name__, type(lowest).__name__)
-        assert isinstance(highest, int), "Highest and lowest must be an integer, not %s" % type(highest).__name__
-        assert highest > lowest, "Value of highest (%d) must be higher than lowest (%d)" % (highest, lowest)
+        
+        def _convert_limits(src):
+            if isinstance(src, list): pass
+            elif isinstance(src, tuple): src = list(src)
+            else: src = [int(src)] * longest
+            if len(src) < longest: src += [src[-1]] * (longest - len(src))
+            return src
+        
+        lowest = _convert_limits(lowest)
+        highest = _convert_limits(highest)
+        
+        assert all(h >= l for h, l in zip(highest, lowest)), \
+            "Values of highest (%s) must be greater than or equal to those in lowest (%s)" % (highest, lowest)
         
         if bounds:
-            assert isinstance(bounds, (tuple, list)), "Bounds must be a tuple or list with two elements"
-            assert len(bounds) == 2, "Bounds must be a tuple or list with two elements"
-            if lowest < bounds[0]: lowest = int(bounds[0])
-            if highest > bounds[1]: highest = int(bounds[1])
+            assert len(bounds) == 2, "bounds must have two elements (%s)" % str(bounds)
+            bounds = [_convert_limits(bounds[0]), _convert_limits(bounds[1])]
         else:
             bounds = (lowest, highest)
 
         irand = rand.randrange      #pylint: disable=E0602
-        while True:
-            length = irand(shortest, longest+1)
-            genes = [_gen(lowest, highest, i) for i in xrange(length)]
-            yield IntegerIndividual(genes, self, bounds)
+        if shortest == longest:
+            while True:
+                genes = [_gen(*i) for i in zip(lowest, highest, xrange(shortest))]
+                yield IntegerIndividual(genes, self, bounds)
+        else:
+            while True:
+                length = irand(shortest, longest+1)
+                genes = [_gen(*i) for i in zip(lowest, highest, xrange(length))]
+                yield IntegerIndividual(genes, self, bounds)
 
     def init_random(self, length=None, shortest=10, longest=10, lowest=0, highest=255, bounds=None, template=None):
         '''Returns instances of `IntegerIndividual` initialised with random values.
@@ -105,6 +117,8 @@ class IntegerSpecies(Species):
         The value of `bounds` (or `lowest` and `highest`) are stored with the
         individual and are used implicitly for mutation operations involving the
         individual.
+        
+        .. include:: epydoc_include.txt
         
         :Parameters:
           length : int > 0
@@ -119,15 +133,26 @@ class IntegerSpecies(Species):
           longest : int > `shortest`
             The largest number of genes in any individual.
           
-          lowest : int
-            The smallest value of any particular gene.
+          lowest : int or iterable(int)
+            The smallest initialisation value of any particular gene.
+            
+            If a list of values is provided it must be at least
+            `longest` long. Otherwise, the last value in the sequence
+            will be used for all subsequent positions.
           
-          highest : int > 'lowest'
-            The largest value of any particular gene.
+          highest : int |ge| `lowest` or iterable(int)
+            The largest initialisation value of any particular gene.
+            
+            If a list of values is provided it must be at least
+            `longest` long. Otherwise, the last value in the sequence
+            will be used for all subsequent positions.
           
-          bounds : tuple [optional]
+          bounds : ``[lower bounds, upper bounds]`` [optional]
             The hard limits to keep with the individual. If not specified,
-            `lowest` and `highest` are assumed to be the limits.
+            `lowest` and `highest` are assumed to be the limits. The two
+            elements of the tuple are the minimum and maximum respectively,
+            and may be either a single value or a list of values, as for
+            `lowest` and `highest`.
           
           template : `IntegerIndividual` [optional]
             If provided, used to determine the values for `lowest`
@@ -144,6 +169,8 @@ class IntegerSpecies(Species):
         individual and are used implicitly for mutation operations involving the
         individual.
         
+        .. include:: epydoc_include.txt
+        
         :Parameters:
           length : int > 0
             The number of genes to include in each individual. If left
@@ -157,15 +184,26 @@ class IntegerSpecies(Species):
           longest : int > `shortest`
             The largest number of genes in any individual.
           
-          lowest : int
-            The smallest value of any particular gene.
+          lowest : int or iterable(int)
+            The smallest initialisation value of any particular gene.
+            
+            If a list of values is provided it must be at least
+            `longest` long. Otherwise, the last value in the sequence
+            will be used for all subsequent positions.
           
-          highest : int > 'lowest'
-            The largest value of any particular gene.
+          highest : int |ge| `lowest` or iterable(int)
+            The largest initialisation value of any particular gene.
+            
+            If a list of values is provided it must be at least
+            `longest` long. Otherwise, the last value in the sequence
+            will be used for all subsequent positions.
           
-          bounds : tuple [optional]
+          bounds : ``[lower bounds, upper bounds]`` [optional]
             The hard limits to keep with the individual. If not specified,
-            `lowest` and `highest` are assumed to be the limits.
+            `lowest` and `highest` are assumed to be the limits. The two
+            elements of the tuple are the minimum and maximum respectively,
+            and may be either a single value or a list of values, as for
+            `lowest` and `highest`.
         '''
         return self._init(length, shortest, longest, lowest, highest, bounds, None,
                           lambda low, high, _: low)
@@ -177,6 +215,8 @@ class IntegerSpecies(Species):
         individual and are used implicitly for mutation operations involving the
         individual.
         
+        .. include:: epydoc_include.txt
+        
         :Parameters:
           length : int > 0
             The number of genes to include in each individual. If left
@@ -190,15 +230,26 @@ class IntegerSpecies(Species):
           longest : int > `shortest`
             The largest number of genes in any individual.
           
-          lowest : int
-            The smallest value of any particular gene.
+          lowest : int or iterable(int)
+            The smallest initialisation value of any particular gene.
+            
+            If a list of values is provided it must be at least
+            `longest` long. Otherwise, the last value in the sequence
+            will be used for all subsequent positions.
           
-          highest : int > 'lowest'
-            The largest value of any particular gene.
+          highest : int |ge| `lowest` or iterable(int)
+            The largest initialisation value of any particular gene.
+            
+            If a list of values is provided it must be at least
+            `longest` long. Otherwise, the last value in the sequence
+            will be used for all subsequent positions.
           
-          bounds : tuple [optional]
+          bounds : ``[lower bounds, upper bounds]`` [optional]
             The hard limits to keep with the individual. If not specified,
-            `lowest` and `highest` are assumed to be the limits.
+            `lowest` and `highest` are assumed to be the limits. The two
+            elements of the tuple are the minimum and maximum respectively,
+            and may be either a single value or a list of values, as for
+            `lowest` and `highest`.
         '''
         return self._init(length, shortest, longest, lowest, highest, bounds, None,
                           lambda low, high, _: high)
@@ -212,6 +263,8 @@ class IntegerSpecies(Species):
         individual and are used implicitly for mutation operations involving the
         individual.
         
+        .. include:: epydoc_include.txt
+        
         :Parameters:
           length : int > 0
             The number of genes to include in each individual. If left
@@ -225,15 +278,26 @@ class IntegerSpecies(Species):
           longest : int > `shortest`
             The largest number of genes in any individual.
           
-          lowest : int
-            The smallest value of any particular gene.
+          lowest : int or iterable(int)
+            The smallest initialisation value of any particular gene.
+            
+            If a list of values is provided it must be at least
+            `longest` long. Otherwise, the last value in the sequence
+            will be used for all subsequent positions.
           
-          highest : int > 'lowest'
-            The largest value of any particular gene.
+          highest : int |ge| `lowest` or iterable(int)
+            The largest initialisation value of any particular gene.
+            
+            If a list of values is provided it must be at least
+            `longest` long. Otherwise, the last value in the sequence
+            will be used for all subsequent positions.
           
-          bounds : tuple [optional]
+          bounds : ``[lower bounds, upper bounds]`` [optional]
             The hard limits to keep with the individual. If not specified,
-            `lowest` and `highest` are assumed to be the limits.
+            `lowest` and `highest` are assumed to be the limits. The two
+            elements of the tuple are the minimum and maximum respectively,
+            and may be either a single value or a list of values, as for
+            `lowest` and `highest`.
         '''
         low_gen = self.init_low(length, shortest, longest, lowest, highest, bounds)
         high_gen = self.init_high(length, shortest, longest, lowest, highest, bounds)
@@ -251,6 +315,8 @@ class IntegerSpecies(Species):
         individual and are used implicitly for mutation operations involving the
         individual.
         
+        .. include:: epydoc_include.txt
+        
         :Parameters:
           length : int > 0
             The number of genes to include in each individual. If left
@@ -264,15 +330,26 @@ class IntegerSpecies(Species):
           longest : int > `shortest`
             The largest number of genes in any individual.
           
-          lowest : int
-            The smallest value of any particular gene.
+          lowest : int or iterable(int)
+            The smallest initialisation value of any particular gene.
+            
+            If a list of values is provided it must be at least
+            `longest` long. Otherwise, the last value in the sequence
+            will be used for all subsequent positions.
           
-          highest : int > 'lowest'
-            The largest value of any particular gene.
+          highest : int |ge| `lowest` or iterable(int)
+            The largest initialisation value of any particular gene.
+            
+            If a list of values is provided it must be at least
+            `longest` long. Otherwise, the last value in the sequence
+            will be used for all subsequent positions.
           
-          bounds : tuple [optional]
+          bounds : ``[lower bounds, upper bounds]`` [optional]
             The hard limits to keep with the individual. If not specified,
-            `lowest` and `highest` are assumed to be the limits.
+            `lowest` and `highest` are assumed to be the limits. The two
+            elements of the tuple are the minimum and maximum respectively,
+            and may be either a single value or a list of values, as for
+            `lowest` and `highest`.
         '''
         return self._init(length, shortest, longest, lowest, highest, bounds, None,
                           lambda low, high, i: i % (high - low) + low)
@@ -286,6 +363,8 @@ class IntegerSpecies(Species):
         individual and are used implicitly for mutation operations involving the
         individual.
         
+        .. include:: epydoc_include.txt
+        
         :Parameters:
           length : int > 0
             The number of genes to include in each individual. If left
@@ -299,22 +378,33 @@ class IntegerSpecies(Species):
           longest : int > `shortest`
             The largest number of genes in any individual.
           
-          lowest : int
-            The smallest value of any particular gene.
+          lowest : int or iterable(int)
+            The smallest initialisation value of any particular gene.
+            
+            If a list of values is provided it must be at least
+            `longest` long. Otherwise, the last value in the sequence
+            will be used for all subsequent positions.
           
-          highest : int > 'lowest'
-            The largest value of any particular gene.
+          highest : int |ge| `lowest` or iterable(int)
+            The largest initialisation value of any particular gene.
+            
+            If a list of values is provided it must be at least
+            `longest` long. Otherwise, the last value in the sequence
+            will be used for all subsequent positions.
           
-          bounds : tuple [optional]
+          bounds : ``[lower bounds, upper bounds]`` [optional]
             The hard limits to keep with the individual. If not specified,
-            `lowest` and `highest` are assumed to be the limits.
+            `lowest` and `highest` are assumed to be the limits. The two
+            elements of the tuple are the minimum and maximum respectively,
+            and may be either a single value or a list of values, as for
+            `lowest` and `highest`.
         '''
         low_gen = self.init_low(length, shortest, longest, lowest, highest, bounds)
+        count = 0
         while True:
-            for i in xrange(lowest, highest + 1):
-                indiv = next(low_gen)
-                indiv.genome[:] = [i] * len(indiv) #pylint: disable=W0212
-                yield indiv
+            indiv = next(low_gen)
+            indiv.genome[:] = [count % (high - low) + low for _, low, high in zip(indiv.genome, *bounds)]
+            yield indiv
     
     def mutate_random(self, src, per_indiv_rate=1.0, per_gene_rate=0.1):
         '''Mutates a group of individuals by replacing genes with random values.
@@ -345,9 +435,9 @@ class IntegerSpecies(Species):
         for indiv in src:
             if do_all_indiv or frand() < per_indiv_rate:
                 new_genes = list(indiv.genome)
-                for i in xrange(len(new_genes)):
+                for i, low, high in zip(xrange(len(new_genes)), *indiv.bounds):
                     if do_all_gene or frand() < per_gene_rate:
-                        new_genes[i] = irand(*indiv.bounds)
+                        new_genes[i] = irand(low, high)
                 
                 yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1 })
             else:
@@ -398,12 +488,12 @@ class IntegerSpecies(Species):
             if do_all_indiv or frand() < per_indiv_rate:
                 step_size_sum = 0
                 new_genes = list(indiv.genome)
-                for i, gene in enumerate(new_genes):
+                for i, gene, low, high in zip(xrange(len(new_genes)), new_genes, *indiv.bounds):
                     if do_all_gene or frand() < per_gene_rate:
                         step_size_sum += step_size
                         new_gene = gene + (step_size if frand() < positive_rate else -step_size)
-                        new_genes[i] = indiv.bounds[0] if new_gene < indiv.bounds[0] else \
-                                       indiv.bounds[1] if new_gene > indiv.bounds[1] else \
+                        new_genes[i] = low  if new_gene < low  else \
+                                       high if new_gene > high else \
                                        new_gene
                 
                 yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1, 'step_sum': step_size_sum })
@@ -454,13 +544,13 @@ class IntegerSpecies(Species):
             if do_all_indiv or frand() < per_indiv_rate:
                 step_size_sum = 0
                 new_genes = list(indiv.genome)
-                for i, gene in enumerate(new_genes):
+                for i, gene, low, high in zip(xrange(len(new_genes)), new_genes, *indiv.bounds):
                     if do_all_gene or frand() < per_gene_rate:
                         step = int(gauss(0, sigma))
                         step_size_sum += step
                         new_gene = gene + step
-                        new_genes[i] = indiv.bounds[0] if new_gene < indiv.bounds[0] else \
-                                       indiv.bounds[1] if new_gene > indiv.bounds[1] else \
+                        new_genes[i] = low  if new_gene < low  else \
+                                       high if new_gene > high else \
                                        new_gene
                 
                 yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1, 'step_sum': step_size_sum })
