@@ -207,7 +207,7 @@ class GESpecies(IntegerSpecies):
         for indiv in self.init_random(length, shortest, longest, lowest, highest, None):
             yield GEIndividual(indiv.genome,            #pylint: disable=W0212
                                parent=self,
-                               bounds=(lowest, highest),
+                               bounds=([lowest] * longest, [highest] * longest),
                                grammar=grammar,
                                defines=defines,
                                wrap_count=wrap_count)
