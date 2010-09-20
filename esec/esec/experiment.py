@@ -173,20 +173,20 @@ class Experiment(object):
         '''
         self.system.begin()
     
-    def step(self, ignore_monitor=False):
+    def step(self, always_step=False):
         '''Executes the next step in the experiment. If the monitor's
         ``should_terminate`` callback returns ``True``, the step is not
-        executed unless `ignore_monitor` is ``True``.
+        executed unless `always_step` is ``True``.
         
         :Parameters:
-          ignore_monitor : bool
-            ``True`` to ignore the monitor's ``should_terminate``
-            callback.
+          always_step : bool
+            ``True`` to execute the step, even if the monitor's
+            ``should_terminate`` callback returns ``True``.
         
         :Returns:
             ``True`` if the monitor does not indicate that it should
             terminate (that is, ``should_terminate`` returns ``False``).
-            This value is unaffected by `ignore_monitor`.
+            This value is unaffected by `always_step`.
         '''
         
         if self.monitor.should_terminate(self.system):  #pylint: disable=E1103
