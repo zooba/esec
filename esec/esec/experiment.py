@@ -190,7 +190,7 @@ class Experiment(object):
         '''
         
         if self.monitor.should_terminate(self.system):  #pylint: disable=E1103
-            if ignore_monitor: self.system.step()
+            if always_step: self.system.step()
             return False
         else:
             self.system.step()
