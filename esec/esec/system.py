@@ -69,7 +69,7 @@ class System(object):
             'mutate_insert':     OnIndividual('mutate_insert'),
             'mutate_delete':     OnIndividual('mutate_delete'),
             
-            '_default_join':    joiners.All,    # key is hard-coded in compiler.py
+            '_default_join':    joiners.Tuples, # key is hard-coded in compiler.py
             'full_combine':     joiners.All,
             'best_with_rest':   joiners.BestWithAll,
             'tuples':           joiners.Tuples,
