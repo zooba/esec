@@ -65,12 +65,12 @@ class Real(Landscape):
     test_cfg = ('2 0.0 1.0 - 0.5',)
     
     
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None, **other_cfg):
         '''Overlay syntax and default requirements, validate, assign range
         bounds and init bounds, and other landscape settings.
         '''
         # call super for overlaid syntax/defaults and validation
-        super(Real, self).__init__(cfg)
+        super(Real, self).__init__(cfg, **other_cfg)
         # landscape parameters
         if isinstance(self.cfg.bounds.lower, (tuple, list)): lbd = self.cfg.bounds.lower
         else: lbd = [self.cfg.bounds.lower] * self.size.max

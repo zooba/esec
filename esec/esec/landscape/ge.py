@@ -39,9 +39,9 @@ class GE(Landscape):
     test_key = ( )
     test_cfg = ( )
     
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None, **other_cfg):
         # call parent cfg magic, validate/strict test syntax/defaults/cfg
-        super(GE, self).__init__(cfg)
+        super(GE, self).__init__(cfg, **other_cfg)
         
         # set the params using the init/bound values
         self.terminals = self.cfg.terminals

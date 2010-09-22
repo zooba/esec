@@ -68,9 +68,9 @@ class TGP(Landscape):
     test_key = ( )
     test_cfg = ( )
     
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None, **other_cfg):
         # call parent cfg magic, validate/strict test syntax/defaults/cfg
-        super(TGP, self).__init__(cfg)
+        super(TGP, self).__init__(cfg, **other_cfg)
         
         # set the params using the init/bound values
         self.adfs = self.cfg.adfs

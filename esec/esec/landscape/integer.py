@@ -36,9 +36,9 @@ class Integer(Landscape):
     test_legal = ([0, 0], [5, 5], [10, 10]) # used by tests
     test_illegal = ([-5, 15], [5, -5]) # used by tests
     
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None, **other_cfg):
         # call parent cfg magic, validate/strict test syntax/defaults/cfg
-        super(Integer, self).__init__(cfg)
+        super(Integer, self).__init__(cfg, **other_cfg)
         
         # bounds contains ([lowest value per gene], [highest value per gene])
         if isinstance(self.cfg.bounds.lower, (tuple, list)): lbd = self.cfg.bounds.lower
