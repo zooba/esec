@@ -21,8 +21,11 @@ config = {
     },
     'monitor': {
         'limits': { 'generations': 10 },
-        'report': 'brief_header+gen+evals+local_header+local_min+local_ave+local_max+local_best_phenome',
-        'summary': 'gen+best_fit+evals+status+time+best_genome+best_length+best_phenome'
+        'report': 'brief_header+gen+evals+local_header+local_min+local_ave+local_max+' + \
+                  'time+time_delta+time_precise+time_delta_precise+' + \
+                  'local_best_phenome',
+        'summary': 'gen+best_fit+evals+status+time+time_precise+' + \
+                   'best_genome+best_length+best_phenome'
     },
     'system': {
         'size': 10
