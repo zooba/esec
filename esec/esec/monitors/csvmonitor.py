@@ -98,6 +98,8 @@ class CSVMonitor(ConsoleMonitor):
         # elapsed CPU time
         'time': ['Elapsed time (ms)', '%d', '_time'],
         'time_delta': [ 'Delta time (ms)', '%d', '_time_delta'],
+        'time_precise': ['Elapsed time (us)', '%d', '_time_precise'],
+        'time_delta_precise': [ 'Delta time (us)', '%d', '_time_delta_precise'],
     }
     '''The set of known column descriptors.
     
@@ -220,18 +222,23 @@ class CSVMonitor(ConsoleMonitor):
         # Unhandled message
         super(CSVMonitor, self).on_notify(sender, name, value)
     
-    # override _time and _time_delta to return milliseconds only
+    # override time functions to return milliseconds/microseconds only
     def _time(self, owner):
         '''Returns ``(milliseconds,)`` that the process has been active for.'''
-        milliseconds = self._get_ms()
-        return (milliseconds,)
+        return (self._get_ms(),)
     
     def _time_delta(self, owner):
         '''Returns ``(milliseconds,)`` since the last call to `_time_delta`.'''
         prev_time = self._last_time
         now_time = self._last_time = self._get_ms()
-        if prev_time == None:
-            return (0,)
-        else:
-            milliseconds = now_time - prev_time
-            return (milliseconds,)
+        return (now_time - prev_time,) if prev_time != None else (0,)
+    
+    def _time_precise(self, owner):
+        '''Returns ``(microseconds,)`` since the first call to `_time_precise`.'''
+        return (self._get_us(),)
+    
+    def _time_delta_precise(self, owner):
+        '''Returns ``(microseconds,)`` since the last call to `_time_delta_precise`.'''
+        prev_time = self._last_time_us
+        now_time = self._last_time_us = self._get_us()
+        return (now_time - prev_time,) if prev_time != None else (0,)

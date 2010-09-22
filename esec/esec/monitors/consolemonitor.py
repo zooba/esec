@@ -109,6 +109,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         # elapsed CPU time
         'time': [' elapsed time  ', "%4d:%02d'%02d.%03d ", '_time'],
         'time_delta': [ ' delta time    ', "%4d:%02d'%02d.%03d ", '_time_delta'],
+        'time_precise': [' elapsed time     ', "%4d:%02d'%02d.%03d.%03d ", '_time_precise'],
+        'time_delta_precise': [ ' delta time       ', "%4d:%02d'%02d.%03d.%03d ", '_time_delta_precise'],
     }
     '''The set of known column descriptors.
     
@@ -332,7 +334,12 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         
         # ------------------------------------------------------------
         # Other members
-        self._last_time = None
+        self._start_time_ms = 0L
+        self._start_time_ms = self._get_ms()
+        self._last_time_ms = None
+        self._start_time_us = 0L
+        self._start_time_us = self._get_us()
+        self._last_time_us = None
         self.stop_now = False
         self.end_code = None
         self._stats = None
@@ -667,7 +674,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         '''Displays the exception trace and terminates immediately.'''
         try:
             print >> self.error_out, '\n' + trace
-        except IOError:
+        except (ValueError, IOError):
             print "IOError writing to output file. Writing exception to stdout."
             print trace
         self.stop_now = True
@@ -728,21 +735,28 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                                                byref(exitTime),     # process end time (ignored)
                                                byref(kernelTime),   # time spent in kernel mode
                                                byref(userTime)):    # time spent in user mode
-                return (kernelTime.value + userTime.value) // 10000L
+                now_time = (kernelTime.value + userTime.value) // 10000L
+                return now_time - self._start_time_ms
             else:
                 # GetProcessTimes call failed for some reason, so fall back on clock().
                 # We assume that one failure means it fails all the time, so the values
                 # returned won't be inconsistent.
-                return long(clock() * 1000.0)
+                return long(clock() * 1000.0) - self._start_time_ms
+        
     else:
         def _get_ms(self):
             '''Returns the number of milliseconds the process has been active for.
             '''
-            return long(clock() * 1000.0)
+            return long(clock() * 1000.0) - self._start_time_ms
+    
+    def _get_us(self):
+        '''Returns the number of microseconds since the first call.
+        '''
+        return long(clock() * 1000000.0) - self._start_time_us
     
     def _time(self, owner):
-        '''Returns ``(hours, minutes, seconds, milliseconds)`` that the process has been
-        active for.
+        '''Returns ``(hours, minutes, seconds, milliseconds)`` since the first call
+        to `_time`.
         '''
         milliseconds = self._get_ms()
         seconds = milliseconds // 1000
@@ -757,8 +771,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         '''Returns ``(hours, minutes, seconds, milliseconds)`` since the last call to
         `_time_delta`.
         '''
-        prev_time = self._last_time
-        now_time = self._last_time = self._get_ms()
+        prev_time = self._last_time_ms
+        now_time = self._last_time_ms = self._get_ms()
         if prev_time == None:
             return (0, 0, 0, 0)
         else:
@@ -770,3 +784,38 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             seconds -= minutes * 60
             minutes -= hours * 60
             return (hours, minutes, seconds, milliseconds)
+
+    def _time_precise(self, owner):
+        '''Returns ``(hours, minutes, seconds, milliseconds, microseconds)`` since the
+        first call to `_time_precise`.
+        '''
+        microseconds = self._get_us()
+        milliseconds = microseconds // 1000
+        seconds = milliseconds // 1000
+        minutes = seconds // 60
+        hours = minutes // 60
+        microseconds -= milliseconds * 1000
+        milliseconds -= seconds * 1000
+        seconds -= minutes * 60
+        minutes -= hours * 60
+        return (hours, minutes, seconds, milliseconds, microseconds)
+    
+    def _time_delta_precise(self, owner):
+        '''Returns ``(hours, minutes, seconds, milliseconds, microseconds)`` since the
+        last call to `_time_delta_precise`.
+        '''
+        prev_time = self._last_time_us
+        now_time = self._last_time_us = self._get_us()
+        if prev_time == None:
+            return (0, 0, 0, 0, 0)
+        else:
+            microseconds = now_time - prev_time
+            milliseconds = microseconds // 1000
+            seconds = milliseconds // 1000
+            minutes = seconds // 60
+            hours = minutes // 60
+            microseconds -= milliseconds * 1000
+            milliseconds -= seconds * 1000
+            seconds -= minutes * 60
+            minutes -= hours * 60
+            return (hours, minutes, seconds, milliseconds, microseconds)
