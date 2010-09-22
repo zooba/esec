@@ -109,8 +109,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         # elapsed CPU time
         'time': [' elapsed time  ', "%4d:%02d'%02d.%03d ", '_time'],
         'time_delta': [ ' delta time    ', "%4d:%02d'%02d.%03d ", '_time_delta'],
-        'time_precise': [' elapsed time     ', "%4d:%02d'%02d.%03d.%03d ", '_time_precise'],
-        'time_delta_precise': [ ' delta time       ', "%4d:%02d'%02d.%03d.%03d ", '_time_delta_precise'],
+        'time_precise': [' elapsed time      ', "%4d:%02d'%02d.%03d.%03d ", '_time_precise'],
+        'time_delta_precise': [ ' delta time        ', "%4d:%02d'%02d.%03d.%03d ", '_time_delta_precise'],
     }
     '''The set of known column descriptors.
     
