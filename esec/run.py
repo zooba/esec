@@ -105,6 +105,7 @@ configs = {
         'report_out': 'results/%04d.csv',
         'summary_out': 'results/%04d._summary.csv',
         'config_out': 'results/%04d._config.txt',
+        'error_out': sys.stderr,
     } },
     
     'short': { 'monitor': { 'limits': { 'generations': 10 } } },
