@@ -95,6 +95,8 @@ class System(object):
         notify = self._do_notify
         self._context = context = {
             'cfg': self.cfg,
+            'rand': rand,
+            'notify': notify,
         }
         overrides = self.cfg.system.as_dict()
         context.update(overrides)
@@ -108,12 +110,7 @@ class System(object):
         compiler = Compiler(self.definition)
         compiler.compile()
         
-        # Put our globals into _globals so they appear in every module.
-        context['_globals'] = {
-            'rand': rand,
-            'notify': notify,
-            'context': context
-        }
+        context['context'] = context
         
         self._code_string = compiler.code
         

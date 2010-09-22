@@ -22,7 +22,7 @@ class GE(Landscape):
     # this is universal - should not be changed by subclasses
     syntax = {
         'terminals': int,                       # must be set by the landscape
-        'parameters?': int,                     # optional, preferred to adding new properties
+        'parameters': [None, int],              # optional, preferred to adding new properties
         
         'size_penalty_square_factor': float,    # penalty factors to apply
         'size_penalty_linear_factor': float,    # to large programs
@@ -30,6 +30,7 @@ class GE(Landscape):
     
     # subclasses should set default to overlay their changes on to this
     default = {
+        'parameters': None,
         'size': { 'min': 1, 'max': 50 },
         'size_penalty_square_factor': 0.0,
         'size_penalty_linear_factor': 0.0,

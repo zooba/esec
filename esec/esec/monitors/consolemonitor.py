@@ -6,7 +6,7 @@ See `esec.monitors` for a general overview of monitors.
 from esec.individual import EmptyIndividual
 from esec.fitness import Fitness, EmptyFitness
 from esec.monitors import MonitorBase
-from esec.utils import ConfigDict
+from esec.utils import ConfigDict, is_ironpython
 
 import sys
 import os, os.path
@@ -23,11 +23,11 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
     format = {
         # <name> : ['<header string>', '<format string>', '<self.call string>']
         # building blocks
-        'gen':      [ ' #gen.  ', '% 7d ', 'stats.generations' ],
-        'births':   [ ' births ', '% 7d ', 'stats.births' ],
-        'evals':    [ ' evals  ', '% 7d ', 'stats.global_evals' ],
-        'local_evals':  [ ' evals  ', '% 7d ', 'stats.local_evals' ],
-        'stable_count': [ ' stable ', '% 7d ', 'stats.stable_count' ],
+        'gen':      [ ' #gen.  ', '%7d ', 'stats.generations' ],
+        'births':   [ ' births ', '%7d ', 'stats.births' ],
+        'evals':    [ ' evals  ', '%7d ', 'stats.global_evals' ],
+        'local_evals':  [ ' evals  ', '%7d ', 'stats.local_evals' ],
+        'stable_count': [ ' stable ', '%7d ', 'stats.stable_count' ],
         
         'brief_header':     [ ' Brief:  ', '         ', None ],
         'best_header':      [ ' Best:   ', '         ', None ],
@@ -35,45 +35,45 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         'local_header':     [ ' Local:  ', '         ', None ],
         'repro_header':     [ ' Repro:  ', '         ', None ],
         
-        'best_bday':        [ ' b-date   ', ' % 8d ', 'stats.global_max.birthday' ],
-        'best_fit_int':     [ '  fitness        ', '% 16d ',   'stats.global_max.fitness.simple' ],
-        'best_fit_float':   [ '  fitness        ', '% 16.3e ', 'stats.global_max.fitness.simple' ],
+        'best_bday':        [ ' b-date   ', ' %9d ', 'stats.global_max.birthday' ],
+        'best_fit_int':     [ '  fitness        ', '%16d ',   'stats.global_max.fitness.simple' ],
+        'best_fit_float':   [ '  fitness        ', '%16.3e ', 'stats.global_max.fitness.simple' ],
         'best_fit':         [ '  fitness        ', '%16s ', 'stats.global_max.fitness' ],
         'best_genome':      [ ' genome ', ' %s', 'stats.global_max.genome_string' ],
         'best_phenome':     [ ' phenome ', ' %s', 'stats.global_max.phenome_string' ],
         'best_length':      [ ' length ', '%7s ', 'stats.global_max.length_string' ],
         
-        'global_min_int':   [ '  minimum     ', '% 13d ', 'stats.global_min.fitness.simple' ],
-        'global_ave_int':   [ '  average     ', '% 13d ', 'stats.global_ave_fitness.simple' ],
-        'global_max_int':   [ '  maximum     ', '% 13d ', 'stats.global_max.fitness.simple' ],
-        'global_min_float': [ '  minimum     ', '% 13.3e ', 'stats.global_min.fitness.simple' ],
-        'global_ave_float': [ '  average     ', '% 13.3e ', 'stats.global_ave_fitness.simple' ],
-        'global_max_float': [ '  maximum     ', '% 13.3e ', 'stats.global_max.fitness.simple' ],
+        'global_min_int':   [ '  minimum     ', '%13d ', 'stats.global_min.fitness.simple' ],
+        'global_ave_int':   [ '  average     ', '%13d ', 'stats.global_ave_fitness.simple' ],
+        'global_max_int':   [ '  maximum     ', '%13d ', 'stats.global_max.fitness.simple' ],
+        'global_min_float': [ '  minimum     ', '%13.5e ', 'stats.global_min.fitness.simple' ],
+        'global_ave_float': [ '  average     ', '%13.5e ', 'stats.global_ave_fitness.simple' ],
+        'global_max_float': [ '  maximum     ', '%13.5e ', 'stats.global_max.fitness.simple' ],
         'global_min':       [ '  minimum        ', '%16s ', 'stats.global_min.fitness' ],
         'global_ave':       [ '  average        ', '%16s ', 'stats.global_ave_fitness' ],
         'global_max':       [ '  maximum        ', '%16s ', 'stats.global_max.fitness' ],
-        'global_mutated':   [ ' mutation  ', '% 10d ', 'stats.global_mutated' ],
-        'global_recombine': [ ' recombine ', '% 10d ', 'stats.global_recombined' ],
-        'global_invalid':   [ ' violation ', '% 10d ', 'stats.global_invalid' ],
-        'step_ave':         [ ' ave.step ', '% 9f ', '_step_ave' ],
+        'global_mutated':   [ ' mutation  ', '%10d ', 'stats.global_mutated' ],
+        'global_recombine': [ ' recombine ', '%10d ', 'stats.global_recombined' ],
+        'global_invalid':   [ ' violation ', '%10d ', 'stats.global_invalid' ],
+        'step_ave':         [ ' ave.step ', '%9f ', '_step_ave' ],
         
-        'local_min_int':    [ '  minimum     ', '% 13d ', 'stats.local_min.fitness.simple' ],
-        'local_ave_int':    [ '  average     ', '% 13d ', 'stats.local_ave_fitness.simple' ],
-        'local_max_int':    [ '  maximum     ', '% 13d ', 'stats.local_max.fitness.simple' ],
-        'local_min_float':  [ '  minimum     ', '% 13.3e ', 'stats.local_min.fitness.simple' ],
-        'local_ave_float':  [ '  average     ', '% 13.3e ', 'stats.local_ave_fitness.simple' ],
-        'local_max_float':  [ '  maximum     ', '% 13.3e ', 'stats.local_max.fitness.simple' ],
+        'local_min_int':    [ '  minimum     ', '%13d ', 'stats.local_min.fitness.simple' ],
+        'local_ave_int':    [ '  average     ', '%13d ', 'stats.local_ave_fitness.simple' ],
+        'local_max_int':    [ '  maximum     ', '%13d ', 'stats.local_max.fitness.simple' ],
+        'local_min_float':  [ '  minimum     ', '%13.5e ', 'stats.local_min.fitness.simple' ],
+        'local_ave_float':  [ '  average     ', '%13.5e ', 'stats.local_ave_fitness.simple' ],
+        'local_max_float':  [ '  maximum     ', '%13.5e ', 'stats.local_max.fitness.simple' ],
         'local_min':        [ '  minimum        ', '%16s ', 'stats.local_min.fitness' ],
         'local_ave':        [ '  average        ', '%16s ', 'stats.local_ave_fitness' ],
         'local_max':        [ '  maximum        ', '%16s ', 'stats.local_max.fitness' ],
-        'local_mutated':    [ ' mutation  ', '% 10d ', 'stats.local_mutated' ],
-        'local_recombine':  [ ' recombine ', '% 10d ', 'stats.local_recombined' ],
-        'local_invalid':    [ ' violation ', '% 10d ', 'stats.local_invalid' ],
-        'local_unique':     [ ' unique    ', '% 10d ', 'stats.local_unique' ],
-        'local_diversity':  [ ' diversity  ', '% 11g ', 'stats.local_diversity'],
-        'local_dispersion': [ ' dispersion ', '% 11g ', 'stats.local_dispersion'],
+        'local_mutated':    [ ' mutation  ', '%10d ', 'stats.local_mutated' ],
+        'local_recombine':  [ ' recombine ', '%10d ', 'stats.local_recombined' ],
+        'local_invalid':    [ ' violation ', '%10d ', 'stats.local_invalid' ],
+        'local_unique':     [ ' unique    ', '%10d ', 'stats.local_unique' ],
+        'local_diversity':  [ ' diversity  ', '%11g ', 'stats.local_diversity'],
+        'local_dispersion': [ ' dispersion ', '%11g ', 'stats.local_dispersion'],
         # for GE landscapes only
-        'local_no_compile': [ ' !compile ', '% 9d ', 'stats.local_did_not_compile', 0 ],
+        'local_no_compile': [ ' !compile ', '%9d ', 'stats.local_did_not_compile', 0 ],
         
         'local_best_genome':    [ ' genome ', ' %s', 'stats.local_max.genome_string' ],
         'local_best_phenome':   [ ' phenome ', ' %s', 'stats.local_max.phenome_string' ],
@@ -132,6 +132,20 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
     The format string is any standard Python format string.
     '''
     
+    if len('%10.1e' % 1.0) != 10:
+        # IronPython handles the %e format badly, so detect this and work around it.
+        # (Using a test instead of is_ironpython() in case it gets fixed.)
+        format.update({
+            'best_fit_float':   [ '  fitness        ', '%17.3e ', 'stats.global_max.fitness.simple' ],
+            
+            'global_min_float': [ '  minimum     ', '%14.5e ', 'stats.global_min.fitness.simple' ],
+            'global_ave_float': [ '  average     ', '%14.5e ', 'stats.global_ave_fitness.simple' ],
+            'global_max_float': [ '  maximum     ', '%14.5e ', 'stats.global_max.fitness.simple' ],
+            
+            'local_min_float':  [ '  minimum     ', '%14.5e ', 'stats.local_min.fitness.simple' ],
+            'local_ave_float':  [ '  average     ', '%14.5e ', 'stats.local_ave_fitness.simple' ],
+            'local_max_float':  [ '  maximum     ', '%14.5e ', 'stats.local_max.fitness.simple' ],
+        })
     
     syntax = {
         'out?': '*',
@@ -272,7 +286,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                 if filename not in opened_files:
                     opened_files[filename] = _do_open(filename)
         def _get_opened(filename):
-            '''Gets the appropriate value from ``opened_fiels``.'''
+            '''Gets the appropriate value from ``opened_files``.'''
             if isinstance(filename, str):
                 return opened_files.get(filename, None)
             else:
@@ -521,6 +535,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             if name == 'Statistics':
                 # `value` contains the _stats dictionary
                 print >> self.summary_out
+                if not value: value = self._stats
                 print >> self.summary_out, '\n'.join(sorted(ConfigDict(value).lines()))
         
         elif name == 'statistic':
@@ -702,7 +717,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
     
     # define a platform specific _get_ms() function, used by _time() below
     if os.name == 'nt':
-        windll.kernel32.GetProcessTimes.argtypes = [ c_void_p ] * 5
+        if not is_ironpython():
+            windll.kernel32.GetProcessTimes.argtypes = [ c_void_p ] * 5
         def _get_ms(self):
             '''Returns the number of milliseconds the process has been active for.
             '''

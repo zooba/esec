@@ -14,10 +14,11 @@ A wide range of standard models and benchmark problems are included, such as
 real valued continuous optimisation and binary problem landscapes.
 
 |esec| is written in the Python programming language and is compatible with
-`CPython 2.6`_ and `IronPython 2.6`_.
+CPython 2.6, `CPython 2.7`_, `IronPython 2.6.1`_ and `IronPython 2.7`_.
 
-.. _`CPython 2.6`: http://www.python.org/
-.. _`IronPython 2.6`: http://ironpython.net/
+.. _`CPython 2.7`: http://www.python.org/
+.. _`IronPython 2.6.1`: http://ironpython.codeplex.com/
+.. _`IronPython 2.7`: http://ironpython.net/
 
 |esec|'s model of evolutionary computation is primarily based on species (see
 `esec.species`), landscapes (see `esec.landscape`) and systems_.

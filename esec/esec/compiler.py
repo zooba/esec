@@ -5,7 +5,10 @@ and validation.
 import re
 from esec.utils.exceptions import ESDLSyntaxError
 
-_DEFINITIONS = '''
+_DEFINITIONS = '''__builtins__['rand'] = rand
+__builtins__['notify'] = notify
+__builtins__['context'] = context
+
 def _iter(*srcs):
     assert srcs, "srcs cannot be empty"
     def _conv(i):
@@ -99,7 +102,6 @@ class Compiler(object):
         code_lines = [ _DEFINITIONS ]
         code_lines.extend('%s = _group()' % g for g in self._groups)
         
-        code_lines.append('__builtins__.update(_globals)')
         code_lines.append('')
         code_lines.extend(transformed_lines)
         
