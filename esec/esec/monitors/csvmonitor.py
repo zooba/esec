@@ -229,8 +229,8 @@ class CSVMonitor(ConsoleMonitor):
     
     def _time_delta(self, owner):
         '''Returns ``(milliseconds,)`` since the last call to `_time_delta`.'''
-        prev_time = self._last_time
-        now_time = self._last_time = self._get_ms()
+        prev_time = self._last_time_ms
+        now_time = self._last_time_ms = self._get_ms()
         return (now_time - prev_time,) if prev_time != None else (0,)
     
     def _time_precise(self, owner):
