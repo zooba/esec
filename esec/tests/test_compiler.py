@@ -152,11 +152,9 @@ END SHAKEUP''')
     c.compile()
     context['_on_yield'] = lambda name, group: context['_monitor'].on_yield(None, name, group)
     from random import Random
-    context['_globals'] = {
-        'rand': Random(1),
-        'notify': _NullMethod,
-        'context': context,
-    }
+    context['rand'] = Random(1)
+    context['notify'] = _NullMethod
+    context['context'] = context
     
     # Some header helpers
     def hdr0(s): return '%s\n%s\n%s' % ('*' * len(s), s, '*' * len(s))
