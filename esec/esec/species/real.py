@@ -80,6 +80,15 @@ class RealSpecies(Species):
             'real_toggle': self.init_toggle,
         }
     
+    @classmethod
+    def _convert_bounds(cls, src, length):
+        '''Produces valid upper/lower bounds lists from the provided input.'''
+        if isinstance(src, list): pass
+        elif hasattr(src, '__iter__'): src = list(src)
+        else: src = [float(src)] * length
+        if len(src) < length: src += [src[-1]] * (length - len(src))
+        return src
+        
     def _init(self, length, shortest, longest, lowest, highest, bounds, template, _gen):
         '''Returns instances of `RealIndividual` initialised using the function in
         `_gen`.
@@ -91,25 +100,15 @@ class RealSpecies(Species):
         
         if template: lowest, highest = template.bounds
         
-        def _convert_limits(src):
-            '''Produces valid upper/lower bounds lists from the provided input.'''
-            if isinstance(src, list): pass
-            elif isinstance(src, tuple): src = list(src)
-            else: src = [float(src)] * longest
-            if len(src) < longest: src += [src[-1]] * (longest - len(src))
-            return src
-        
-        lowest = _convert_limits(lowest)
-        highest = _convert_limits(highest)
+        lowest = self._convert_bounds(lowest, longest)
+        highest = self._convert_bounds(highest, longest)
         
         assert all(h >= l for h, l in zip(highest, lowest)), \
             "Values of highest (%s) must be greater than or equal to those in lowest (%s)" % (highest, lowest)
         
-        if bounds:
-            assert len(bounds) == 2, "bounds must have two elements (%s)" % str(bounds)
-            bounds = [_convert_limits(bounds[0]), _convert_limits(bounds[1])]
-        else:
-            bounds = (lowest, highest)
+        assert not bounds or len(bounds) == 2, "bounds must have two elements (%s)" % str(bounds)
+        if not bounds: bounds = (lowest, highest)
+        bounds = [self._convert_bounds(bounds[0], longest), self._convert_bounds(bounds[1], longest)]
 
         irand = rand.randrange      #pylint: disable=E0602
         if shortest == longest:
