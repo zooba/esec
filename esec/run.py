@@ -483,12 +483,16 @@ def esec_batch(options):
                 filename = filepattern % i
             return open(filename, mode)
         
+        # Close files/objects in this list after this run
+        open_files = []
+        
         # If the monitor has been specified as a dictionary, specify output files.
         # If the monitor has been specified directly, don't try and change it.
         if isinstance(cfg.monitor, (ConfigDict, dict)):
             report_out = _open(os.path.join(pathbase, cfgid + '.%04d' + extension))
             summary_out = _open(os.path.join(pathbase, cfgid + '.%04d._summary' + extension))
             config_out = _open(os.path.join(pathbase, cfgid + '.%04d._config.txt'))
+            open_files.extend((report_out, summary_out, config_out))
             
             if not batch_cfg.csv:
                 # MultiTarget sends the same output to both the console and the files.
@@ -540,6 +544,8 @@ def esec_batch(options):
                     summary_file.write('  #  ' + summary_lines[0] + '\n')
                 summary_file.write('%04d %s\n' % (i, summary_lines[1]))
             summary_file.flush()
+        
+        for obj in open_files: obj.close()
         
     # Save the tag data
     if batch_cfg.include_tags or batch_cfg.exclude_tags:
