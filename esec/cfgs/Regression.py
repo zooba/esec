@@ -59,6 +59,7 @@ std_dialects = ['GA', 'SSGA', 'binary_int_map']
 ivp_tests = [
     ('IVP.Nsum',        std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
     ('IVP.Nmax',        std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
+    ('IVP.Nmin',        std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
     ('IVP.Nmatch',      std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
     ('IVP.Robbins',     std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
 ]
@@ -87,6 +88,7 @@ rvp_tests = [
     ('RVP.MultiPeak4',      std_dialects, [None]),
     ('RVP.Booth',           std_dialects, [None]),
     ('RVP.Himmelblau',      std_dialects, [None]),
+    ('RVP.SchafferF6',      std_dialects, [None]),
     ('RVP.SixHumpCamelBack', std_dialects, [None]),
     ('RVP.FMS',             std_dialects, [None]),
 ]
