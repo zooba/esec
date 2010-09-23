@@ -44,12 +44,13 @@ interchangeable.)
 - The ``cfg.invert`` and ``cfg.offset`` are stored in ``self.invert`` and
   ``self.offset`` respectively.
 - The ``cfg.size`` dictionary is validated and stored in ``self.size.min``,
-  ``self.size.max`` and (if applicable) ``self.size.exact``.
+  ``self.size.max`` and (if applicable) ``self.size.exact``. If
+  ``size_equals_parameters`` is ``True`` and ``cfg.parameters`` is provided,
+  the value of ``cfg.parameters`` is used for ``self.size.exact``.
 - If a ``self._eval`` method has been defined in the subclass, it is bound to
-  the instance attribute ``self.eval`` ready for use. Alternatively, if the
-  ``cfg.invert`` is true, and a ``self._eval_invert`` method has been defined,
-  it will be bound to .eval, and if not available, a default invert method
-  using the standard eval is used.
+  the instance attribute ``self.eval`` through a function that wraps the
+  returned fitness in a `FitnessMaximise` or `FitnessMinimise` class, depending
+  on the value of ``maximise``.
 
 The only requirement of a subclass is that it defines an ``_eval()`` method and
 calls the `Landscape` initialiser.
@@ -82,7 +83,7 @@ class Landscape(object):
     lname = '--none--' # problem type subclasses should overwrite this
     
     maximise = True # is the default objective maximise? (ie fitness)
-    normalised = False # is the problem normalised [0.0-1.0] ?
+    size_equals_parameters = True # should size.exact == parameters?
     syntax = { # configuration syntax key's and type. MERGED
         'class?': type, # specific class of landscape
         'instance?': '*', # landscape instance
@@ -128,6 +129,7 @@ class Landscape(object):
         
         # Initialise size properties
         self.size = self.cfg.size
+        if self.size_equals_parameters and self.cfg.parameters: self.size.exact = self.cfg.parameters
         if self.size.exact: self.size.min = self.size.max = self.size.exact
         if self.size.min >= self.size.max: self.size.exact = self.size.max = self.size.min
         
@@ -135,7 +137,7 @@ class Landscape(object):
         cfg_strict_test(self.cfg, self.strict)
         
         # random seed?
-        if type(self.cfg.random_seed) is not int:
+        if not isinstance(self.cfg.random_seed, int):
             random.seed()
             self.cfg.random_seed = cfg.random_seed = random.randint(0, maxint)
         self.rand = Random(self.cfg.random_seed)

@@ -33,8 +33,8 @@ class Binary(Landscape):
     '''Abstract binary (Boolean) string fitness landscape
     '''
     ltype = 'BVP' # subclasses shouldn't change this
-    syntax = { }
     
+    syntax = { }
     default = { }
     
     # default testing is no parameters are needed
@@ -68,14 +68,16 @@ class OneMax(Binary):
     Qualities: maximisation, unconstrained
     '''
     lname = 'Binary OneMax'
+    size_equals_parameters = False
+    
     syntax = { 'N?': int }
+    
     test_key = (('parameters', int),)
     test_cfg = ('4', '10')
     
     def __init__(self, cfg=None, **other_cfg):
         super(OneMax, self).__init__(cfg, **other_cfg)
-        self.size.exact = self.cfg.N or self.cfg.parameters
-        self.size.min = self.size.max = self.size.exact
+        self.size.min = self.size.max = self.size.exact = self.cfg.N or self.cfg.parameters
     
     def _eval(self, indiv):
         '''Count the bits.
@@ -113,6 +115,8 @@ class RoyalRoad(Binary):
     Qualities: maximisation, multimodal
     '''
     lname = 'Royal Road'
+    size_equals_parameters = False
+    
     syntax = {
         'Q': int, # number of blocks
         'C': int  # size of each block
@@ -126,8 +130,7 @@ class RoyalRoad(Binary):
         
         Q = self.Q = self.cfg.Q
         C = self.C = self.cfg.C
-        self.size.exact = Q * C
-        self.size.min = self.size.max = self.size.exact
+        self.size.min = self.size.max = self.size.exact = Q * C
     
     def _eval(self, indiv):
         ''' f(x) = sum(blocks(x))*C
@@ -158,6 +161,7 @@ class GoldbergD3B(Binary):
     Qualities: maximisation, unconstrained
     '''
     lname = "Goldberg Deceptive 3-bit Function"
+    size_equals_parameters = False
     
     max_x = {(0, 0, 0):7, (0, 0, 1):5, (0, 1, 0):5, (0, 1, 1):0,
              (1, 0, 0):3, (1, 0, 1):0, (1, 1, 0):0, (1, 1, 1):8, }
@@ -205,6 +209,7 @@ class WhitleyD4B(Binary):
     Qualities: maximisation, unconstrained
     '''
     lname = "Whitley Deceptive 4-bit Function"
+    size_equals_parameters = False
     
     max_x = {(0, 0, 0, 0):28, (0, 0, 0, 1):26, (0, 0, 1, 0):24, (0, 0, 1, 1):18,
              (0, 1, 0, 0):22, (0, 1, 0, 1):16, (0, 1, 1, 0):14, (0, 1, 1, 1): 0,
@@ -252,6 +257,8 @@ class Multimodal(Binary):
     Qualities: maximisation, multimodal, non-separable, normalised.
     '''
     lname = 'Binary Multimodal (P-PEAKS)'
+    size_equals_parameters = False
+    
     syntax = { 'N?': int, 'P': int } # N = parameters, P = peaks
     default = { 'parameters': 10, 'P': 4 }
     
@@ -261,9 +268,10 @@ class Multimodal(Binary):
     def __init__(self, cfg=None, **other_cfg):
         super(Multimodal, self).__init__(cfg, **other_cfg)
         
-        self.size.exact = N = self.cfg.N or self.cfg.parameters
-        self.size.min = self.size.max = self.size.exact
+        self.N = N = self.cfg.N or self.cfg.parameters
         self.P = P = self.cfg.P
+        
+        self.size.min = self.size.max = self.size.exact = N
         # create the random peak[j] templates of length L
         irand = self.rand.randrange
         self._peaks = [ [irand(2) for _ in xrange(N)] for _ in xrange(P) ]
@@ -324,10 +332,12 @@ class CNF_SAT(Binary):
     
     '''
     lname = 'CNF-SAT'
+    size_equals_parameters = False
+    
     syntax = {
         'L': int,
         'K': int,
-        'N': int,
+        'N?': int,
         'SAW?': bool
     }
     default = {
@@ -345,13 +355,12 @@ class CNF_SAT(Binary):
         
         self.n_clauses = self.cfg.L  # L = say < 50000
         self.c_len = self.cfg.K  # K = should be <= 10, say 3
-        self.c_vars = self.cfg.N # N
+        self.c_vars = self.cfg.N or self.cfg.parameters
         self.use_saw = self.cfg.SAW
         
-        # set the indiv count to match the no of Boolean literals eg A, B, C = 3
-        self.size.exact = self.c_vars
-        self.size.min = self.size.max = self.size.exact
-        # create the random clauses of length
+        self.size.min = self.size.max = self.size.exact = self.c_vars
+        
+        # create the random clauses of length K (c_len)
         self.c_list = [ self._create_clause() for _ in xrange(self.n_clauses)]
         # initialise SAW weights if needed
         if self.use_saw:
@@ -381,13 +390,10 @@ class CNF_SAT(Binary):
         '''
         satisfied = 0
         c_list = self.c_list
-        #Note, we need 1 based indexes, so let's push the params across by 1
-        # to make indexing from 1 easy (otherwise lots of -1 calc's) :)
-        indiv = [0]+indiv[:]
         for j in xrange(self.n_clauses):
             for k in xrange(self.c_len):
-                if (((c_list[j][k] > 0) and indiv[c_list[j][k]]) or
-                    ((c_list[j][k] < 0) and (not indiv[-c_list[j][k]]))):
+                if (((c_list[j][k] > 0) and indiv[c_list[j][k]-1]) or
+                    ((c_list[j][k] < 0) and (not indiv[-c_list[j][k]-1]))):
                     satisfied += 1
                     break
         return (float(satisfied) / self.n_clauses) # 1.0 = expression satisfied
@@ -400,13 +406,10 @@ class CNF_SAT(Binary):
         total = 0
         c_list = self.c_list
         w_list = self.w_list
-        #Note, we need 1 based indexes, so let's push the params across by 1
-        # to make indexing from 1 easy (otherwise lots of -1 calc's) :)
-        indiv = [0]+indiv[:]
         for j in xrange(self.n_clauses):
             for k in xrange(self.c_len):
-                if (((c_list[j][k] > 0) and indiv[c_list[j][k]]) or
-                    ((c_list[j][k] < 0) and (not indiv[-c_list[j][k]]))):
+                if (((c_list[j][k] > 0) and indiv[c_list[j][k]-1]) or
+                    ((c_list[j][k] < 0) and (not indiv[-c_list[j][k]-1]))):
                     total += w_list[j]
                     break
         return total
@@ -414,14 +417,13 @@ class CNF_SAT(Binary):
     def update_saw(self, best):
         '''Update weights using w_i^1 = w-i + 1 + c_i(best).
         '''
-        best = [0]+best
         c_list = self.c_list
         w_list = self.w_list
         for j in xrange(self.n_clauses):
             satisfied = 0 # False
             for k in xrange(self.c_len):
-                if (((c_list[j][k] > 0) and best[c_list[j][k]]) or
-                    ((c_list[j][k] < 0) and (not best[-c_list[j][k]]))):
+                if (((c_list[j][k] > 0) and best[c_list[j][k]-1]) or
+                    ((c_list[j][k] < 0) and (not best[-c_list[j][k]-1]))):
                     satisfied = 1 # True
                     break
             # Stepwise Adaptation of Weights - SAW
@@ -464,9 +466,11 @@ class NK(Binary):
     Qualities: maximisation, normalised
     '''
     lname = 'NK Binary Landscape'
-    syntax = { 'N': int, 'K': int }
+    size_equals_parameters = False
+    
+    syntax = { 'N?': int, 'K': int }
     default = {
-        'N': 5, # N = number of genes
+        'parameters': 5, # N = number of genes
         'K': 2, # K = number of interactions (K<=N)
     }
     
@@ -476,10 +480,9 @@ class NK(Binary):
     def __init__(self, cfg=None, **other_cfg):
         super(NK, self).__init__(cfg, **other_cfg)
         
-        n = self.cfg.N
+        n = self.cfg.N or self.cfg.parameters
         k = self.K = self.cfg.K
-        self.size.exact = n
-        self.size.min = self.size.max = self.size.exact
+        self.size.min = self.size.max = self.size.exact = n
         random = self.rand.random
         shuffle = self.rand.shuffle
         
@@ -532,16 +535,15 @@ class NKC(Binary):
     Qualities: maximisation, normalised
     '''
     lname = 'NKC Binary Landscape'
+    size_equals_parameters = False
     
-    syntax = { 'N': int, 'K': int, 'C': int, 'group': int }
+    syntax = { 'N?': int, 'K': int, 'C': int, 'group': int }
     default = {
-        'N': 5, # N = number of genes
+        'parameters': 5, # N = number of genes
         'K': 2, # number of self interactions
         'C': 2, # number of external interactions
         'group': 2, # size of evaluation group
     }
-    
-    strict = { 'size.exact': '*' }
     
     test_key = (('N', int), ('K', int), ('C', int), ('group', int), ('random_seed', int),)
     test_cfg = ('5 2 2 2 1234',) #N #K #C #group #seed
@@ -549,13 +551,11 @@ class NKC(Binary):
     def __init__(self, cfg=None, **other_cfg):
         super(NKC, self).__init__(cfg, **other_cfg)
         
-        n = self.cfg.N
+        n = self.cfg.N or self.cfg.parameters
         k = self.K = self.cfg.K
         c = self.C = self.cfg.C
         s = self.group = self.cfg.group
-        self.size.exact = n
-        self.size.min = self.size.exact
-        self.size.max = self.size.exact
+        self.size.min = self.size.max = self.size.exact = n
         random = self.rand.random
         shuffle = self.rand.shuffle
         
@@ -642,6 +642,8 @@ class MMDP6(Binary):
     Qualities: maximisation, multimodal
     '''
     lname = 'Massively Multimodal Deceptive Problem (6-bit)'
+    size_equals_parameters = False
+    
     syntax = { 'subs?': int }
     default = { 'parameters': 20 } # substrings, as a reference
     
@@ -656,9 +658,7 @@ class MMDP6(Binary):
         
         self.subs = self.cfg.subs or self.cfg.parameters
         # set total number of binary genes (bits) needed; multiple of 6-bits
-        self.size.exact = 6 * self.subs
-        self.size.min = self.size.exact
-        self.size.max = self.size.exact
+        self.size.min = self.size.max = self.size.exact = 6 * self.subs
     
     def _eval(self, indiv):
         '''Evaluate MMDP 6 bit.
@@ -698,6 +698,8 @@ class ECC(Binary):
     Qualities:
     '''
     lname = 'Error Correcting Code (ECC) Design Problem'
+    size_equals_parameters = False
+    
     syntax = { 'n': int, 'M': int, 'd': int }
     default = {
         'n': 2, # code length
@@ -716,9 +718,7 @@ class ECC(Binary):
         self.d = self.cfg.d
         # set the number of Binary genes that will be required
         # Note - only using simplified M/2 search space
-        self.size.exact = self.n * (self.M/2)
-        self.size.min = self.size.exact
-        self.size.max = self.size.exact
+        self.size.min = self.size.max = self.size.exact = self.n * (self.M/2)
     
     def _eval(self, indiv):
         '''Evaluate ECC
@@ -797,6 +797,8 @@ class SUS(Binary):
     Qualities: minimisation, NP-complete
     '''
     lname = 'Subset Sum Problem'
+    size_equals_parameters = False
+    
     syntax = { 'N?': int, 'maxN': int, 'even': bool }
     default = {
         'parameters': 100, # set size (of ints)
@@ -871,14 +873,16 @@ class MAXCUT(Binary):
     Qualities:
     '''
     lname = 'MAXCUT'
-    syntax = { 'N': int, 'P': [int, float] }
+    size_equals_parameters = False
+    
+    syntax = { 'N?': int, 'P': [int, float] }
     default = {
-        'N': 20, # vertices
+        'parameters': 20, # vertices
         'P': 0.9, # probability of connection
     }
     
-    test_key = (('N', int), ('P', float), ('random_seed', int),)
-    test_cfg = ('20 0.9 1234',) #n=params #p=edge prob. #seed
+    test_key = (('N', int), ('P', float),)
+    test_cfg = ('20 0.9',) #n=params #p=edge prob.
     
     def __init__(self, cfg=None, **other_cfg):
         super(MAXCUT, self).__init__(cfg, **other_cfg)
@@ -976,8 +980,10 @@ class MTTP(Binary):
     Qualities: minimisation
     '''
     lname = 'MTTP'
-    syntax = { 'tasks': int }
-    default = { 'tasks': 20 }
+    size_equals_parameters = False
+    
+    syntax = { 'tasks?': int }
+    default = { 'parameters': 20 }
     
     
     # The following instances from \cite{Khuri1994}
@@ -1100,6 +1106,7 @@ class Graph2c(Binary):
     Qualities: maximisation
     '''
     lname = 'Graph2c'
+    size_equals_parameters = False
     
     # A value for parameters is required
     syntax = { 'parameters': int }
@@ -1117,14 +1124,9 @@ class Graph2c(Binary):
         self.dimensions = self.cfg.parameters
         # Round up to next even number
         if (self.dimensions % 2) == 1: self.dimensions += 1
-        self.size.exact = self.dimensions * self.dimensions # NxN matrix
-        self.size.min = self.size.max = self.size.exact
+        self.size.min = self.size.max = self.size.exact = self.dimensions * self.dimensions
         
         self.payoff = [10, -10]*(self.dimensions * self.dimensions // 2)
-        #self.payoff = [-10]*self.size.exact
-        #for i in xrange(self.size.exact):
-        #    if ((i % self.dimensions) % 2) == 0:
-        #        self.payoff[i] = 10
     
     def _eval(self, indiv):
         '''NxN connectivity matrix. Odd numbered Row constraints
@@ -1164,6 +1166,7 @@ class Graph2r(Binary):
     Qualities:
     '''
     lname = 'Graph2r'
+    size_equals_parameters = False
     
     # A value for parameters is required
     syntax = { 'parameters': int }
@@ -1180,13 +1183,9 @@ class Graph2r(Binary):
         self.dimensions = self.cfg.parameters
         # Round up to next even number
         if (self.dimensions % 2) == 1: self.dimensions += 1
-        self.size.exact = self.dimensions * self.dimensions # NxN matrix
-        self.size.min = self.size.max = self.size.exact
+        self.size.min = self.size.max = self.size.exact = self.dimensions * self.dimensions
         
         self.payoff = ([-10]*self.dimensions + [10]*self.dimensions) * (self.dimensions // 2)
-        #for i in xrange(self.size.exact):
-        #    if ((i // self.dimensions) % 2) == 0: # // integer division
-        #        self.payoff[i] = 10
     
     def _eval(self, indiv):
         '''NxN connectivity matrix. Odd numbered ROW constraints

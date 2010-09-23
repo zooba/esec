@@ -50,19 +50,17 @@ class TGP(Landscape):
     '''Abstract TGP fitness landscape
     '''
     ltype = 'TGP' # subclasses shouldn't change this
+    size_equals_parameters = False
     
     # this is universal - should not be changed by subclasses
     syntax = {
         'parameters': int,                      # landscape specific, but guaranteed to be there
-        
         'instruction_set?': list,               # optional instruction set name(s)
     }
-    
     # subclasses should set default to overlay their changes on to this
     default = {
         'size': { 'min': 1, 'max': 50 }
     }
-    
     strict = { 'size.min': 1 }
     
     test_key = ( )
@@ -149,13 +147,11 @@ class SymbolicRegression(TGP):
     lname = 'Symbolic Regression'
     
     syntax = { 'expr': str }
-    
     default = {
         'parameters': 1,
         'instruction_set': ['real', 'integer'],
         'expr': 'X**4 + X**3 + X**2 + X',
     }
-    
     strict = { 'parameters': 1 }
     
     def __init__(self, cfg=None, **other_cfg):

@@ -18,11 +18,11 @@ class GE(Landscape):
     '''Abstract GE fitness landscape
     '''
     ltype = 'GE' # subclasses shouldn't change this
+    size_equals_parameters = False
     
     # this is universal - should not be changed by subclasses
     syntax = {
         'terminals': int,                       # must be set by the landscape
-        'parameters': [None, int],              # optional, preferred to adding new properties
         
         'size_penalty_square_factor': float,    # penalty factors to apply
         'size_penalty_linear_factor': float,    # to large programs
@@ -30,7 +30,6 @@ class GE(Landscape):
     
     # subclasses should set default to overlay their changes on to this
     default = {
-        'parameters': None,
         'size': { 'min': 1, 'max': 50 },
         'size_penalty_square_factor': 0.0,
         'size_penalty_linear_factor': 0.0,

@@ -24,12 +24,12 @@ def _suitable_individual():
     
     elif lscape.ltype == 'IVP':
         params = { 'shortest': lscape.size.min, 'longest': lscape.size.max,
-                   'lowest': lscape.bounds[0][0], 'highest': lscape.bounds[1][0] }
+                   'lowest': lscape.bounds[0], 'highest': lscape.bounds[1] }
         return context['random_int'](**params)
     
     elif lscape.ltype == 'RVP':
         params = { 'shortest': lscape.size.min, 'longest': lscape.size.max,
-                   'lowest': lscape.bounds[0][0], 'highest': lscape.bounds[1][0] }
+                   'lowest': lscape.bounds[0], 'highest': lscape.bounds[1] }
         return context['random_real'](**params)
     
     elif lscape.ltype == 'TGP':

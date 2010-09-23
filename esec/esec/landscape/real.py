@@ -44,8 +44,8 @@ class Real(Landscape):
     # This is universal for Real problems
     syntax = {
         'bounds': {
-            'lower?': [tuple, list, int, float],
-            'upper?': [tuple, list, int, float],
+            'lower?': [tuple, list, int, float, str, None],
+            'upper?': [tuple, list, int, float, str, None],
         },
     }
     
@@ -58,11 +58,9 @@ class Real(Landscape):
     # used by code testing to easily test each class using simple strings
     test_key = (('size.exact', int),
                 ('bounds.lower', float),
-                ('bounds.upper', float),
-                ('invert', bool),
-                ('offset', float),)
-    #n=params lbd ubd "-"=(invert) offset
-    test_cfg = ('2 0.0 1.0 - 0.5',)
+                ('bounds.upper', float),)
+    #n=params lbd ubd
+    test_cfg = ('2 0.0 1.0',)
     
     
     def __init__(self, cfg=None, **other_cfg):
@@ -71,12 +69,16 @@ class Real(Landscape):
         '''
         # call super for overlaid syntax/defaults and validation
         super(Real, self).__init__(cfg, **other_cfg)
-        # landscape parameters
-        if isinstance(self.cfg.bounds.lower, (tuple, list)): lbd = self.cfg.bounds.lower
-        else: lbd = [self.cfg.bounds.lower] * self.size.max
+        
+        # landscape bounds ([lowest value per gene], [highest value per gene])
+        lbd = self.cfg.bounds.lower
+        if lbd == None: lbd = '-inf'
+        if isinstance(lbd, (int, float, str)): lbd = [float(lbd)] * self.size.max
         assert len(lbd) >= self.size.max, 'At least %d lower bound values are required' % self.size.max
-        if isinstance(self.cfg.bounds.upper, (tuple, list)): ubd = self.cfg.bounds.upper
-        else: ubd = [self.cfg.bounds.upper] * self.size.max
+        
+        ubd = self.cfg.bounds.upper
+        if ubd == None: ubd = 'inf'
+        if isinstance(ubd, (int, float, str)): ubd = [float(ubd)] * self.size.max
         assert len(ubd) >= self.size.max, 'At least %d upper bound values are required' % self.size.max
         
         self.bounds = (lbd, ubd)
@@ -119,7 +121,7 @@ class Real(Landscape):
         else:
             part += " defined on [%d, %d) parameters(s)" % (self.size.min, self.size.max)
         result.append(part)
-
+        
         if level > 0:
             # parameter bounds
             result.append("with parameter bounds of:")
@@ -161,8 +163,10 @@ class Linear(Real):
     Qualities: maximisation, separable, unconstrained
     '''
     lname = 'Linear'
+    
     default = { 'size': { 'min': 10, 'max': 10 }, 'bounds': { 'lower': 0.0, 'upper': 100.0 } }
-    test_cfg = ('2 0.0 100.0 - 100.0',)
+    
+    test_cfg = ('2 0.0 100.0',)
     
     def _eval(self, indiv):
         '''Returns the sum of all values'''
@@ -180,13 +184,15 @@ class Neutral(Real):
     Qualities: neither maximisation and minimisation, unconstrained
     '''
     lname = 'Neutral (constant)'
+    
     syntax = { 'mean': float }
     default = {
         'size': { 'min': 1, 'max': 1 },
         'bounds': { 'lower': 0.0, 'upper': 100.0 },
         'mean': 1.0
     }
-    test_cfg = ('2 0.0 100.0', '2 0.0 100.0 - 100')
+    
+    test_cfg = ('2 0.0 100.0',)
     
     def __init__(self, cfg=None, **other_cfg):
         super(Neutral, self).__init__(cfg, **other_cfg)
@@ -215,6 +221,7 @@ class Stabilising(Real):
     Qualities: maximisation, separable, unconstrained
     '''
     lname = 'Stabilising'
+    
     syntax = { 'mean': float, 'amplitude': float, 'gamma': float }
     default = {
         'size': { 'min': 1, 'max': 1 },
@@ -223,7 +230,8 @@ class Stabilising(Real):
         'amplitude': 1.0,
         'gamma': 10.0
     }
-    test_cfg = ('2 0.0 100.0', '2 0.0 100.0 - 100')
+    
+    test_cfg = ('2 0.0 100.0',)
     
     def __init__(self, cfg=None, **other_cfg):
         super(Stabilising, self).__init__(cfg, **other_cfg)
@@ -258,6 +266,7 @@ class Disruptive(Real):
     Qualities: maximisation, separable, unconstrained
     '''
     lname = 'Stabilising'
+    
     syntax = { 'mean': float, 'amplitude': float, 'gamma': float }
     default = {
         'size': { 'min': 1, 'max': 1 },
@@ -266,7 +275,8 @@ class Disruptive(Real):
         'amplitude': 1.0,
         'gamma': 10.0
     }
-    test_cfg = ('2 0.0 100.0', '2 0.0 100.0 - 100')
+    
+    test_cfg = ('2 0.0 100.0',)
     
     def __init__(self, cfg=None, **other_cfg):
         super(Disruptive, self).__init__(cfg, **other_cfg)
@@ -310,8 +320,10 @@ class Sphere(Real):
     '''
     lname = 'Sphere'
     maximise = False
+    
     default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 }}
-    test_cfg = ('2 0.0 100.0 - 100.0', '2 0.0 100.0')
+    
+    test_cfg = ('2 0.0 100.0',)
     
     def _eval(self, indiv):
         '''f(x) = sum((x_i)^2)
@@ -341,7 +353,9 @@ class Ellipsoid(Real):
     '''
     lname = 'Ellipsoid'
     maximise = False
+    
     default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 }}
+    
     test_cfg = ('2 -5.12 5.12',)
     
     def _eval(self, indiv):
@@ -368,7 +382,9 @@ class HyperEllipsoid(Real):
     '''
     lname = 'Hyper Ellipsoid'
     maximise = False
+    
     default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 }}
+    
     test_cfg = ('2 -5.12 5.12',)
     
     def _eval(self, indiv):
@@ -397,7 +413,9 @@ class Quadric(Real):
     '''
     lname = 'Quadric (Rotated Hyper-ellipsoid)'
     maximise = False
+    
     default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -65.536, 'upper': 65.536 }}
+    
     test_cfg = ('2 -65.536 65.536',)
     
     def _eval(self, indiv):
@@ -428,8 +446,10 @@ class NoisyQuartic(Real):
     '''
     lname = 'Noisy Quartic'
     maximise = False
+    
     default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 }}
-    test_cfg = ('2 -5.12 5.12', '2 -5.12 5.12 -')
+    
+    test_cfg = ('2 -5.12 5.12',)
     
     def _eval(self, indiv):
         '''f(x) = sum(i*(x_i)^4 + gauss(0, 1))
@@ -462,11 +482,11 @@ class Easom(Real):
     Qualities: maximisation, unimodal, normalised, (un)constrained
     '''
     lname = 'Easom'
+    
     default = { 'size': { 'exact': 2 }, 'bounds': { 'lower': -100.0, 'upper': 100.0 }}
-    
-    test_cfg = ('2 -100 100', '2 -100 100 hard')
-    
     strict = { 'size.exact': 2 }
+    
+    test_cfg = ('2 -100 100',)
     
     def _eval(self, indiv):
         '''f(x) = cos(x1)*cos(x2)*exp(-((x1-pi)^2+(x2-pi)^2))'''
@@ -494,10 +514,10 @@ class Rosenbrock(Real):
     '''
     lname = 'Rosenbrock'
     maximise = False
+    
     default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -2.048, 'upper': 2.048 } }
     
-    test_cfg = ( '2 -2.048 2.048 -',  '2 -2.048 2.048',
-                '10 -2.048 2.048 -', '10 -2.048 2.048')
+    test_cfg = ('2 -2.048 2.048', '10 -2.048 2.048')
     
     def __init__(self, cfg=None, **other_cfg):
         super(Rosenbrock, self).__init__(cfg, **other_cfg)
@@ -535,9 +555,11 @@ class Rastrigin(Real):
     '''
     lname = 'Rastrigin'
     maximise = False
+    
     default = { 'size': { 'exact': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 } }
-    test_cfg = ('2 -5.12 5.12 hard',)
     strict = { 'size.exact': '*' }
+    
+    test_cfg = ('2 -5.12 5.12',)
     
     def _eval(self, indiv):
         '''f() = 10*n + sum((x_i)^2 - 10cos(2*pi*x_i))
@@ -567,9 +589,11 @@ class Griewangk(Real):
     '''
     lname = 'Griewangk'
     maximise = False
+    
     default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -600., 'upper': 600. }}
-    test_cfg = ('2 -600 600',)
     strict = { 'size.exact': '*' }
+    
+    test_cfg = ('2 -600 600',)
     
     def _eval(self, indiv):
         '''f(x) = 1 + sum(x_i^2/4000) - prod(code(x_i/sqrt(i))
@@ -606,9 +630,11 @@ class Ackley(Real):
     '''
     lname = 'Ackley'
     maximise = False
+    
     default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -30.0, 'upper': 30.0 }}
-    test_cfg = ('2 -30.0 30.0 hard', '2 -30.0 30.0')
     strict = { 'size.exact': '*' }
+    
+    test_cfg = ('2 -30.0 30.0',)
     
     def _eval(self, indiv):
         '''f(x) = 20 + e - 20exp(-0.2 * sqrt((1/n)*sum(x_i^2)))
@@ -644,9 +670,11 @@ class Schwefel(Real):
     '''
     lname = 'Schwefel'
     maximise = False
+    
     default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -512.0, 'upper': 511.0 }}
-    test_cfg = ('2 -512 512',)
     strict = { 'size.exact': '*' }
+    
+    test_cfg = ('2 -512 512',)
     
     def _eval(self, indiv):
         '''f(x) = 418.9829*n + sum(x_i * sin(sqrt(abs(x_i))))
@@ -675,9 +703,11 @@ class Michalewicz(Real):
     '''
     lname = 'Michalewicz'
     maximise = False
+    
     default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': 0, 'upper': pi }}
-    test_cfg = ('2 0.0 3.1416',)
     strict = { 'size.exact': '*' }
+    
+    test_cfg = ('2 0.0 3.1416',)
     
     def __init__(self, cfg=None, **other_cfg):
         super(Michalewicz, self).__init__(cfg, **other_cfg)
@@ -716,9 +746,11 @@ class MultiPeak1(Real):
     Qualities: maximisation, multimodal, normalised, constrained.
     '''
     lname = 'Multipeak1'
+    
     default = { 'size': { 'exact': 1 }, 'bounds': { 'lower': -0.0, 'upper': 1.0 }}
-    test_cfg = ('1 -0.0 1.0', '1 -0.0 1.0 -')
     strict = { 'size.exact': 1 }
+    
+    test_cfg = ('1 -0.0 1.0',)
     
     def _eval(self, indiv):
         '''f(x) = sin^6(5*pi*x)
@@ -741,9 +773,11 @@ class MultiPeak2(Real):
     Qualities: maximisation, multimodal, normalised, constrained.
     '''
     lname = 'Multipeak2'
+    
     default = { 'size': { 'exact': 1 }, 'bounds': { 'lower': -0.0, 'upper': 1.0 } }
-    test_cfg = ('1 -0.0 1.0', '1 -0.0 1.0 -')
     strict = { 'size.exact': 1 }
+    
+    test_cfg = ('1 -0.0 1.0',)
     
     def _eval(self, indiv):
         '''f(x) = sin^6(5*pi(x^(3/4)-0.05))
@@ -766,9 +800,11 @@ class MultiPeak3(Real):
     Qualities: maximisation, multimodal, normalised, constrained.
     '''
     lname = 'Multipeak3'
+    
     default = { 'size': { 'exact': 1 }, 'bounds': { 'lower': -0.0, 'upper': 1.0 } }
-    test_cfg = ('1 -0.0 1.0', '1 -0.0 1.0 -')
     strict = { 'size.exact': 1 }
+    
+    test_cfg = ('1 -0.0 1.0',)
     
     def _eval(self, indiv):
         '''f(x) = (exp^(...))*sin^6(5*pi*x)
@@ -792,9 +828,11 @@ class MultiPeak4(Real):
     Qualities: maximisation, multimodal, normalised, constrained.
     '''
     lname = 'Multipeak4'
+    
     default = { 'size': { 'exact': 1 }, 'bounds': { 'lower': -0.0, 'upper': 1.0 }}
-    test_cfg = ('1 -0.0 1.0', '1 -0.0 1.0 -')
     strict = { 'size.exact': 1 }
+    
+    test_cfg = ('1 -0.0 1.0',)
     
     def _eval(self, indiv):
         '''f(x) = (exp^(...))*sin^6(5*pi*x)
@@ -819,9 +857,11 @@ class Booth(Real):
     '''
     lname = 'Booth'
     maximise = False
+    
     default = { 'size': { 'exact': 2 }, 'bounds': { 'lower': -10.0, 'upper': 10.0 }}
-    test_cfg = ('2 -10.0 10.0',)
     strict = { 'size.exact': 2 }
+    
+    test_cfg = ('2 -10.0 10.0',)
     
     def _eval(self, indiv):
         '''f(x1, x2) = (x_1 + 2*x_2 - 7)^2 + (2*x_1 + x_2 -5)^2
@@ -852,9 +892,11 @@ class Himmelblau(Real):
     '''
     lname = 'Himmelblau'
     maximise = False
+    
     default = { 'size': { 'exact': 2 }, 'bounds': { 'lower': -5.0, 'upper': 5.0 } }
-    test_cfg = ('2 -5.0 5.0', '2 -5.0 5.0 -')
     strict = { 'size.exact': 2 }
+    
+    test_cfg = ('2 -5.0 5.0',)
     
     def _eval(self, indiv):
         '''f(x) = (x1^2 + x2 - 11)^2 + (x1 + x2^2 - 7)^2
@@ -882,6 +924,7 @@ class SixHumpCamelBack(Real):
     '''
     lname = 'Six Hump Camel-back'
     maximise = False
+    
     default = {
         'size': { 'exact': 2 },
         'bounds': {
@@ -889,13 +932,9 @@ class SixHumpCamelBack(Real):
             'upper': [ 3.0, 2.0],
         }
     }
-    
-    # don't require strict parameters
-    test_key = (('invert', bool),)
-    # two simple test cases
-    test_cfg = ('', '-')
-    # strict requirements
     strict = { 'size.exact': 2, 'bounds.lower': [-3.0, -2.0], 'bounds.upper': [3.0, 2.0] }
+    
+    test_cfg = ('2',)
     
     
     def _eval(self, indiv):
@@ -905,6 +944,36 @@ class SixHumpCamelBack(Real):
         result = 4*(x1**2) - 2.1*(x1**4) + (1.0/3.0)*(x1**6) + x1*x2 - 4*(x2**2) + 4*(x2**4)
         return result
 
+#==============================================================================
+class SchafferF6(Real):
+    '''Schaffer's f6 function (2D)
+    
+    A two-dimensional deceptive minimisation problem landscape that is
+    mostly flat except near the global minimum.
+        
+        f(x, y) = 0.5 + (sin^2(sqrt(x^2+y^2)) - 0.5) / 
+                        (1+0.001(x^2+y^2))^2
+    
+    Standard initialisation range of [-100, 100]
+    The global minimum of 0 is located at (0, 0).
+    
+    Qualities: minimisation, non-separable, constrained.
+    '''
+    lname = "Schaffer's F6"
+    maximise = False
+    
+    default = { 'size': { 'exact': 2 }, 'bounds': { 'lower': -100.0, 'upper': 100.0 } }
+    strict = { 'size.exact': 2 }
+    
+    test_cfg = ('2 -100.0 100.0',)
+    
+    def _eval(self, indiv):
+        '''f(x, y) = 0.5 + (sin^2(sqrt(x^2+y^2)) - 0.5) / 
+                           (1+0.001(x^2+y^2))^2
+        '''
+        x, y = indiv
+        d = x*x+y*y
+        return 0.5 + (sin(sqrt(d))**2 - 0.5) / (1 + 0.001*d)**2
 
 #==============================================================================
 # Real-valued Landscape Generators
@@ -948,11 +1017,9 @@ class FMS(Real):
     lname = 'Frequency Modulation Sounds (FMS)'
     maximise = False
     default = { 'size': { 'exact': 6 }, 'bounds': { 'lower': -6.4, 'upper': 6.35 }}
-    
-    test_key = (('size.exact', int),)
-    test_cfg = ('6',)
-    
     strict = { 'size.exact': 6, 'bounds.lower': -6.4, 'bounds.upper': 6.35 }
+    
+    test_cfg = ('6',)
     
     def __init__(self, cfg=None, **other_cfg):
         super(FMS, self).__init__(cfg, **other_cfg)

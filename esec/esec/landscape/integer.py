@@ -7,6 +7,7 @@ support. See `landscape` for details.
    :dir: right
 '''
 
+from sys import maxsize
 from math import sqrt
 from esec.landscape import Landscape
 from esec.utils import all_equal
@@ -20,12 +21,15 @@ class Integer(Landscape):
     '''
     ltype = 'IVP' # subclasses shouldn't change this
     
-    # this is universal - should not be changed by subclasses
+    # This is universal for Integer problems
     syntax = {
-        'bounds': {'lower': [tuple, list, int], 'upper': [tuple, list, int] }
+        'bounds': {
+            'lower?': [tuple, list, int, long, float, str, None],
+            'upper?': [tuple, list, int, long, float, str, None],
+        },
     }
     
-    # subclasses should set default to overlay their changes on to this
+    # Subclasses can set default to overlay their changes on to this
     default = {
         'bounds': { 'lower': 0, 'upper': 255 },
         'size': { 'min': 10, 'max': 10 },
@@ -40,12 +44,17 @@ class Integer(Landscape):
         # call parent cfg magic, validate/strict test syntax/defaults/cfg
         super(Integer, self).__init__(cfg, **other_cfg)
         
-        # bounds contains ([lowest value per gene], [highest value per gene])
-        if isinstance(self.cfg.bounds.lower, (tuple, list)): lbd = self.cfg.bounds.lower
-        else: lbd = [self.cfg.bounds.lower] * self.size.max
+        # landscape bounds ([lowest value per gene], [highest value per gene])
+        lbd = self.cfg.bounds.lower
+        if lbd == None: lbd = -maxsize - 1
+        if isinstance(lbd, (int, long)): lbd = [lbd] * self.size.max
+        elif isinstance(lbd, (float, str)): lbd = [int(lbd)] * self.size.max
         assert len(lbd) >= self.size.max, 'At least %d lower bound values are required' % self.size.max
-        if isinstance(self.cfg.bounds.upper, (tuple, list)): ubd = self.cfg.bounds.upper
-        else: ubd = [self.cfg.bounds.upper] * self.size.max
+        
+        ubd = self.cfg.bounds.upper
+        if ubd == None: ubd = maxsize
+        if isinstance(ubd, (int, long)): ubd = [ubd] * self.size.max
+        elif isinstance(ubd, (float, str)): ubd = [int(ubd)] * self.size.max
         assert len(ubd) >= self.size.max, 'At least %d upper bound values are required' % self.size.max
         
         self.bounds = (lbd, ubd)
@@ -146,6 +155,34 @@ class Nmax(Integer):
             return -sqrt(fitness)
         else:
             return -1e10000 # -INF
+
+class Nmin(Integer):
+    '''N-dimensional N-min (integer) landscape
+    
+    2D example:
+        f(x, y) = sqrt(x^2 + y^2),
+        min at (0, 0) for x=(0, 1)
+    
+    Qualities: minimisation, unimodal
+    '''
+    lname = 'N-max'
+    maximise = False
+    
+    test_cfg = ('10 0 31',)
+    test_legal = ([5]*10, [20]*10)
+    test_illegal = ([-1]*10, [40]*10)
+    
+    def _eval(self, indiv):
+        '''Negative root-sum-squared difference between each gene and
+        its maximum value.'''
+        if self.legal(indiv):
+            fitness = 0
+            for expected, actual in zip(self.bounds[0], indiv):
+                tmp = expected - actual
+                fitness += tmp * tmp
+            return sqrt(fitness)
+        else:
+            return 1e10000 # INF
 
 
 #==============================================================================
