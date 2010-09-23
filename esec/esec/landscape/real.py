@@ -108,11 +108,12 @@ class Real(Landscape):
     def info(self, level):
         '''Return landscape info for any RvpBase
         '''
-        # normal or invert?
         result = []
         part = "Using landscape %s" % self.lname
         if self.invert:
-            part += " invert with offset %f" % self.offset
+            part += " (inverted)"
+        if self.offset:
+            part += " with offset %f" % self.offset
         if self.size.exact:
             part += " defined on %d parameter(s)" % self.size.exact
         else:
@@ -166,10 +167,6 @@ class Linear(Real):
     def _eval(self, indiv):
         '''Returns the sum of all values'''
         return sum(indiv)
-    
-    def _eval_invert(self, indiv):
-        '''Returns the sum of all values subtracted from the offset.'''
-        return self.offset-sum(indiv)
 
 
 #==============================================================================
@@ -199,9 +196,6 @@ class Neutral(Real):
         '''Returns the value of ``mean``.'''
         return self.mean
     
-    def _eval_invert(self, indiv):  #pylint: disable=W0613
-        '''Returns the value of ``mean``.'''
-        return self.mean
 
 #==============================================================================
 class Stabilising(Real):
@@ -307,7 +301,7 @@ class Sphere(Real):
         f(x) = sum((x_i)^2)
     
     Note: Minimisation by default. Often inverted and offset for use as a
-    fitness value (as with many other "optimisation" functions.
+    fitness value (as with many other "optimisation" functions).
     
     Standard initialisation range of [-5.12, 5.12]
     Minimum vector of x=[0, 0, ..., 0] results in f(x)=0
@@ -324,10 +318,6 @@ class Sphere(Real):
         '''
         return sum(v*v for v in indiv)
     
-    def _eval_invert(self, indiv):
-        '''Inverted: f(x) = OFFSET - sum((x_i)^2)
-        '''
-        return self.offset - sum(v*v for v in indiv)
 
 #rename Parabola (EC) to the more common standard Sphere
 Parabola = Sphere
@@ -357,7 +347,7 @@ class Ellipsoid(Real):
     def _eval(self, indiv):
         '''f(x) = sum(i^2 * x(i)^2)
         '''
-        return sum(( ((i+1) * x*x) for i, x in enumerate(indiv)))
+        return sum(((i+1) * x*x) for i, x in enumerate(indiv))
 
 
 
@@ -384,7 +374,7 @@ class HyperEllipsoid(Real):
     def _eval(self, indiv):
         '''f(x) = sum(i^2 * x(i)^2)
         '''
-        return sum(( ((i+1)**2 * x*x) for i, x in enumerate(indiv)))
+        return sum(((i+1)**2 * x*x) for i, x in enumerate(indiv))
 
 
 #==============================================================================
@@ -445,16 +435,7 @@ class NoisyQuartic(Real):
         '''f(x) = sum(i*(x_i)^4 + gauss(0, 1))
         '''
         gauss = self.rand.gauss
-        return sum(( (i+1) * x**4 + gauss(0, 1) for i, x in enumerate(indiv)))
-    
-    def _eval_invert(self, indiv):
-        '''Inverted: f(x) = OFFSET - sum((i*x_i)^4 + gauss(0, 1))
-        '''
-        fitness = 0
-        gauss = self.rand.gauss
-        for i, x in enumerate(indiv):
-            fitness += (i+1) * x**4 + gauss(0, 1)
-        return self.offset-fitness
+        return sum((i+1) * x**4 + gauss(0, 1) for i, x in enumerate(indiv))
 
 
 #==============================================================================
@@ -529,15 +510,6 @@ class Rosenbrock(Real):
             total += (1-x)*(1-x) + 100*(y-x*x)*(y-x*x)
             x = y
         return total
-    
-    def _eval_invert(self, indiv):
-        '''invert n-dimensional case'''
-        total = 0
-        x = indiv[0]
-        for y in indiv[1:]:
-            total += (1-x)*(1-x) + 100*(y-x*x)*(y-x*x)
-            x = y
-        return self.offset - total
 
 #==============================================================================
 class Rastrigin(Real):
@@ -571,13 +543,7 @@ class Rastrigin(Real):
         '''f() = 10*n + sum((x_i)^2 - 10cos(2*pi*x_i))
         '''
         c = 2*pi
-        return 10*len(indiv) + sum(( x*x - 10*cos(c*x) for x in indiv))
-
-    def _eval_invert(self, indiv):
-        '''f() = 10*n + sum((x_i)^2 - 10cos(2*pi*x_i))
-        '''
-        c = 2*pi
-        return self.offset - (10*len(indiv) + sum(( x*x - 10*cos(c*x) for x in indiv)))
+        return 10*len(indiv) + sum( x*x - 10*cos(c*x) for x in indiv)
 
 #==============================================================================
 class Griewangk(Real):
@@ -745,7 +711,7 @@ class MultiPeak1(Real):
     - Peaks of equal height
     - Regular spacing between peaks
     
-    Five equivalnet maxima of f(x) = 1.0 at x values of [0.1, 0.3, 0.5, 0.7, 0.9]
+    Five equivalent maxima of f(x) = 1.0 at x values of [0.1, 0.3, 0.5, 0.7, 0.9]
     
     Qualities: maximisation, multimodal, normalised, constrained.
     '''
@@ -758,11 +724,6 @@ class MultiPeak1(Real):
         '''f(x) = sin^6(5*pi*x)
         '''
         return sin(5*pi*indiv[0])**6
-    
-    def _eval_invert(self, indiv):
-        '''f(x) = 1 - sin^6(5*pi*x)
-        '''
-        return 1 - sin(5*pi*indiv[0])**6
 
 #==============================================================================
 class MultiPeak2(Real):
@@ -788,11 +749,6 @@ class MultiPeak2(Real):
         '''f(x) = sin^6(5*pi(x^(3/4)-0.05))
         '''
         return sin(5*pi*(indiv[0]**(3.0/4)-0.05))**6
-    
-    def _eval_invert(self, indiv):
-        '''f(x) = 1 - sin^6(5*pi(x^(3/4)-0.05))
-        '''
-        return 1 - sin(5*pi*(indiv[0]**(3.0/4)-0.05))**6
 
 #==============================================================================
 class MultiPeak3(Real):
@@ -819,12 +775,6 @@ class MultiPeak3(Real):
         '''
         x = indiv[0]
         return (exp(-2*log(2)*((x-0.08)/0.854)**2))*sin(5*pi*x)**6
-    
-    def _eval_invert(self, indiv):
-        '''f(x) = (exp^(...))*sin^6(5*pi*x)
-        '''
-        x = indiv[0]
-        return 1 - (exp(-2*log(2)*((x-0.08)/0.854)**2))*sin(5*pi*x)**6
 
 #==============================================================================
 class MultiPeak4(Real):
@@ -851,12 +801,6 @@ class MultiPeak4(Real):
         '''
         x = indiv[0]
         return (exp(-2*log(2)*((x-0.08)/0.854)**2))*sin(5*pi*(x**(3.0/4)-0.05))**6
-    
-    def _eval_invert(self, indiv):
-        '''f(x) = (exp^(...))*sin^6(5*pi*x)
-        '''
-        x = indiv[0]
-        return 1 - (exp(-2*log(2)*((x-0.08)/0.854)**2))*sin(5*pi*(x**(3.0/4)-0.05))**6
 
 
 #==============================================================================
@@ -917,12 +861,6 @@ class Himmelblau(Real):
         '''
         x1, x2 = indiv
         return (x1**2 + x2 - 11)**2 + (x1 + x2**2 - 7)**2
-    
-    def _eval_invert(self, indiv):
-        '''f(x) = 200 - (x1^2 + x2 - 11)^2 - (x1 + x2^2 - 7)^2
-        '''
-        x1, x2 = indiv
-        return 200 - (x1**2 + x2 - 11)**2 - (x1 + x2**2 - 7)**2
 
 
 #==============================================================================
@@ -953,7 +891,7 @@ class SixHumpCamelBack(Real):
     }
     
     # don't require strict parameters
-    test_key = (('invert', bool), ('offset', float),)
+    test_key = (('invert', bool),)
     # two simple test cases
     test_cfg = ('', '-')
     # strict requirements
@@ -965,14 +903,6 @@ class SixHumpCamelBack(Real):
         '''
         x1, x2 = indiv
         result = 4*(x1**2) - 2.1*(x1**4) + (1.0/3.0)*(x1**6) + x1*x2 - 4*(x2**2) + 4*(x2**4)
-        return result
-    
-    def _eval_invert(self, indiv):
-        '''inverted form
-        '''
-        x1, x2 = indiv
-        # the "scaled" (invert) version ie. jbrownlee, x1=+/-2, x2=+/- 1
-        result = 200 - ((4-2.1*(x1**2) + (x1**4)/3.0)*(x1**2) + x1*x2 + (-4 + 4*(x2**2))*(x2**2))
         return result
 
 

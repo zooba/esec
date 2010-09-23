@@ -140,17 +140,6 @@ class RoyalRoad(Binary):
                 total += C
         return total
     
-    
-    def _eval_invert(self, indiv):
-        ''' f(x) = C*Q - sum(blocks(x))*C
-        '''
-        total = 0
-        C = self.C
-        for i in xrange(0, self.size.exact, C):
-            q = indiv[i:i+C] # get each block of C genes
-            if sum(q) == C:
-                total += C
-        return self.size.exact - total
 
 
 #==============================================================================
@@ -196,15 +185,6 @@ class GoldbergD3B(Binary):
             total += self.max_x[tuple(xi)]
         return total
     
-    def _eval_invert(self, indiv):
-        '''Map each segment of 3-bits value subtracted from 8, and sum
-        '''
-        total = 0
-        for i in xrange(0, self.size.exact, 3):
-            xi = indiv[i:i+3] # get each block of 3 bits
-            total += 8 - self.max_x[tuple(xi)]
-        return total
-
 
 #==============================================================================
 class WhitleyD4B(Binary):
@@ -255,15 +235,6 @@ class WhitleyD4B(Binary):
             total += self.max_x[tuple(xi)]
         return total
     
-    def _eval_invert(self, indiv):
-        '''Map each segment of 4-bits value subtracted from 30, and sum
-        '''
-        total = 0
-        for i in xrange(0, self.size.exact, 4):
-            xi = indiv[i:i+4] # get each block of 4 bits
-            total += 30 - self.max_x[tuple(xi)]
-        return total
-
 
 #==============================================================================
 class Multimodal(Binary):

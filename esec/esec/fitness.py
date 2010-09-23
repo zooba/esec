@@ -284,6 +284,45 @@ class Fitness(object):
         result = (expected_type(value * other) for expected_type, value in zip(self.types, self.values))
         return type(self)(tuple(result), True)
 
+class FitnessMaximise(Fitness):
+    '''Represents a simple fitness value where higher values are considered to be
+    more fit.
+    '''
+    pass
+
+class FitnessMaximize(FitnessMaximise):
+    '''Represents a simple fitness value where higher values are considered to be
+    more fit.
+    '''
+    pass
+
+class FitnessMinimise(Fitness):
+    '''Represents a simple fitness value where lower values are considered to be
+    more fit.
+    '''
+    def __gt__(self, other):
+        '''Determines whether `self` is more fit than `other`.
+        
+        A `Fitness` instance is always more fit than ``None`` or any object which
+        is not a `Fitness`.
+        
+        :Parameters:
+          other : `Fitness`, ``None`` or another object
+            The object to compare this `Fitness` instance to.
+        
+        :Returns:
+            ``True`` if `self` is more fit than `other`; otherwise, ``False``.
+        '''
+        if not isinstance(other, Fitness): return True
+        # By default, Python performs a lexicographical comparison on sequences.
+        return self.values < other.values
+
+class FitnessMinimize(FitnessMinimise):
+    '''Represents a simple fitness value where lower values are considered to be
+    more fit.
+    '''
+    pass
+
 class EmptyFitness(object):
     '''Represents an unspecified multi-stage fitness value.
     

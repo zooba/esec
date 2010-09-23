@@ -59,6 +59,7 @@ calls the `Landscape` initialiser.
 import random
 from sys import maxint
 from random import Random
+from esec.fitness import Fitness, FitnessMaximise, FitnessMinimise
 from esec.utils import ConfigDict, merge_cls_dicts, cfg_validate, cfg_strict_test
 from esec.utils import a_or_an
 from types import ModuleType as module
@@ -143,25 +144,28 @@ class Landscape(object):
         self.invert = self.cfg.invert
         self.offset = self.cfg.offset
         
-        # Each subclass needs to specify a bound method for eval() calls. So we
-        # auto-bind _eval or _eval_invert. Subclasses can alter later.
-        #pylint: disable=E1101
+        # Autobind _eval_minimise or _eval_maximise.
         if not hasattr(self, 'eval'):
-            if self.invert ^ (not self.maximise):
-                if hasattr(self, '_eval_invert'):
-                    self.eval = self._eval_invert
-                elif hasattr(self, '_eval'):
-                    self.eval = self._eval_invert_default
+            if self.maximise == self.invert:
+                self.eval = self._eval_minimise
             else:
-                self.eval = getattr(self, '_eval', None)
-        if not hasattr(self, 'eval'):
-            raise AttributeError('No eval method defined.')
+                self.eval = self._eval_maximise
     
-    def _eval_invert_default(self, param):
-        '''Simple wrapper around any standard _eval. A bit slower than a direct
-        implementation, but always a valid fall-back if not available in subclass.
+    def _eval_maximise(self, indiv):
+        '''Evaluates the provided individual and wraps the result in a
+        `FitnessMaximise` object.
         '''
-        return self.offset - self._eval(param) #pylint: disable=E1101
+        fitness = self._eval(indiv)     #pylint: disable=E1101
+        if isinstance(fitness, Fitness): return fitness
+        else: return FitnessMaximise(fitness + self.offset)
+    
+    def _eval_minimise(self, indiv):
+        '''Evaluates the provided individual and wraps the result in a
+        `FitnessMinimise` object.
+        '''
+        fitness = self._eval(indiv)     #pylint: disable=E1101
+        if isinstance(fitness, Fitness): return fitness
+        else: return FitnessMinimise(fitness + self.offset)
     
     @classmethod
     def by_cfg_str(cls, cfg_str):
