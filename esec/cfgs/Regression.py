@@ -33,6 +33,8 @@ config = {
     'verbose': 0,
 }
 
+settings = "low_priority=True;"
+
 std_dialects = ['GA', 'SSGA']
 bvp_tests = [
     ('BVP.OneMax',      std_dialects, [{ 'landscape': { 'N': 3 } }, { 'landscape': { 'N': 8 } }, { 'landscape': { 'N': 100 } }]),
