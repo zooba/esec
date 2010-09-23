@@ -294,6 +294,7 @@ batch_settings_syntax = {
     'summary': bool,
     'csv': bool,
     'low_priority': bool,
+    'quiet': bool,
 }
 '''The syntax used for batch configurations.'''
 
@@ -306,6 +307,7 @@ batch_settings_default = {
     'summary': True,
     'csv': False,
     'low_priority': False,
+    'quiet': False,
 }
 '''The default values used for batch configurations.'''
 
@@ -339,8 +341,9 @@ def esec_batch(options):
         batch.exclude_tags=[...] # do not run experiments that include these "tags"
         batch.pathbase="..." # relative path to store results in
         batch.summary=True # create a summary file of all experiments
-        batch.csv=False # create CSV files instead of TXT files (except for config)
-        batch.low_priority=False # run with low CPU priority
+        batch.csv=True # create CSV files instead of TXT files (except for config)
+        batch.low_priority=True # run with low CPU priority
+        batch.quiet=True # hide console output
     
     '''
     # Disable pylint complaints about branches and local variables
@@ -499,17 +502,30 @@ def esec_batch(options):
             open_files.extend((report_out, summary_out, config_out))
             
             if not batch_cfg.csv:
-                # MultiTarget sends the same output to both the console and the files.
-                cfg.overlay({'monitor': {
-                    'report_out': MultiTarget(report_out, sys.stdout),
-                    'summary_out': MultiTarget(summary_out, sys.stdout, summary_buffer),
-                    'config_out': MultiTarget(config_out, sys.stdout),
-                    'error_out': MultiTarget(summary_out, sys.stderr),
-                    'verbose': 4,
-                }})
+                if batch_cfg.quiet:
+                    # MultiTarget sends the same output to both the console and the files.
+                    cfg.overlay({'monitor': {
+                        'report_out': report_out,
+                        'summary_out': MultiTarget(summary_out, sys.stdout, summary_buffer),
+                        'config_out': config_out,
+                        'error_out': MultiTarget(summary_out, sys.stderr),
+                        'verbose': 4,
+                    }})
+                else:
+                    # MultiTarget sends the same output to both the console and the files.
+                    cfg.overlay({'monitor': {
+                        'report_out': MultiTarget(report_out, sys.stdout),
+                        'summary_out': MultiTarget(summary_out, sys.stdout, summary_buffer),
+                        'config_out': MultiTarget(config_out, sys.stdout),
+                        'error_out': MultiTarget(summary_out, sys.stderr),
+                        'verbose': 4,
+                    }})
             else:
                 # MultiMonitor sends the same callbacks to different monitors.
                 monitor_cfg = ConfigDict(cfg.monitor)
+                if batch_cfg.quiet:
+                    monitor_cfg['report_out'] = None
+                    monitor_cfg['config_out'] = None
                 console_monitor = ConsoleMonitor(monitor_cfg)
                 monitor_cfg.overlay({
                     'report_out': report_out,

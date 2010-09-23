@@ -14,6 +14,16 @@ if os.name == 'nt':
     from ctypes import windll, c_ulonglong, c_void_p, byref
 from time import clock
 
+class NullStream(object):
+    '''A stream target that drops all writes.'''
+    def write(self, value):
+        '''Ignores the provided value.'''
+        pass
+    
+    def flush(self):
+        '''Does nothing.'''
+        pass
+
 class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
     '''A monitor that displays output using the console or other 'file-like' object
     based on prespecified report strings.
@@ -291,6 +301,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             '''Gets the appropriate value from ``opened_files``.'''
             if isinstance(filename, str):
                 return opened_files.get(filename, None)
+            elif filename == None:
+                return NullStream()
             else:
                 return filename
         
