@@ -203,8 +203,11 @@ def _set_low_priority():
     is ``'win32'``).
     '''
     if sys.platform == 'win32':
-        from ctypes import windll
+        from ctypes import windll, c_voidp, c_ulong
+        windll.kernel32.SetPriorityClass.argtypes = [ c_voidp, c_ulong ]
         windll.kernel32.SetPriorityClass(-1, 0x00004000)
+    else:
+        warn("Don't know how to set low priority for " + sys.platform)
 
 #==============================================================================
 # Run a single configuration
