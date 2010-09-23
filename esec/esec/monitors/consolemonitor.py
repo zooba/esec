@@ -169,6 +169,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         'primary': str,
         'report': str,
         'summary': str,
+        'exception_summary': str,
         'limits?': {
             'generations?': [int, None],
             'stable?': [int, None],
@@ -209,9 +210,15 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         The report format string, made up of the desired report column
         names (from `format`) concatenated with '+' symbols.
       
-      summary : (str [defaults to ``'brief+best_genome'``])
+      summary : (str [defaults to ``'status+best+best_phenome'``])
         The summary format string, made up of the desired report column
         names (from `format`) concatenated with '+' symbols.
+      
+      exception_summary : (str [defaults to ``'status+gen+births+evals'``])
+        The summary format string to use when an exception has terminated
+        the experiment. Uses the same syntax as ``summary``. (Override
+        the `on_exception` function to provide different handling of
+        exceptions.)
       
       limits.generations : (int > 0 [optional])
         Terminate after this number of generations have been executed.
@@ -242,6 +249,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         'primary': 'population',
         'report': 'brief+global',
         'summary': 'status+best+best_phenome',
+        'exception_summary': 'status+gen+births+evals',
         'formats': { },
         'limits': { }
     }
@@ -334,9 +342,12 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         
         self.report = self.parse_report(self.cfg.report)
         self.summary = self.parse_report(self.cfg.summary)
+        self.exception_summary = self.parse_report(self.cfg.exception_summary)
         
         # These statistics are slow to calculate, so only bother if we're interested in them
-        part_list = set(self.cfg.report.split('+') + self.cfg.summary.split('+'))
+        part_list = set(self.cfg.report.split('+') + \
+                        self.cfg.summary.split('+') + \
+                        self.cfg.exception_summary.split('+'))
         self.measure_diversity = 'local_diversity' in part_list
         '''``True`` if diversity should be calculated for each group; otherwise, ``False``.'''
         self.measure_dispersion = 'local_dispersion' in part_list
@@ -661,8 +672,9 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         '''Displays the summary report. If verbosity is
         set to 4 or higher, displays the full set of statistics.
         '''
-        rep = self.summary
-        if rep and not self.stop_now:
+        rep = self.exception_summary if self.stop_now else self.summary
+        
+        if rep:
             print >> self.summary_out, rep[0]
             values = []
             for value_list in [call(self) for call in rep[2]]:
@@ -674,9 +686,9 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                 print >> self.error_out, 'Format string:', rep[1]
                 print >> self.error_out, 'Values:       ', values
                 raise
-        
-        if self.verbose > 2:
-            self.notify('Monitor', 'Statistics', self._stats)
+            
+            if self.verbose > 2:
+                self.notify('Monitor', 'Statistics', self._stats)
         
         self.report_out.flush()
         self.summary_out.flush()
@@ -690,6 +702,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             print "IOError writing to output file. Writing exception to stdout."
             print trace
         self.stop_now = True
+        self.end_code = 'EXCEPTION'
     
     def should_terminate(self, sender):
         '''Returns ``True`` if an exception has occurred or

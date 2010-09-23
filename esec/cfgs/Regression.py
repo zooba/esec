@@ -25,7 +25,8 @@ config = {
                   'time+time_delta+time_precise+time_delta_precise+' + \
                   'local_best_phenome',
         'summary': 'gen+best_fit+evals+status+time+time_precise+' + \
-                   'best_genome+best_length+best_phenome'
+                   'best_genome+best_length+best_phenome',
+        'exception_summary': 'gen+best_fit+evals+status+time+time_precise'
     },
     'system': {
         'size': 10
