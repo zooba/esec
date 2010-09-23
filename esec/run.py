@@ -206,6 +206,9 @@ def _set_low_priority():
         from ctypes import windll, c_voidp, c_ulong
         windll.kernel32.SetPriorityClass.argtypes = [ c_voidp, c_ulong ]
         windll.kernel32.SetPriorityClass(-1, 0x00004000)
+    elif sys.platform == 'cli':
+        from ctypes import windll
+        windll.kernel32.SetPriorityClass(-1, 0x00004000)
     else:
         warn("Don't know how to set low priority for " + sys.platform)
 
