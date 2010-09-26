@@ -34,7 +34,7 @@ config = {
     'verbose': 0,
 }
 
-settings = "low_priority=True;"
+settings = "low_priority=True;quiet=True"
 
 std_dialects = ['GA', 'SSGA']
 bvp_tests = [
@@ -175,21 +175,29 @@ tests = bvp_tests + ivp_tests + rvp_tests + tgp_tests + ge_tests
 
 # return (tags, cmd string, config, settings, report)
 def batch():
-    for (k,dialects,testconfigs) in tests:
-        for d in dialects:
-            if d[-2:] == '%d':
+    for (landscape, dialects, config_overrides) in tests:
+        for dialect in dialects:
+            if dialect[-2:] == '%d':
                 i = 0
-                d2 = d % i
-                while d2 in configs:
-                    for c in testconfigs:
+                dialect_pattern = dialect
+                dialect = dialect_pattern % i
+                while dialect in configs:
+                    for config_override in config_overrides:
                         cfg = ConfigDict(config)
-                        if c: cfg.overlay(c)
-                        yield ([k.partition('.')[0]], '%s+%s' % (k, d2), cfg, None, None)
+                        if config_override: cfg.overlay(config_override)
+                        yield {
+                            'keys': [landscape.partition('.')[0]],
+                            'names': '%s+%s' % (landscape, dialect),
+                            'config': cfg
+                        }
                     i += 1
-                    d2 = d % i
+                    dialect = dialect_pattern % i
             else:
-                for c in testconfigs:
+                for config_override in config_overrides:
                     cfg = ConfigDict(config)
-                    if c: cfg.overlay(c)
-                    yield ([k.partition('.')[0]], '%s+%s' % (k, d), cfg, None, None)
-        
+                    if config_override: cfg.overlay(config_override)
+                    yield {
+                        'keys': [landscape.partition('.')[0]],
+                        'names': '%s+%s' % (landscape, dialect),
+                        'config': cfg
+                    }
