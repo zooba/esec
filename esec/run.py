@@ -472,6 +472,9 @@ def esec_batch(options):
             raise
         # Overlay any config dictionary (copy to avoid shared reference issues)
         cfg.overlay(ConfigDict(config) if isinstance(config, ConfigDict) else config)
+        # Override cfg.verbose
+        if options.verbose >= 0:
+            cfg.verbose = int(options.verbose)
         # Use settings strings to override configurations
         for key, value in settings_split(settings).iteritems():
             cfg.set_by_name(key, value)
@@ -512,7 +515,7 @@ def esec_batch(options):
                         'summary_out': MultiTarget(summary_out, sys.stdout, summary_buffer),
                         'config_out': config_out,
                         'error_out': MultiTarget(summary_out, sys.stderr),
-                        'verbose': 4,
+                        'verbose': max(4, cfg.verbose),
                     }})
                 else:
                     # MultiTarget sends the same output to both the console and the files.
@@ -521,7 +524,7 @@ def esec_batch(options):
                         'summary_out': MultiTarget(summary_out, sys.stdout, summary_buffer),
                         'config_out': MultiTarget(config_out, sys.stdout),
                         'error_out': MultiTarget(summary_out, sys.stderr),
-                        'verbose': 4,
+                        'verbose': max(4, cfg.verbose),
                     }})
             else:
                 # MultiMonitor sends the same callbacks to different monitors.
@@ -535,7 +538,7 @@ def esec_batch(options):
                     'summary_out': MultiTarget(summary_out, summary_buffer),
                     'config_out': config_out,
                     'error_out': summary_out,
-                    'verbose': 4,
+                    'verbose': max(4, cfg.verbose),
                 })
                 csv_monitor = CSVMonitor(monitor_cfg)
                 
