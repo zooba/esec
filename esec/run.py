@@ -431,7 +431,18 @@ def esec_batch(options):
     summary_file = open(os.path.join(pathbase, '_summary' + extension), 'w')
     
     # Run each configuration of the batch
-    for i, (tags, names, config, settings, fmt) in enumerate(batch):
+    for i, batch_item in enumerate(batch):
+        # Use get method (dictionary) if available;
+        # otherwise, assume compatibility mode (tuple).
+        if hasattr(batch_item, 'get'):
+            tags = batch_item.get('tags', None)
+            names = batch_item.get('names', None)
+            config = batch_item.get('config', None)
+            settings = batch_item.get('settings', None)
+            fmt = batch_item.get('fmt', None)
+        else:
+            tags, names, config, settings, fmt = batch_item
+        
         # Use cfgid instead of converting i repeatedly
         cfgid = '%04d' % i
         if batch_cfg.include_tags or batch_cfg.exclude_tags:
