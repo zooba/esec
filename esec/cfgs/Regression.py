@@ -186,7 +186,7 @@ def batch():
                         cfg = ConfigDict(config)
                         if config_override: cfg.overlay(config_override)
                         yield {
-                            'keys': [landscape.partition('.')[0]],
+                            'tags': [landscape.partition('.')[0]],
                             'names': '%s+%s' % (landscape, dialect),
                             'config': cfg
                         }
@@ -197,7 +197,7 @@ def batch():
                     cfg = ConfigDict(config)
                     if config_override: cfg.overlay(config_override)
                     yield {
-                        'keys': [landscape.partition('.')[0]],
+                        'tags': [landscape.partition('.')[0]],
                         'names': '%s+%s' % (landscape, dialect),
                         'config': cfg
                     }

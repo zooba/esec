@@ -291,8 +291,8 @@ batch_settings_syntax = {
     'dry_run': bool,
     'start_at': int,
     'stop_at': int,
-    'include_tags': [list, tuple, set, None],
-    'exclude_tags': [list, tuple, set, None],
+    'include_tags': [list, tuple, set, str, None],
+    'exclude_tags': [list, tuple, set, str, None],
     'pathbase?': str,
     'summary': bool,
     'csv': bool,
@@ -391,6 +391,8 @@ def esec_batch(options):
         print >> sys.stderr, '  ' + '\n  '.join('%s: %r' % (key, batch_cfg[key]) for key in other_keys)
         print >> sys.stderr
     
+    if isinstance(batch_cfg.include_tags, str): batch_cfg.include_tags = batch_cfg.include_tags.split('+')
+    if isinstance(batch_cfg.exclude_tags, str): batch_cfg.exclude_tags = batch_cfg.exclude_tags.split('+')
     batch_cfg.include_tags = set(batch_cfg.include_tags or set())
     batch_cfg.exclude_tags = set(batch_cfg.exclude_tags or set())
     
@@ -435,7 +437,7 @@ def esec_batch(options):
         # Use get method (dictionary) if available;
         # otherwise, assume compatibility mode (tuple).
         if hasattr(batch_item, 'get'):
-            tags = batch_item.get('tags', None)
+            tags = batch_item.get('tags', set([]))
             names = batch_item.get('names', None)
             config = batch_item.get('config', None)
             settings = batch_item.get('settings', None)
