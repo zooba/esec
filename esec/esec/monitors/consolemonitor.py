@@ -548,11 +548,13 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                 print >> self.config_out, 'System Information:'
                 print >> self.config_out, '\n'.join(value.info(level=self.verbose))
                 print >> self.config_out
+                self.config_out.flush()
             elif name == 'Landscape':
                 # `value` contains a Landscape
                 print >> self.config_out, 'Landscape Infomation:'
                 print >> self.config_out, '  ' + '\n  '.join(value.info(level=self.verbose))
                 print >> self.config_out
+                self.config_out.flush()
             elif name == 'Configuration':
                 # `value` contains a ConfigDict
                 assert isinstance(value, ConfigDict)
@@ -560,6 +562,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                     print >> self.config_out, 'Configuration Information:'
                     print >> self.config_out, '\n'.join(value.list())
                     print >> self.config_out
+                self.config_out.flush()
         
         elif sender == 'Monitor':
             if name == 'Statistics':
