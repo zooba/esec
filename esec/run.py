@@ -439,7 +439,7 @@ def esec_batch(options):
             names = batch_item.get('names', None)
             config = batch_item.get('config', None)
             settings = batch_item.get('settings', None)
-            fmt = batch_item.get('fmt', None)
+            fmt = batch_item.get('format', None) or batch_item.get('fmt', None)
         else:
             tags, names, config, settings, fmt = batch_item
         
