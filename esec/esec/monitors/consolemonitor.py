@@ -690,7 +690,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                 print >> self.error_out, 'Values:       ', values
                 raise
             
-            if self.verbose > 2:
+            if self.verbose >= 2:
                 self.notify('Monitor', 'Statistics', self._stats)
         
         self.report_out.flush()
