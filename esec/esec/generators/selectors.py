@@ -7,9 +7,9 @@ which the selectors are executed.
 
 from itertools import repeat
 from warnings import warn
-from esec.fitness import Fitness
 from esec.generators import _key_fitness
 from esec.individual import JoinedIndividual
+from esec.context import rand
 
 class NoReplacementSelector(object):
     '''An internal iterator class that supports selection
@@ -169,8 +169,8 @@ def Tournament(src, k=2, replacement=True, greediness=1.0):
         individuals is selected at random.
     '''
     assert k >= 2, "k must be at least 2"
-    irand = rand.randrange      #pylint: disable=E0602
-    frand = rand.random         #pylint: disable=E0602
+    irand = rand.randrange
+    frand = rand.random
     # WITH REPLACEMENT
     if replacement:
         def _iter(_src):
@@ -246,7 +246,7 @@ def UniformRandom(src, replacement=True):
         is equal to the number in `src`.
         If ``True``, the generator will never terminate.
     '''
-    irand = rand.randrange      #pylint: disable=E0602
+    irand = rand.randrange
     # WITH REPLACEMENT
     if replacement:
         def _iter(_src):
@@ -305,8 +305,8 @@ def FitnessProportional(src, replacement=True, sus=False, mu=None):
     '''
     
     group = sorted(src, key=_key_fitness, reverse=True)
-    irand = rand.randrange      #pylint: disable=E0602
-    frand = rand.random         #pylint: disable=E0602
+    irand = rand.randrange
+    frand = rand.random
     
     if not group: raise StopIteration
     if len(group) == 1:

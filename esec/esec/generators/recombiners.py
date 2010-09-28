@@ -1,13 +1,15 @@
 '''A set of recombinations generators that take multiple individuals and
 return a set of new individuals based on groups of the original set.
 
-The global variable ``rand`` and function ``notify`` are made available
-through the context in which the recombiners are executed.
+The global variable ``rand`` and function ``notify`` are imported from
+`esec.context` and so are available when the recombiners are executed.
 
 Since some species provide a derived version of `Individual` and include
 type validation, all constructors should use ``type`` on an existing
 `Individual` to ensure the correct derivation is used.
 '''
+
+from esec.context import rand, notify
 
 def Uniform(src, per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5):
     '''Performs uniform crossover by selecting genes at random from
@@ -45,7 +47,7 @@ def Uniform(src, per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5):
     
     do_all_pairs = (per_pair_rate >= 1.0)
     
-    frand = rand.random     #pylint: disable=E0602
+    frand = rand.random
     group = list(src)
     
     for i1_pre, i2_pre in zip(group[::2], group[1::2]):
@@ -101,8 +103,8 @@ def OnePointSame(src, per_pair_rate=None, per_indiv_rate=1.0):
     
     do_all_pairs = (per_pair_rate >= 1.0)
     
-    frand = rand.random     #pylint: disable=E0602
-    irand = rand.randrange  #pylint: disable=E0602
+    frand = rand.random
+    irand = rand.randrange
     group = list(src)
     
     for i1_pre, i2_pre in zip(group[::2], group[1::2]):
@@ -165,8 +167,8 @@ def OnePointDifferent(src, per_pair_rate=None, per_indiv_rate=1.0, longest_resul
     
     do_all_pairs = (per_pair_rate >= 1.0)
     
-    frand = rand.random     #pylint: disable=E0602
-    irand = rand.randrange  #pylint: disable=E0602
+    frand = rand.random
+    irand = rand.randrange
     group = list(src)
     
     for i1_pre, i2_pre in zip(group[::2], group[1::2]):
@@ -197,7 +199,7 @@ def OnePointDifferent(src, per_pair_rate=None, per_indiv_rate=1.0, longest_resul
                     i2_post = type(i2_pre)(genome2[:cut2] + genome1[cut1:], i2_pre, statistic={ 'recombined': 1 })
                 else:
                     
-                    notify('crossover_one_different', 'aborted',    #pylint: disable=E0602
+                    notify('crossover_one_different', 'aborted', 
                            {'i1': i1_pre, 'i2': i2_pre, 'longest_result': longest_result})
                     i1_post, i2_post = i1_pre, i2_pre
             yield i1_post
@@ -249,8 +251,8 @@ def PerGeneTuple(src, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=None
     do_all_indiv = (per_indiv_rate >= 1.0)
     equal_per_gene_rate = (per_gene_rate == None)
     
-    frand = rand.random     #pylint: disable=E0602
-    choice = rand.choice    #pylint: disable=E0602
+    frand = rand.random
+    choice = rand.choice
     
     for indiv in src:
         if do_all_indiv or frand() < per_indiv_rate:

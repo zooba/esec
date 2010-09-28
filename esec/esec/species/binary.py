@@ -2,8 +2,8 @@
 '''
 from esec.species import Species
 from esec.individual import Individual
+from esec.context import rand
 from math import floor
-
 # Disabled: method could be a function
 #pylint: disable=R0201
 
@@ -212,7 +212,7 @@ class BinarySpecies(Species):
             "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
         assert shortest > 0, "Shortest must be greater than zero"
         
-        return rand.randrange(shortest, longest+1)  #pylint: disable=E0602
+        return rand.randrange(shortest, longest+1)
     
     def init_random(self, length=None, shortest=10, longest=10, template=None): #pylint: disable=W0613
         '''Returns instances of `BinaryIndividual` initialised with random bitstrings.
@@ -235,7 +235,7 @@ class BinarySpecies(Species):
         '''
         def _bit():
             '''Picks a random bit value.'''
-            return 0 if rand.random() <= 0.5 else 1 #pylint: disable=E0602
+            return 0 if rand.random() <= 0.5 else 1
         while True:
             yield BinaryIndividual([_bit() for _ in xrange(self._len(length, shortest, longest))], self)
     
@@ -267,7 +267,7 @@ class BinarySpecies(Species):
         '''
         def _bit():
             '''Picks a random bit value.'''
-            return 0 if rand.random() <= 0.5 else 1 #pylint: disable=E0602
+            return 0 if rand.random() <= 0.5 else 1
         while True:
             yield BinaryRealIndividual([_bit() for _ in xrange(self._len(length, shortest, longest))], self, \
                                        resolution, offset, bits_per_value)
@@ -300,7 +300,7 @@ class BinarySpecies(Species):
         '''
         def _bit():
             '''Picks a random bit value.'''
-            return 0 if rand.random() <= 0.5 else 1 #pylint: disable=E0602
+            return 0 if rand.random() <= 0.5 else 1
         while True:
             yield BinaryIntegerIndividual([_bit() for _ in xrange(self._len(length, shortest, longest))], self, \
                                        resolution, offset, bits_per_value)
@@ -384,7 +384,7 @@ class BinarySpecies(Species):
             selected for mutation (under `per_indiv_rate`) then this value is
             unused.
         '''
-        frand = rand.random     #pylint: disable=E0602
+        frand = rand.random
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
@@ -420,7 +420,7 @@ class BinarySpecies(Species):
             selected for mutation (under `per_indiv_rate`) then this value is
             unused.
         '''
-        frand = rand.random     #pylint: disable=E0602
+        frand = rand.random
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
@@ -451,7 +451,7 @@ class BinarySpecies(Species):
             The probability of any individual being mutated. If an individual
             is not mutated, it is returned unmodified.
         '''
-        frand = rand.random     #pylint: disable=E0602
+        frand = rand.random
         
         do_all_indiv = (per_indiv_rate >= 1.0)
         
@@ -495,8 +495,8 @@ class BinarySpecies(Species):
         if length:
             shortest = longest = length
         
-        frand = rand.random     #pylint: disable=E0602
-        irand = rand.randrange  #pylint: disable=E0602
+        frand = rand.random
+        irand = rand.randrange
         
         do_all_indiv = (per_indiv_rate >= 1.0)
         

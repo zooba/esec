@@ -1,13 +1,6 @@
-from . import *
-import random
+from tests import *
 from esec.generators import selectors, joiners
-
-rand = random
-
-def notify(sender, name, param): pass
-import __builtin__
-__builtin__.rand = rand
-__builtin__.notify = notify
+from esec.context import rand, notify
 
 def test_selectors_max():
     population = make_pop_max()

@@ -105,7 +105,7 @@ ge_tests = [
 ]
 
 TGP_DEF_TEMPLATE = r'''
-FROM %s_tgp(terminals=cfg.landscape.terminals,%s) SELECT (size) population
+FROM %s_tgp(terminals=config.landscape.terminals,%s) SELECT (size) population
 YIELD population
 
 BEGIN generation
@@ -120,9 +120,9 @@ TGP_BOOL_DEFS = [TGP_DEF_TEMPLATE % i for i in [('boolean', 'constants=False'), 
 TGP_INT_DEFS =  [TGP_DEF_TEMPLATE % i for i in [('integer', ''), ('integer', 'lowest_constant=0, highest_constant=255')]]
 TGP_REAL_DEFS = [TGP_DEF_TEMPLATE % i for i in [('real', ''), ('real', 'transcendentals=True'), ('real', 'lowest_constant=-1.0, highest_constant=1.0')]]
 
-REAL_MAP_DEF = r'''FROM random_real_binary(longest=cfg.landscape.size.max*10,shortest=cfg.landscape.size.min*10, \
-                        resolution=cfg.landscape.bounds[1][0]-cfg.landscape.bounds[0][0] / 10.0, \
-                        offset=cfg.landscape.bounds[0][0], \
+REAL_MAP_DEF = r'''FROM random_real_binary(longest=config.landscape.size.max*10,shortest=config.landscape.size.min*10, \
+                        resolution=config.landscape.bounds[1][0]-config.landscape.bounds[0][0] / 10.0, \
+                        offset=config.landscape.bounds[0][0], \
                         bits_per_value=10) SELECT (size) population
 
 YIELD population
@@ -135,9 +135,9 @@ BEGIN generation
 END generation
 '''
 
-INT_MAP_DEF = r'''FROM random_integer_binary(longest=cfg.landscape.size.max*10,shortest=cfg.landscape.size.min*10, \
-                        resolution=cfg.landscape.bounds[1][0]-cfg.landscape.bounds[0][0] / 10, \
-                        offset=cfg.landscape.bounds[0][0], \
+INT_MAP_DEF = r'''FROM random_integer_binary(longest=config.landscape.size.max*10,shortest=config.landscape.size.min*10, \
+                        resolution=config.landscape.bounds[1][0]-config.landscape.bounds[0][0] / 10, \
+                        offset=config.landscape.bounds[0][0], \
                         bits_per_value=10) SELECT (size) population
 
 YIELD population

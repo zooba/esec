@@ -3,6 +3,8 @@
 These pipelines may also be taken as examples to be used with configuration files.
 '''
 
+from esec.context import context, config
+
 ########################################################################
 def _suitable_individual():
     '''Used by generic pipelines to create individuals suitable for the current
@@ -15,7 +17,7 @@ def _suitable_individual():
         individuals, write a new system definition.
     '''
     # Pipeline context is available through `context`
-    lscape = context['cfg'].landscape
+    lscape = config.landscape
     assert hasattr(lscape, 'size'), "Landscapes used with predefined pipelines require a size attribute"
     
     if lscape.ltype == 'BVP':
@@ -194,9 +196,9 @@ END generation
 #-----------------------------------------------------------------------
 
 NKC_GA_DEF = r'''
-FROM random_binary(length=cfg.landscape.size.exact) SELECT (size) population
+FROM random_binary(length=config.landscape.size.exact) SELECT (size) population
 JOIN population, population INTO pairs USING random_tuples
-EVAL pairs USING cfg.landscape
+EVAL pairs USING config.landscape
 EVAL population USING assign(source=pairs)
 YIELD population
 
@@ -206,9 +208,8 @@ BEGIN generation
                                                   mutate_random(per_indiv_rate=(1.0/size))
     
     JOIN population, population INTO pairs USING random_tuples
-    EVAL pairs USING cfg.landscape
+    EVAL pairs USING config.landscape
     EVAL population USING assign(pairs)
-    `print '\n'.join(','.join(str(i) for i in p) for p in pairs)
     YIELD population
 END generation
 '''

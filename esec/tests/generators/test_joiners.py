@@ -1,8 +1,5 @@
-from . import *
-import random
+from tests import *
 from esec.generators import joiners
-
-rand = joiners.rand = random
 
 def test_joiners():
     print "Maximisation"

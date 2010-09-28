@@ -19,6 +19,7 @@ problem.
 '''
 
 from esec.fitness import Fitness, EmptyFitness
+from esec.context import notify
 import itertools
 
 class Individual(object):
@@ -44,8 +45,6 @@ class Individual(object):
         with the notification ``'statistic'`` and value ``'births'``.
         '''
         cls._birthday += 1
-        # notify() will be available when this runs
-        #pylint: disable=E0602
         notify('individual', 'statistic', 'births')
         return cls._birthday
     
@@ -144,7 +143,7 @@ class Individual(object):
             if isinstance(_fit, Fitness): self._fitness = _fit
             elif _fit != None: self._fitness = Fitness(_fit)
             else: self._fitness = EmptyFitness()
-            notify('individual', 'statistic', 'local_evals+global_evals')   #pylint: disable=E0602
+            notify('individual', 'statistic', 'local_evals+global_evals')
         return self._fitness
     
     # Pylint doesn't understand @x.setter and @x.deleter

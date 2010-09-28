@@ -71,6 +71,7 @@ class OneMax(Binary):
     size_equals_parameters = False
     
     syntax = { 'N?': int }
+    default = { 'parameters': 4 }
     
     test_key = (('parameters', int),)
     test_cfg = ('4', '10')

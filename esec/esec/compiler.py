@@ -5,11 +5,7 @@ and validation.
 import re
 from esec.utils.exceptions import ESDLSyntaxError
 
-_DEFINITIONS = '''__builtins__['rand'] = rand
-__builtins__['notify'] = notify
-__builtins__['context'] = context
-
-def _iter(*srcs):
+_DEFINITIONS = '''def _iter(*srcs):
     assert srcs, "srcs cannot be empty"
     def _conv(i):
         return (getattr(i, '__iter__', None) or getattr(i, '__call__'))()

@@ -9,6 +9,7 @@ from itertools import product
 from esec.individual import JoinedIndividual
 from esec.species import JoinedSpecies
 from esec.generators.selectors import BestOnly
+from esec.context import rand
 
 def All(srcs, names):
     '''Returns all individuals matched with all other individuals.'''
@@ -42,7 +43,7 @@ def RandomTuples(srcs, names, distinct=False):
     If `distinct` is ``True``, an attempt is made to avoid repetition
     within a tuple, however, if this cannot be achieved then some
     elements may not be distinct.'''
-    choice = rand.choice    #pylint: disable=E0602
+    choice = rand.choice
     
     srcs = list(srcs)
     assert all(len(i) for i in srcs), 'Empty groups cannot joined'

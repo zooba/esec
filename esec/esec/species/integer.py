@@ -3,6 +3,7 @@ integer-valued genomes.
 '''
 from esec.species import Species
 from esec.individual import Individual
+from esec.context import rand
 
 # Disabled: method could be a function
 #pylint: disable=R0201
@@ -100,7 +101,7 @@ class IntegerSpecies(Species):
         if not bounds: bounds = (lowest, highest)
         bounds = [self._convert_bounds(bounds[0], longest), self._convert_bounds(bounds[1], longest)]
 
-        irand = rand.randrange      #pylint: disable=E0602
+        irand = rand.randrange
         if shortest == longest:
             while True:
                 genes = [_gen(*i) for i in zip(lowest, highest, xrange(shortest))]
@@ -158,7 +159,7 @@ class IntegerSpecies(Species):
             If provided, used to determine the values for `lowest`
             and `highest`.
         '''
-        irand = rand.randrange      #pylint: disable=E0602
+        irand = rand.randrange
         return self._init(length, shortest, longest, lowest, highest, bounds, template,
                           lambda low, high, _: irand(low, high + 1))
     
@@ -427,8 +428,8 @@ class IntegerSpecies(Species):
             selected for mutation (under `per_indiv_rate`) then this value is
             unused.
         '''
-        frand = rand.random     #pylint: disable=E0602
-        irand = rand.randrange  #pylint: disable=E0602
+        frand = rand.random
+        irand = rand.randrange
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
@@ -473,7 +474,7 @@ class IntegerSpecies(Species):
             The probability of `step_size` being added to the gene value.
             Otherwise, `step_size` is subtracted.
         '''
-        frand = rand.random     #pylint: disable=E0602
+        frand = rand.random
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
@@ -533,8 +534,8 @@ class IntegerSpecies(Species):
             unused.
         '''
         sigma = sigma or (step_size * 1.253)
-        frand = rand.random     #pylint: disable=E0602
-        gauss = rand.gauss      #pylint: disable=E0602
+        frand = rand.random
+        gauss = rand.gauss
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)

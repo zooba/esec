@@ -3,6 +3,11 @@ from esec.species import JoinedSpecies
 from esec.individual import JoinedIndividual
 from esec.fitness import FitnessMaximise, FitnessMinimise
 
+from esec.context import _context
+import random
+_context.rand = random
+_context.notify = lambda *p, **kw: None
+
 class TestEvaluatorMax(object):
     def eval(self, indiv):
         return FitnessMaximise(indiv[-1])

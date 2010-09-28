@@ -11,6 +11,8 @@ from esec.individual import Individual, OnIndividual
 from esec.generators import selectors, recombiners, joiners
 from esec.species import SPECIES
 
+from esec.context import _context as global_context
+
 class System(object):
     '''Provides a system using a dynamically generated controller.
     '''
@@ -94,7 +96,7 @@ class System(object):
         rand = random.Random(cfg.random_seed)
         notify = self._do_notify
         self._context = context = {
-            'cfg': self.cfg,
+            'config': self.cfg,
             'rand': rand,
             'notify': notify,
         }
@@ -110,7 +112,10 @@ class System(object):
         compiler = Compiler(self.definition)
         compiler.compile()
         
-        context['context'] = context
+        global_context.context = context
+        global_context.config = self.cfg
+        global_context.rand = context['rand']
+        global_context.notify = context['notify']
         
         self._code_string = compiler.code
         

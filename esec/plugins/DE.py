@@ -32,8 +32,8 @@ def mutate_DE(source, scale):
         yield type(base)([_combine(b, p1, p2, *base.bounds) for b, p1, p2 in zip(base, parameter1, parameter2)], base)
 
 DE_DEF = r'''
-FROM random_real(length=cfg.landscape.size.exact,
-                 lowest=cfg.landscape.bounds[0][0],highest=cfg.landscape.bounds[1][0]) \
+FROM random_real(length=config.landscape.size.exact,
+                 lowest=config.landscape.bounds[0],highest=config.landscape.bounds[1]) \
         SELECT (size) population
 YIELD population
 

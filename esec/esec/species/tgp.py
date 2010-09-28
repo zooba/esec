@@ -3,6 +3,7 @@ genetic programming (Koza-style) genomes.
 '''
 from esec.species import Species
 from esec.individual import Individual, OnIndividual
+from esec.context import rand, notify
 import math
 
 # Override Individual to provide one that keeps its valid instructions with it
@@ -399,9 +400,9 @@ class TgpSpecies(Species):
             instruction is followed by its parameters, also known as
             Polish notation).
         '''
-        irand = rand.randrange  #pylint: disable=E0602
-        frand = rand.random     #pylint: disable=E0602
-        choice = rand.choice    #pylint: disable=E0602
+        irand = rand.randrange
+        frand = rand.random
+        choice = rand.choice
         constants = (terminals or 1) if constant_bounds else 0
         assert (adfs - adf_index) + terminals + constants, "No terminals available"
         
@@ -659,7 +660,7 @@ class TgpSpecies(Species):
             ``'aborted'`` notification is sent to the monitor from
             ``'crossover_one'``.
         '''
-        frand = rand.random     #pylint: disable=E0602
+        frand = rand.random
         
         if per_pair_rate == None: per_pair_rate = per_indiv_rate
         do_all_pairs = (per_pair_rate >= 1.0)
@@ -686,7 +687,7 @@ class TgpSpecies(Species):
                             new2 = program2[:start2] + program1[start1:end1] + program2[end2:]
                             if self.depth(new1) > deepest_result or self.depth(new2) > deepest_result:
                                 stats = { 'i1': i1_pre, 'i2': i2_pre, 'adf': adf, 'deepest_result': deepest_result }
-                                notify('crossover_one', 'aborted', stats)   #pylint: disable=E0602
+                                notify('crossover_one', 'aborted', stats)
                                 i1_post.append(program1)
                                 i2_post.append(program2)
                             else:
@@ -747,7 +748,7 @@ class TgpSpecies(Species):
             point. If this is zero, the program tree will be filled to
             the depth specified by `deepest_result`.
         '''
-        frand = rand.random     #pylint: disable=E0602
+        frand = rand.random
         
         if per_gene_rate != None: per_adf_rate = per_gene_rate
         do_all_indiv = (per_indiv_rate >= 1.0)
@@ -800,8 +801,8 @@ class TgpSpecies(Species):
             each ADF within the selected individuals is mutated with a
             probability of `per_adf_rate`.
         '''
-        frand = rand.random     #pylint: disable=E0602
-        shuffle = rand.shuffle  #pylint: disable=E0602
+        frand = rand.random
+        shuffle = rand.shuffle
         
         do_all_indiv = (per_indiv_rate >= 1.0)
         do_all_adf = (per_adf_rate >= 1.0)
@@ -859,7 +860,7 @@ class TgpSpecies(Species):
             probability of `per_adf_rate`.
         '''
         
-        frand = rand.random     #pylint: disable=E0602
+        frand = rand.random
         
         do_all_indiv = (per_indiv_rate >= 1.0)
         do_all_adf = (per_adf_rate >= 1.0)
@@ -916,7 +917,7 @@ class TgpSpecies(Species):
         '''Selects a random branch within the program and returns both its
         starting index and end index (as found with `_find_end`).
         '''
-        start = rand.randrange(len(program))    #pylint: disable=E0602
+        start = rand.randrange(len(program))
         end = cls._find_end(program, start)
         
         return (start, end)

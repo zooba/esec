@@ -1,12 +1,7 @@
+import tests
 import esec.species.tgp as tgp
 
-import random
-rand = random
-
-def notify(sender, name, param): pass
-import __builtin__
-__builtin__.rand = rand
-__builtin__.notify = notify
+from esec.context import rand, notify
 
 Species = tgp.TgpSpecies({ }, None)
 
