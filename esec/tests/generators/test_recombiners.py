@@ -4,6 +4,9 @@ from esec.generators import recombiners, joiners
 
 rand = recombiners.rand = random
 
+make_pop = make_pop_max
+make_pop_variable = make_pop_variable_max
+
 def test_recombiners_OnePointSame_Values():
     population = make_pop()
     

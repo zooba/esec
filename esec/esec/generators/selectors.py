@@ -313,19 +313,7 @@ def FitnessProportional(src, replacement=True, sus=False, mu=None):
         yield group[0]
         raise StopIteration
     
-    invert = False
-    try:
-        g0 = group[0]
-        g1 = next((g for g in group if g.fitness != g0.fitness))
-        if g0.fitness > g1.fitness and g0.fitness.values[0] < g1.fitness.values[0] or \
-            g0.fitness < g1.fitness and g0.fitness.values[0] > g1.fitness.values[0]:
-            invert = True
-    except StopIteration:
-        # All fitnesses are the same, so invert is irrelevant.
-        pass
-    
-    wheel = [(i.fitness.values[0] if (i and isinstance(i.fitness, Fitness)) else 0, i) for i in group]
-    if invert: wheel = [(-i[0], i[1]) for i in wheel]
+    wheel = [(i.fitness.simple, i) for i in group]
     
     # if necessary, adjust all fitnesses to be positive
     min_fitness = min([i[0] for i in wheel])

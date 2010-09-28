@@ -115,7 +115,8 @@ class Fitness(object):
     
     @property
     def simple(self):
-        '''Returns the most significant part of the fitness value.
+        '''Returns the most significant part of the fitness value. This value
+        should always be larger (more positive) for a more-fit fitness.
         '''
         return self.values[0]
     
@@ -316,6 +317,14 @@ class FitnessMinimise(Fitness):
         if not isinstance(other, Fitness): return True
         # By default, Python performs a lexicographical comparison on sequences.
         return self.values < other.values
+    
+    @property
+    def simple(self):
+        '''Returns the most significant part of the fitness value. This value
+        is negated to ensure maximisation.
+        '''
+        return -self.values[0]
+    
 
 class FitnessMinimize(FitnessMinimise):
     '''Represents a simple fitness value where lower values are considered to be

@@ -4,9 +4,24 @@ from esec.generators import joiners
 
 rand = joiners.rand = random
 
-def test_joiners_All():
-    population = make_pop()
+def test_joiners():
+    print "Maximisation"
+    population = make_pop_max()
+    yield check_joiners_All, population
+    yield check_joiners_Tuples, population
+    yield check_joiners_RandomTuples, population
+    yield check_joiners_DistinctRandomTuples, population
     
+    print "Minimisation"
+    population = make_pop_min()
+    yield check_joiners_All, population
+    yield check_joiners_Tuples, population
+    yield check_joiners_RandomTuples, population
+    yield check_joiners_DistinctRandomTuples, population
+    
+    
+
+def check_joiners_All(population):
     _gen = joiners.All([population] * 2, ['population'] * 2)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population)**2 = %d" % (len(offspring), len(population)**2)
@@ -15,9 +30,7 @@ def test_joiners_All():
     assert all(isinstance(g, JoinedIndividual) for g in offspring), "Some individuals are not JoinedIndividuals"
     assert all(all(i in population for i in g.genome) for g in offspring), "Some members are not in original population"
         
-def test_joiners_Tuples():
-    population = make_pop()
-    
+def check_joiners_Tuples(population):
     _gen = joiners.Tuples([population] * 3, ['population'] * 3)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
@@ -28,9 +41,7 @@ def test_joiners_Tuples():
     assert all(all(i in population for i in g) for g in offspring), "Some members are not in original population"
     assert all(all(i is g[0] for i in g[1:]) for g in offspring), "Some members are not matched with themselves"
     
-def test_joiners_RandomTuples():
-    population = make_pop()
-    
+def check_joiners_RandomTuples(population):
     _gen = joiners.RandomTuples([population] * 3, ['population'] * 3)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
@@ -41,9 +52,7 @@ def test_joiners_RandomTuples():
     assert all(all(i in population for i in g) for g in offspring), "Some members are not in original population"
     assert not all(all(i is g[0] for i in g[1:]) for g in offspring), "All members are matched with themselves"
     
-def test_joiners_DistinctRandomTuples():
-    population = make_pop()
-    
+def check_joiners_DistinctRandomTuples(population):
     _gen = joiners.DistinctRandomTuples([population] * 3, ['population'] * 3)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
