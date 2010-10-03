@@ -1,4 +1,5 @@
 from random import randrange
+from itertools import izip as zip
 from esec.fitness import Fitness, EmptyFitness
 import esec.landscape.integer as integer
 

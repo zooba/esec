@@ -13,6 +13,7 @@ Most of these binary landscapes are problem generators.
 
 '''
 
+from itertools import izip as zip
 from esec.landscape import Landscape
 from esec.individual import JoinedIndividual
 

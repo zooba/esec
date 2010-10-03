@@ -24,6 +24,7 @@ if used in an operation.
 
 import sys
 from types import GeneratorType as generator
+from itertools import izip as zip
 
 class Fitness(object):
     '''Represents a multi-stage fitness value.

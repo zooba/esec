@@ -6,6 +6,7 @@ which the joiners are executed.
 '''
 
 from itertools import product
+from itertools import izip as zip
 from esec.individual import JoinedIndividual
 from esec.species import JoinedSpecies
 from esec.generators.selectors import BestOnly

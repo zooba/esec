@@ -1,4 +1,5 @@
 from random import uniform
+from itertools import izip as zip
 from esec.fitness import Fitness, EmptyFitness
 import esec.landscape.real as real
 

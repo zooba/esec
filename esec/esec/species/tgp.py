@@ -1,6 +1,7 @@
 '''Provides the `TgpSpecies` and `TgpIndividual` classes for tree-based
 genetic programming (Koza-style) genomes.
 '''
+from itertools import izip as zip
 from esec.species import Species
 from esec.individual import Individual, OnIndividual
 from esec.context import rand, notify

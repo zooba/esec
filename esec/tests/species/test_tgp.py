@@ -1,4 +1,5 @@
 import tests
+from itertools import izip as zip
 import esec.species.tgp as tgp
 
 from esec.context import rand, notify

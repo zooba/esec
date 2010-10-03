@@ -31,6 +31,7 @@ Problem Generators:
 
 '''
 
+from itertools import izip as zip
 from esec.utils import all_equal
 from math import sin, cos, fabs, sqrt, pi, e, exp, log
 from esec.landscape import Landscape

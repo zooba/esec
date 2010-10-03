@@ -1,5 +1,6 @@
 from . import *
 import random
+from itertools import izip as zip
 from esec.generators import recombiners, joiners
 
 rand = recombiners.rand = random

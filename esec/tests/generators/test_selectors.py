@@ -1,4 +1,5 @@
 from tests import *
+from itertools import izip as zip
 from esec.generators import selectors, joiners
 from esec.context import rand, notify
 

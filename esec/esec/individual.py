@@ -20,6 +20,7 @@ problem.
 
 from esec.fitness import Fitness, EmptyFitness
 from esec.context import notify
+from itertools import izip as zip
 import itertools
 
 class Individual(object):

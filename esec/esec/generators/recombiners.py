@@ -9,6 +9,7 @@ type validation, all constructors should use ``type`` on an existing
 `Individual` to ensure the correct derivation is used.
 '''
 
+from itertools import izip as zip
 from esec.context import rand, notify
 
 def Uniform(src, per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5):

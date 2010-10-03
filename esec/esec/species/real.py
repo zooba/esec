@@ -1,6 +1,7 @@
 '''Provides the `RealSpecies` and `RealIndividual` classes for
 real-valued genomes.
 '''
+from itertools import izip as zip
 from esec.species import Species
 from esec.individual import Individual
 from esec.context import rand

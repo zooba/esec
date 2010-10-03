@@ -3,6 +3,7 @@
 These pipelines may also be taken as examples to be used with configuration files.
 '''
 
+from itertools import izip as zip
 from esec.context import context, config
 
 ########################################################################

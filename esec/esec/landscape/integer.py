@@ -9,6 +9,7 @@ support. See `landscape` for details.
 
 from sys import maxsize
 from math import sqrt
+from itertools import izip as zip
 from esec.landscape import Landscape
 from esec.utils import all_equal
 

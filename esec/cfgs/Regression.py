@@ -34,7 +34,7 @@ config = {
     'verbose': 0,
 }
 
-settings = "low_priority=True;quiet=True"
+settings = "low_priority=False;quiet=True"
 
 std_dialects = ['GA', 'SSGA']
 bvp_tests = [
