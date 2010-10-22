@@ -274,7 +274,7 @@ def esec_run(options):
         # in the system definition.
         ex = sys.exc_info()[1]
         print >> sys.stderr, HR, "Errors occurred:"
-        print >> sys.stderr, ' ' + '\n '.join(('%s: %s' % tuple(i) for i in ex.exceptions))
+        print >> sys.stderr, ' ' + '\n '.join(str(i) for i in ex.exceptions)
         print >> sys.stderr, HR
         return
     
