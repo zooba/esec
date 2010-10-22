@@ -21,6 +21,7 @@ class Experiment(object):
         'monitor': '*', # pre-initialised MonitorBase instance, class or dict
         'landscape': '*',
         'system': '*', # allow System to validate
+        'selector?': '*', # System also validates this
         'verbose': int,
     }
     '''The expected format of the configuration dictionary passed to `__init__`.

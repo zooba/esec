@@ -1,7 +1,7 @@
 '''Provides the `TgpSpecies` and `TgpIndividual` classes for tree-based
 genetic programming (Koza-style) genomes.
 '''
-from itertools import izip as zip
+from itertools import izip as zip   #pylint: disable=W0622
 from esec.species import Species
 from esec.individual import Individual, OnIndividual
 from esec.context import rand, notify
@@ -601,18 +601,18 @@ class TgpSpecies(Species):
                 instructions, instruction_set, terminals, \
                 constant_bounds, int)
     
-    def crossover_one(self, src, \
+    def crossover_one(self, _source, \
                       per_pair_rate=None, per_indiv_rate=0.1, per_adf_rate=1.0, \
                       longest_result=None, deepest_result=None):
         '''
         :Note: Redirects to `crossover_one_different`. TGP has no sensible
                way in which to cross two individuals at the same point.
         '''
-        return self.crossover_one_different(src, \
+        return self.crossover_one_different(_source, \
             per_pair_rate, per_indiv_rate, per_adf_rate, \
             longest_result, deepest_result)
     
-    def crossover_one_different(self, src, \
+    def crossover_one_different(self, _source, \
                                 per_pair_rate=None, per_indiv_rate=0.1, per_adf_rate=1.0, \
                                 longest_result=None, deepest_result=None):
         '''Performs single-point crossover by selecting a random program
@@ -623,14 +623,14 @@ class TgpSpecies(Species):
         that circular or recursive references are not introduced.
         
         Returns a sequence of crossed individuals based on the individuals
-        in `src`. The resulting sequence will contain as many individuals
-        as `src` (unless `src` contains an odd number, in which case one
-        less will be returned).
+        in `_source`. The resulting sequence will contain as many individuals
+        as `_source` (unless `_source` contains an odd number, in which case
+        one less will be returned).
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`TgpIndividual`)
+          _source : iterable(`TgpIndividual`)
             A sequence of individuals. Individuals are taken two at a time
             from this sequence, recombined to produce two new individuals,
             and yielded separately.
@@ -669,7 +669,7 @@ class TgpSpecies(Species):
         
         if deepest_result == None: deepest_result = longest_result
         
-        group = list(src)
+        group = list(_source)
         for i1_pre, i2_pre in zip(group[::2], group[1::2]):
             if do_all_pairs or frand() < per_pair_rate:
                 assert len(i1_pre.genome) == len(i2_pre.genome), "ADF counts are not consistent"
@@ -708,7 +708,7 @@ class TgpSpecies(Species):
                 yield i1_pre
                 yield i2_pre
     
-    def mutate_random(self, src, \
+    def mutate_random(self, _source, \
                       per_indiv_rate=1.0, per_gene_rate=None, per_adf_rate=1.0, \
                       deepest_result=None, \
                       terminal_prob=0.5):
@@ -718,7 +718,7 @@ class TgpSpecies(Species):
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`TgpIndividual`)
+          _source : iterable(`TgpIndividual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -773,20 +773,20 @@ class TgpSpecies(Species):
                     new_genes.append(program)
             return new_genes
         
-        for indiv in src:
+        for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 yield type(indiv)(_mutate(indiv), indiv, statistic={ 'mutated': 1 })
             else:
                 yield indiv
     
-    def mutate_permutate(self, src, per_indiv_rate=1.0, per_adf_rate=1.0):
+    def mutate_permutate(self, _source, per_indiv_rate=1.0, per_adf_rate=1.0):
         '''Mutates a group of individuals by selecting a random node and
         randomly reordering its parameters.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`TgpIndividual`)
+          _source : iterable(`TgpIndividual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -830,21 +830,21 @@ class TgpSpecies(Species):
                     new_genes.append(program)
             return new_genes
         
-        for indiv in src:
+        for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 yield type(indiv)(_mutate(indiv), indiv, statistic={ 'mutated': 1, 'permutated': 1 })
             else:
                 yield indiv
 
     
-    def mutate_edit(self, src, per_indiv_rate=1.0, per_adf_rate=1.0):
+    def mutate_edit(self, _source, per_indiv_rate=1.0, per_adf_rate=1.0):
         '''Mutates a group of individuals by simplifying instruction sequences
         that are redundant or contradictory.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`TgpIndividual`)
+          _source : iterable(`TgpIndividual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -907,7 +907,7 @@ class TgpSpecies(Species):
                     new_genes.append(program)
             return new_genes
         
-        for indiv in src:
+        for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 yield type(indiv)(_edit(indiv), indiv, statistic={ 'mutated': 1, 'permutated': 1 })
             else:

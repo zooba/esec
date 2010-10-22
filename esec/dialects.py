@@ -134,8 +134,8 @@ BEGIN generation
     YIELD offspring
     
     # calculate success rate based on parents and offspring
-    success_rate = es_success_rate(parents, offspring)
-    current_step = es_adapt(current_step, adapt_step, success_rate)
+    success_rate = es_success_rate(parents=parents, offspring=offspring)
+    current_step = es_adapt(current_step=current_step, adapt_step=adapt_step, success_rate=success_rate)
     
     FROM population, offspring SELECT (size) population USING best
     YIELD population
@@ -210,7 +210,7 @@ BEGIN generation
     
     JOIN population, population INTO pairs USING random_tuples
     EVAL pairs USING config.landscape
-    EVAL population USING assign(pairs)
+    EVAL population USING assign(source=pairs)
     YIELD population
 END generation
 '''

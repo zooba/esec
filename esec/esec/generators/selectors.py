@@ -19,21 +19,21 @@ class NoReplacementSelector(object):
     for example, five individuals to be selected at random and
     the remainder to be kept in a separate group.
     '''
-    def __init__(self, src, func):
+    def __init__(self, _source, func):
         '''Initialises the iterator.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`Individual`)
+          _source : iterable(`Individual`)
             A sequence of individuals. This sequence is cached in
             a list at construction.
           
-          func : function(self, src) |rArr| index
+          func : function(self, _source) |rArr| index
             A function that takes a list of individuals and returns
             the index of the next one selected.
         '''
-        self.src = list(src)
+        self._source = list(_source)
         self.func = func
     
     def __iter__(self): return self
@@ -41,106 +41,106 @@ class NoReplacementSelector(object):
     def rest(self):
         '''Returns all remaining individuals in the group.
         '''
-        return self.src
+        return self._source
     
     def next(self):
         '''Returns the next selected individual in the group.
         '''
-        if not self.src: raise StopIteration
+        if not self._source: raise StopIteration
         
-        i = self.func(self, self.src)
-        indiv = self.src[i]
-        del self.src[i]
+        i = self.func(self, self._source)
+        indiv = self._source[i]
+        del self._source[i]
         return indiv
 
-def All(src):
+def All(_source):
     '''Returns all individuals in an unspecified order.
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
     '''
-    return iter(src)
+    return iter(_source)
 
-def Repeat(src):
+def Repeat(_source):
     '''Returns all individuals in an unspecified order, returning
     to the start when the end is reached.
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
     '''
-    group = list(src)
+    group = list(_source)
     while True:
         for i in group:
             yield i
 
-def Best(src, only=False):
+def Best(_source, only=False):
     '''Returns the individuals in decreasing fitness order.
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
       
       only : bool
         If ``True``, repeatedly returns only the best individual
-        in `src`; otherwise, returns all individuals in `src` in
+        in `_source`; otherwise, returns all individuals in `_source` in
         order of decreasing fitness.
     '''
     if only:
-        return repeat(max(src, key=_key_fitness))
+        return repeat(max(_source, key=_key_fitness))
     else:
-        return NoReplacementSelector(sorted(src, key=_key_fitness, reverse=True), lambda s, src: 0)
+        return NoReplacementSelector(sorted(_source, key=_key_fitness, reverse=True), lambda s, _source: 0)
 
-def BestOnly(src):
+def BestOnly(_source):
     '''Repeatedly returns the individual with the highest fitness.
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
     '''
-    return Best(src, True)
+    return Best(_source, True)
 
-def Worst(src, only=False):
+def Worst(_source, only=False):
     '''Returns the individuals in increasing fitness order.
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
       
       only : bool
         If ``True``, repeatedly returns only the worst individual
-        in `src`; otherwise, returns all individuals in `src` in
+        in `_source`; otherwise, returns all individuals in `_source` in
         order of increasing fitness.
     '''
     if only:
-        return repeat(min(src, key=_key_fitness))
+        return repeat(min(_source, key=_key_fitness))
     else:
-        return NoReplacementSelector(sorted(src, key=_key_fitness, reverse=False), lambda s, src: 0)
+        return NoReplacementSelector(sorted(_source, key=_key_fitness, reverse=False), lambda s, _source: 0)
 
-def WorstOnly(src):
+def WorstOnly(_source):
     '''Repeatedly returns the individual with the lowest fitness.
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
     '''
-    return Worst(src, True)
+    return Worst(_source, True)
 
 
-def Tournament(src, k=2, replacement=True, greediness=1.0):
+def Tournament(_source, k=2, replacement=True, greediness=1.0):
     '''Returns a sequence of individuals selected using tournament
     selection. `k` individuals are selected at random and the individual
     with the best fitness is returned.
@@ -148,7 +148,7 @@ def Tournament(src, k=2, replacement=True, greediness=1.0):
     .. include:: epydoc_include.txt
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
@@ -160,7 +160,7 @@ def Tournament(src, k=2, replacement=True, greediness=1.0):
         ``False`` to remove individuals from contention once they
         have been returned. The generator terminates when no
         individuals remain and the total number of individuals
-        is equal to the number in `src`.
+        is equal to the number in `_source`.
         If ``True``, the generator will never terminate.
       
       greediness : |prob|
@@ -184,7 +184,7 @@ def Tournament(src, k=2, replacement=True, greediness=1.0):
                 else:
                     pool.remove(winner)
                     yield pool[irand(len(pool))]
-        return _iter(list(src))
+        return _iter(list(_source))
     # WITHOUT REPLACEMENT
     else:
         def _func(sender, _src):    #pylint: disable=W0613
@@ -200,9 +200,9 @@ def Tournament(src, k=2, replacement=True, greediness=1.0):
             else:
                 # Now everyone's a winner (in fitness order)!
                 return 0
-        return NoReplacementSelector(src, _func)
+        return NoReplacementSelector(_source, _func)
 
-def BinaryTournament(src, replacement=True, greediness=1.0):
+def BinaryTournament(_source, replacement=True, greediness=1.0):
     '''Returns a sequence of individuals selected using binary tournament
     selection. Two individuals are selected at random and the individual
     with the best fitness is returned.
@@ -210,7 +210,7 @@ def BinaryTournament(src, replacement=True, greediness=1.0):
     .. include:: epydoc_include.txt
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
@@ -219,7 +219,7 @@ def BinaryTournament(src, replacement=True, greediness=1.0):
         ``False`` to remove individuals from contention once they
         have been returned. The generator terminates when no
         individuals remain and the total number of individuals
-        is equal to the number in `src`.
+        is equal to the number in `_source`.
         If ``True``, the generator will never terminate.
       
       greediness : |prob|
@@ -227,14 +227,14 @@ def BinaryTournament(src, replacement=True, greediness=1.0):
         selected. If this does not occur, one of the remaining
         individuals is selected at random.
     '''
-    return Tournament(src, 2, replacement, greediness)
+    return Tournament(_source, 2, replacement, greediness)
 
-def UniformRandom(src, replacement=True):
+def UniformRandom(_source, replacement=True):
     '''Returns a sequence of individuals selected randomly, without regards
     to their fitness.
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
@@ -243,7 +243,7 @@ def UniformRandom(src, replacement=True):
         ``False`` to remove individuals from contention once they
         have been returned. The generator terminates when no
         individuals remain and the total number of individuals
-        is equal to the number in `src`.
+        is equal to the number in `_source`.
         If ``True``, the generator will never terminate.
     '''
     irand = rand.randrange
@@ -254,31 +254,31 @@ def UniformRandom(src, replacement=True):
             size = len(_src)
             while True:
                 yield _src[irand(size)]
-        return _iter(list(src))
+        return _iter(list(_source))
     # WITHOUT REPLACEMENT
     else:
-        return NoReplacementSelector(src, lambda s, _src: irand(len(_src)))
+        return NoReplacementSelector(_source, lambda s, _src: irand(len(_src)))
 
-def UniformRandomWithoutReplacement(src):
+def UniformRandomWithoutReplacement(_source):
     '''Returns a sequence of individuals selected randomly, without regards
     to their fitness. Each individual is guaranteed to return only once,
-    and the number of individuals returned is equal to the number in `src`.
+    and the number of individuals returned is equal to the number in `_source`.
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
     '''
-    return UniformRandom(src, replacement=False)
+    return UniformRandom(_source, replacement=False)
 
-def FitnessProportional(src, replacement=True, sus=False, mu=None):
+def FitnessProportional(_source, replacement=True, sus=False, mu=None):
     '''Returns a sequence of individuals selected in proportion to their
     fitness. Only the most significant fitness value is used for determining
     proportion.
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
@@ -287,7 +287,7 @@ def FitnessProportional(src, replacement=True, sus=False, mu=None):
         ``False`` to remove individuals from contention once they
         have been returned. The generator terminates when no
         individuals remain and the total number of individuals
-        is equal to the number in `src`.
+        is equal to the number in `_source`.
         If ``True``, the generator will never terminate.
         If `sus` is ``True``, `replacement` is ignored.
       
@@ -299,12 +299,12 @@ def FitnessProportional(src, replacement=True, sus=False, mu=None):
       
       mu : int [optional]
         The number of selections being made when using SUS. If
-        not provided, the total number of individuals in `src`
+        not provided, the total number of individuals in `_source`
         is used.
         If `sus` is ``False``, `mu` is ignored.
     '''
     
-    group = sorted(src, key=_key_fitness, reverse=True)
+    group = sorted(_source, key=_key_fitness, reverse=True)
     irand = rand.randrange
     frand = rand.random
     
@@ -355,28 +355,28 @@ def FitnessProportional(src, replacement=True, sus=False, mu=None):
             yield winner[1]
             size -= 1
 
-def FitnessProportionalSUS(src, mu=None):
+def FitnessProportionalSUS(_source, mu=None):
     '''Returns a sequence of individuals selected using fitness based
     Stochastic Universal Sampling (SUS).
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
       
       mu : int [optional]
         The number of selections being made. If not provided,
-        the total number of individuals in `src` is used.
+        the total number of individuals in `_source` is used.
     '''
-    return FitnessProportional(src, sus=True, mu=mu)
+    return FitnessProportional(_source, sus=True, mu=mu)
 
-def RankProportional(src, replacement=True, sus=False, mu=None):
+def RankProportional(_source, replacement=True, sus=False, mu=None):
     '''Returns a sequence of individuals selected in proportion to their
     rank.
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
@@ -385,7 +385,7 @@ def RankProportional(src, replacement=True, sus=False, mu=None):
         ``False`` to remove individuals from contention once they
         have been returned. The generator terminates when no
         individuals remain and the total number of individuals
-        is equal to the number in `src`.
+        is equal to the number in `_source`.
         If ``True``, the generator will never terminate.
         If `sus` is ``True``, `replacement` is ignored.
       
@@ -397,12 +397,12 @@ def RankProportional(src, replacement=True, sus=False, mu=None):
       
       mu : int [optional]
         The number of selections being made when using SUS. If
-        not provided, the total number of individuals in `src`
+        not provided, the total number of individuals in `_source`
         is used.
         If `sus` is ``False``, `mu` is ignored.
     '''
     
-    group = sorted(src, key=_key_fitness, reverse=True)
+    group = sorted(_source, key=_key_fitness, reverse=True)
     frand = rand.random     #pylint: disable=E0602
     irand = rand.randrange  #pylint: disable=E0602
     
@@ -442,50 +442,50 @@ def RankProportional(src, replacement=True, sus=False, mu=None):
             yield winner[1]
             size -= 1
 
-def RankProportionalSUS(src, mu=None):
+def RankProportionalSUS(_source, mu=None):
     '''Returns a sequence of individuals selected using rank based
     Stochastic Universal Sampling (SUS).
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
       
       mu : int [optional]
         The number of selections being made. If not provided,
-        the total number of individuals in `src` is used.
+        the total number of individuals in `_source` is used.
     '''
-    return RankProportional(src, sus=True, mu=mu)
+    return RankProportional(_source, sus=True, mu=mu)
 
-def Unique(src):
+def Unique(_source):
     '''Returns a sequence of the unique individuals based on phenomes.
     
     Individuals are compared using their ``phenome_string`` property.
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Some or all individuals are
         returned from this sequence, depending on the selection
         criteria.
     '''
     known = set()
     
-    for indiv in src:
+    for indiv in _source:
         phenome = indiv.phenome_string
         if phenome not in known:
             known.add(phenome)
             yield indiv
 
-def BestOfTuple(src):
+def BestOfTuple(_source):
     '''Returns a sequence of the individuals with highest fitness from
     each `JoinedIndividual` provided.
 
     :Parameters:
-      src : iterable(`JoinedIndividual`)
+      _source : iterable(`JoinedIndividual`)
         A sequence of joined individuals.
     '''
 
-    for indiv in src:
+    for indiv in _source:
         assert isinstance(indiv, JoinedIndividual), "JoinedIndividuals are required for BestOfTuple"
         yield max(indiv, key=_key_fitness)

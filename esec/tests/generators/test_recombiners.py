@@ -11,7 +11,7 @@ make_pop_variable = make_pop_variable_max
 def test_recombiners_OnePointSame_Values():
     population = make_pop()
     
-    _gen = recombiners.OnePointSame(iter(population))
+    _gen = recombiners.OnePointSame(_source=iter(population))
     child1, child2 = next(_gen), next(_gen)
     print "len(child1) = %d, len(child2) = %d, len(population[0]) = %d" % (len(child1), len(child2), len(population[0]))
     assert len(child1) == len(child2) == len(population[0]), "Individual's length was changed"
@@ -25,7 +25,7 @@ def test_recombiners_OnePointSame_Values():
 def test_recombiners_OnePointSame_Selection_All():
     population = make_pop()
     
-    _gen = recombiners.OnePointSame(iter(population))
+    _gen = recombiners.OnePointSame(_source=iter(population))
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
@@ -35,7 +35,7 @@ def test_recombiners_OnePointSame_Selection_All():
 def test_recombiners_OnePointSame_Selection_None():
     population = make_pop()
     
-    _gen = recombiners.OnePointSame(iter(population), per_pair_rate=0.0)
+    _gen = recombiners.OnePointSame(_source=iter(population), per_pair_rate=0.0)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
@@ -47,7 +47,7 @@ def test_recombiners_OnePointSame_Selection_Half():
     
     modify_count = 0
     for _ in xrange(100):
-        _gen = recombiners.OnePointSame(iter(population), per_pair_rate=0.5)
+        _gen = recombiners.OnePointSame(_source=iter(population), per_pair_rate=0.5)
         offspring = list(_gen)
         assert len(offspring) == len(population), "Did not select all individuals"
         modify_count += len(set(offspring).difference(set(population)))
@@ -57,7 +57,7 @@ def test_recombiners_OnePointSame_Selection_Half():
 def test_recombiners_OnePointDifferent_Values():
     population = make_pop_variable()
     
-    _gen = recombiners.OnePointDifferent(iter(population))
+    _gen = recombiners.OnePointDifferent(_source=iter(population))
     child1, child2 = next(_gen), next(_gen)
     print "len(child1) = %d, len(child2) = %d, len(pop[0]) = %d, len(pop[1]) = %d" % (len(child1), len(child2), len(population[0]), len(population[1]))
     assert len(child1) + len(child2) == len(population[0]) + len(population[1]), "Genes were gained/lost"
@@ -73,7 +73,7 @@ def test_recombiners_OnePointDifferent_Values():
 def test_recombiners_OnePointDifferent_Selection_All():
     population = make_pop_variable()
     
-    _gen = recombiners.OnePointDifferent(iter(population))
+    _gen = recombiners.OnePointDifferent(_source=iter(population))
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
@@ -83,7 +83,7 @@ def test_recombiners_OnePointDifferent_Selection_All():
 def test_recombiners_OnePointDifferent_Selection_None():
     population = make_pop_variable()
     
-    _gen = recombiners.OnePointDifferent(iter(population), per_pair_rate=0.0)
+    _gen = recombiners.OnePointDifferent(_source=iter(population), per_pair_rate=0.0)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
@@ -95,7 +95,7 @@ def test_recombiners_OnePointDifferent_Selection_Half():
     
     modify_count = 0
     for _ in xrange(100):
-        _gen = recombiners.OnePointDifferent(iter(population), per_pair_rate=0.5)
+        _gen = recombiners.OnePointDifferent(_source=iter(population), per_pair_rate=0.5)
         offspring = list(_gen)
         assert len(offspring) == len(population), "Did not select all individuals"
         modify_count += len(set(offspring).difference(set(population)))
@@ -104,9 +104,9 @@ def test_recombiners_OnePointDifferent_Selection_Half():
 
 def test_recombiners_PerGeneTuple_None():
     population = make_pop()
-    joined = list(joiners.DistinctRandomTuples([population] * 2, ['population'] * 2))
+    joined = list(joiners.DistinctRandomTuples(_source=([population] * 2, ['population'] * 2)))
     
-    _gen = recombiners.PerGeneTuple(joined, per_indiv_rate=1.0, per_gene_rate=1.0)
+    _gen = recombiners.PerGeneTuple(_source=joined, per_indiv_rate=1.0, per_gene_rate=1.0)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
@@ -114,9 +114,9 @@ def test_recombiners_PerGeneTuple_None():
 
 def test_recombiners_PerGeneTuple_NotFromFirst():
     population = make_pop()
-    joined = list(joiners.DistinctRandomTuples([population] * 2, ['population'] * 2))
+    joined = list(joiners.DistinctRandomTuples(_source=([population] * 2, ['population'] * 2)))
     
-    _gen = recombiners.PerGeneTuple(joined, per_indiv_rate=1.0, per_gene_rate=0.0)
+    _gen = recombiners.PerGeneTuple(_source=joined, per_indiv_rate=1.0, per_gene_rate=0.0)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
@@ -126,9 +126,9 @@ def test_recombiners_PerGeneTuple_NotFromFirst():
 
 def test_recombiners_PerGeneTuple_AutoProb():
     population = make_pop()
-    joined = list(joiners.DistinctRandomTuples([population] * 2, ['population'] * 2))
+    joined = list(joiners.DistinctRandomTuples(_source=([population] * 2, ['population'] * 2)))
     
-    _gen = recombiners.PerGeneTuple(joined, per_indiv_rate=1.0, per_gene_rate=None)
+    _gen = recombiners.PerGeneTuple(_source=joined, per_indiv_rate=1.0, per_gene_rate=None)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
@@ -141,9 +141,9 @@ def test_recombiners_PerGeneTuple_AutoProb():
 
 def test_recombiners_PerGeneTuple_HalfFromFirst():
     population = make_pop()
-    joined = list(joiners.DistinctRandomTuples([population] * 2, ['population'] * 2))
+    joined = list(joiners.DistinctRandomTuples(_source=([population] * 2, ['population'] * 2)))
     
-    _gen = recombiners.PerGeneTuple(joined, per_indiv_rate=1.0, per_gene_rate=0.5)
+    _gen = recombiners.PerGeneTuple(_source=joined, per_indiv_rate=1.0, per_gene_rate=0.5)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"

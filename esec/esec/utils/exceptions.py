@@ -3,14 +3,6 @@
 Contains custom exceptions used in |esec|.
 '''
 
-class ESDLSyntaxError(SyntaxError):
-    '''Raised when an error is encountered while compiling ESDL code.
-    
-    Initialiser syntax is ESDLSyntaxError(msg, (filename, lineno, offset, line))
-    '''
-    pass
-
-
 class UnexpectedKeyWarning(Warning):
     '''Raised when a key that is passed in a configuration dictionary does not
     appear in the expected syntax.

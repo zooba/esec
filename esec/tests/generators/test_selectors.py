@@ -33,20 +33,20 @@ def test_selectors_min():
     
 
 def check_selectors_All(population):
-    _gen = selectors.All(iter(population))
+    _gen = selectors.All(_source=iter(population))
     offspring = [next(_gen) for _ in xrange(50)]
     print "len(offspring) = %d, expected = 50" % len(offspring)
     assert len(offspring) == 50, "Did not select expected number of individuals"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     
-    _gen = selectors.All(iter(population))
+    _gen = selectors.All(_source=iter(population))
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individials"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     
 def check_selectors_Best_max(population):
-    _gen = selectors.Best(iter(population))
+    _gen = selectors.Best(_source=iter(population))
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
@@ -56,13 +56,13 @@ def check_selectors_Best_max(population):
     print
     assert all((i==j for i,j in zip(offspring, reversed(population[-10:])))), "Did not select correct individuals"
     
-    _gen = selectors.Best(iter(population), only=True)
+    _gen = selectors.Best(_source=iter(population), only=True)
     offspring = [next(_gen) for _ in xrange(10)]
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all((i==population[-1] for i in offspring)), "Did not select best individual"
 
 def check_selectors_Best_min(population):
-    _gen = selectors.Best(iter(population))
+    _gen = selectors.Best(_source=iter(population))
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
@@ -72,45 +72,45 @@ def check_selectors_Best_min(population):
     print
     assert all((i==j for i,j in zip(offspring, population[:10]))), "Did not select correct individuals"
     
-    _gen = selectors.Best(iter(population), only=True)
+    _gen = selectors.Best(_source=iter(population), only=True)
     offspring = [next(_gen) for _ in xrange(10)]
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all((i==population[0] for i in offspring)), "Did not select best individual"
 
 def check_selectors_Worst_max(population):
-    _gen = selectors.Worst(iter(population))
+    _gen = selectors.Worst(_source=iter(population))
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all((i==j for i,j in zip(offspring, population[:10]))), "Did not select correct individuals"
 
-    _gen = selectors.Worst(iter(population), only=True)
+    _gen = selectors.Worst(_source=iter(population), only=True)
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all((i==population[0] for i in offspring)), "Did not select worst individual"
 
 def check_selectors_Worst_min(population):
-    _gen = selectors.Worst(iter(population))
+    _gen = selectors.Worst(_source=iter(population))
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all((i==j for i,j in zip(offspring, reversed(population[-10:])))), "Did not select correct individuals"
 
-    _gen = selectors.Worst(iter(population), only=True)
+    _gen = selectors.Worst(_source=iter(population), only=True)
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all((i==population[-1] for i in offspring)), "Did not select worst individual"
 
 def check_selectors_Tournament_2(population):
-    _gen = selectors.Tournament(iter(population), 2, replacement=True)
+    _gen = selectors.Tournament(_source=iter(population), k=2, replacement=True)
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     
-    _gen = selectors.Tournament(iter(population), 2, replacement=False)
+    _gen = selectors.Tournament(_source=iter(population), k=2, replacement=False)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individials"
@@ -121,13 +121,13 @@ def check_selectors_Tournament_2(population):
     assert sum(fit[:50]) > sum(fit[50:]), "Average fitness is not better in early selections"
 
 def check_selectors_Tournament_3(population):
-    _gen = selectors.Tournament(iter(population), 3, replacement=True)
+    _gen = selectors.Tournament(_source=iter(population), k=3, replacement=True)
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     
-    _gen = selectors.Tournament(iter(population), 3, replacement=False)
+    _gen = selectors.Tournament(_source=iter(population), k=3, replacement=False)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individials"
@@ -138,13 +138,13 @@ def check_selectors_Tournament_3(population):
     assert sum(fit[:50]) > sum(fit[50:]), "Average fitness is not better in early selections"
 
 def check_selectors_Tournament_5(population):
-    _gen = selectors.Tournament(iter(population), 5, replacement=True)
+    _gen = selectors.Tournament(_source=iter(population), k=5, replacement=True)
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     
-    _gen = selectors.Tournament(iter(population), 5, replacement=False)
+    _gen = selectors.Tournament(_source=iter(population), k=5, replacement=False)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individials"
@@ -155,14 +155,14 @@ def check_selectors_Tournament_5(population):
     assert sum(fit[:50]) > sum(fit[50:]), "Average fitness is not better in early selections"
     
 def check_selectors_UniformRandom(population):
-    _gen = selectors.UniformRandom(iter(population), replacement=True)
+    _gen = selectors.UniformRandom(_source=iter(population), replacement=True)
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     
 def check_selectors_UniformShuffle(population):
-    _gen = selectors.UniformRandom(iter(population), replacement=False)
+    _gen = selectors.UniformRandom(_source=iter(population), replacement=False)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individials"
@@ -170,13 +170,13 @@ def check_selectors_UniformShuffle(population):
     assert len(set(offspring)) == len(offspring), "Individuals are not all unique"
     
 def check_selectors_FitnessProportional(population):
-    _gen = selectors.FitnessProportional(iter(population), replacement=True)
+    _gen = selectors.FitnessProportional(_source=iter(population), replacement=True)
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     
-    _gen = selectors.FitnessProportional(iter(population), replacement=False)
+    _gen = selectors.FitnessProportional(_source=iter(population), replacement=False)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individials"
@@ -187,13 +187,13 @@ def check_selectors_FitnessProportional(population):
     assert sum(fit[:50]) > sum(fit[50:]), "Average fitness is not better in early selections"
     
 def check_selectors_RankProportional(population):
-    _gen = selectors.RankProportional(iter(population), replacement=True)
+    _gen = selectors.RankProportional(_source=iter(population), replacement=True)
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     
-    _gen = selectors.RankProportional(iter(population), replacement=False)
+    _gen = selectors.RankProportional(_source=iter(population), replacement=False)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individials"
@@ -204,9 +204,9 @@ def check_selectors_RankProportional(population):
     assert sum(fit[:50]) > sum(fit[50:]), "Average fitness is not better in early selections"
     
 def check_selectors_BestOfTuple(population, best_population):
-    _gen = joiners.DistinctRandomTuples([best_population, population, population], \
-                                        ['best_population', 'population', 'population'])
-    _gen = selectors.BestOfTuple(_gen)
+    _gen = joiners.DistinctRandomTuples(_source=([best_population, population, population], \
+                                                 ['best_population', 'population', 'population']))
+    _gen = selectors.BestOfTuple(_source=_gen)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(best_population))
     assert len(offspring) == len(best_population), "Did not select all individials"

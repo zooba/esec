@@ -121,6 +121,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         'time_delta': [ ' delta time    ', "%4d:%02d'%02d.%03d ", '_time_delta'],
         'time_precise': [' elapsed time      ', "%4d:%02d'%02d.%03d.%03d ", '_time_precise'],
         'time_delta_precise': [ ' delta time        ', "%4d:%02d'%02d.%03d.%03d ", '_time_delta_precise'],
+        # most recently executed block
+        'block': [ '  block           ', ' %-16s ', '_last_block'],
     }
     '''The set of known column descriptors.
     
@@ -366,6 +368,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         self.stop_now = False
         self.end_code = None
         self._stats = None
+        self._last_block_name = 'initialisation'
     
     class _read_stats(object):  #pylint: disable=C0103,R0903
         '''Read any specified statistic from the primary population's Statistics object
@@ -540,7 +543,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             self._stats.update(pop_stat)
     
     
-    def on_notify(self, sender, name, value):   #pylint: disable=R0912
+    def on_notify(self, sender, name, value):   #pylint: disable=R0912,R0915
         '''Handles various messages.'''
         if sender == 'Experiment':
             if name == 'System':
@@ -563,6 +566,17 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                     print >> self.config_out, '\n'.join(value.list())
                     print >> self.config_out
                 self.config_out.flush()
+        
+        elif sender == 'System':
+            if name == 'Block':
+                # `value` contains a block name
+                key = value
+                self._last_block_name = key
+                blocks = self._stats['blocks']
+                if key in blocks:
+                    blocks[key] += 1
+                else:
+                    blocks[key] = 1
         
         elif sender == 'Monitor':
             if name == 'Statistics':
@@ -611,6 +625,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             'global_evals': 0,
             'local_evals': 0,
             'groups': set(),
+            'blocks': { },
             self.primary : { 'global_max': EmptyIndividual() }
         }
         self.stop_now = False
@@ -847,3 +862,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             seconds -= minutes * 60
             minutes -= hours * 60
             return (hours, minutes, seconds, milliseconds, microseconds)
+    
+    def _last_block(self, owner):
+        '''Returns ``(last_block_name,)``.'''
+        return (self._last_block_name,)

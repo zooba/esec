@@ -6,24 +6,26 @@ which the joiners are executed.
 '''
 
 from itertools import product
-from itertools import izip as zip
+from itertools import izip as zip   #pylint: disable=W0622
 from esec.individual import JoinedIndividual
 from esec.species import JoinedSpecies
 from esec.generators.selectors import BestOnly
 from esec.context import rand
 
-def All(srcs, names):
+def All(_source):
     '''Returns all individuals matched with all other individuals.'''
-    for groups in product(*srcs):
+    _source, names = _source
+    for groups in product(*_source):
         yield JoinedIndividual(groups, names, JoinedSpecies)
 
-def BestWithAll(srcs, names, best_from=0):
+def BestWithAll(_source, best_from=0):
     '''Returns the best individual from group `best_from` (zero-based
-    index into `srcs`) matched.'''
-    srcs = list(srcs)
-    best_group = srcs[best_from]
+    index into `_source`) matched.'''
+    _source, names = _source
+    _source = list(_source)
+    best_group = _source[best_from]
     best = (next(BestOnly(best_group)),)  # make it a tuple
-    rest = srcs
+    rest = _source
     del rest[best_from]
     # reorder names
     if best_from > 0:
@@ -32,12 +34,13 @@ def BestWithAll(srcs, names, best_from=0):
     for groups in product(*rest):
         yield JoinedIndividual(best + groups, names, JoinedSpecies)
 
-def Tuples(srcs, names):
+def Tuples(_source):
     '''Returns all individuals matched with matching elements by index.'''
-    for groups in zip(*srcs):
+    _source, names = _source
+    for groups in zip(*_source):
         yield JoinedIndividual(groups, names, JoinedSpecies)
 
-def RandomTuples(srcs, names, distinct=False):
+def RandomTuples(_source, distinct=False):
     '''Matches each individual from the first source with randomly
     selected individuals from the other sources.
     
@@ -46,11 +49,12 @@ def RandomTuples(srcs, names, distinct=False):
     elements may not be distinct.'''
     choice = rand.choice
     
-    srcs = list(srcs)
-    assert all(len(i) for i in srcs), 'Empty groups cannot joined'
-    for indiv in srcs[0]:
+    _source, names = _source
+    _source = list(_source)
+    assert all(len(i) for i in _source), 'Empty groups cannot joined'
+    for indiv in _source[0]:
         group = [ indiv ]
-        for other_group in srcs[1:]:
+        for other_group in _source[1:]:
             indiv2 = choice(other_group)
             if distinct:
                 # Limit the number of attempts
@@ -63,9 +67,9 @@ def RandomTuples(srcs, names, distinct=False):
             group.append(indiv2)
         yield JoinedIndividual(group, names, JoinedSpecies)
 
-def DistinctRandomTuples(srcs, names):
+def DistinctRandomTuples(_source):
     '''Matches each individual from the first source with randomly
     selected individuals from the other sources, avoiding repetition
     of individuals within a single tuple.
     '''
-    return RandomTuples(srcs, names, distinct=True)
+    return RandomTuples(_source, distinct=True)

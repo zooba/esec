@@ -100,6 +100,8 @@ class CSVMonitor(ConsoleMonitor):
         'time_delta': [ 'Delta time (ms)', '%d', '_time_delta'],
         'time_precise': ['Elapsed time (us)', '%d', '_time_precise'],
         'time_delta_precise': [ 'Delta time (us)', '%d', '_time_delta_precise'],
+        # most recently executed block
+        'block': [ 'Block', '%s', '_last_block'],
     }
     '''The set of known column descriptors.
     

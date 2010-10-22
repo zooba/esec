@@ -9,7 +9,7 @@ support. See `landscape` for details.
 
 from sys import maxsize
 from math import sqrt
-from itertools import izip as zip
+from itertools import izip as zip   #pylint: disable=W0622
 from esec.landscape import Landscape
 from esec.utils import all_equal
 

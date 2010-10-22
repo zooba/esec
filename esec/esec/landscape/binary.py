@@ -13,7 +13,7 @@ Most of these binary landscapes are problem generators.
 
 '''
 
-from itertools import izip as zip
+from itertools import izip as zip   #pylint: disable=W0622
 from esec.landscape import Landscape
 from esec.individual import JoinedIndividual
 

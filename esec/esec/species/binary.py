@@ -364,13 +364,13 @@ class BinarySpecies(Species):
             yield BinaryIndividual([1] * self._len(length, shortest, longest), self)
             yield BinaryIndividual([0] * self._len(length, shortest, longest), self)
     
-    def mutate_random(self, src, per_indiv_rate=1.0, per_gene_rate=0.1):
+    def mutate_random(self, _source, per_indiv_rate=1.0, per_gene_rate=0.1):
         '''Mutates a group of individuals by replacing genes with random values.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`Individual`)
+          _source : iterable(`Individual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -389,7 +389,7 @@ class BinarySpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        for indiv in src:
+        for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 new_genes = list(indiv.genome)
                 for i in xrange(len(new_genes)):
@@ -400,13 +400,13 @@ class BinarySpecies(Species):
             else:
                 yield indiv
     
-    def mutate_bitflip(self, src, per_indiv_rate=1.0, per_gene_rate=0.1):
+    def mutate_bitflip(self, _source, per_indiv_rate=1.0, per_gene_rate=0.1):
         '''Mutates a group of individuals by inverting genes.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`Individual`)
+          _source : iterable(`Individual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -425,7 +425,7 @@ class BinarySpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        for indiv in src:
+        for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 new_genes = list(indiv.genome)
                 for i, gene in enumerate(new_genes):
@@ -436,13 +436,13 @@ class BinarySpecies(Species):
             else:
                 yield indiv
     
-    def mutate_inversion(self, src, per_indiv_rate=0.1):
+    def mutate_inversion(self, _source, per_indiv_rate=0.1):
         '''Mutates a group of individuals by inverting entire individuals.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`Individual`)
+          _source : iterable(`Individual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -455,13 +455,13 @@ class BinarySpecies(Species):
         
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        for indiv in src:
+        for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 yield type(indiv)([(1 - g) for g in indiv.genome], indiv, statistic={ 'mutated': 1 })
             else:
                 yield indiv
     
-    def mutate_gap_inversion(self, src, per_indiv_rate=0.1, length=None, shortest=1, longest=10):
+    def mutate_gap_inversion(self, _source, per_indiv_rate=0.1, length=None, shortest=1, longest=10):
         '''Mutates a group of individuals by inverting segments within
         individuals.
         
@@ -470,7 +470,7 @@ class BinarySpecies(Species):
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`Individual`)
+          _source : iterable(`Individual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -500,7 +500,7 @@ class BinarySpecies(Species):
         
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        for indiv in src:
+        for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 length = irand(shortest, longest+1)
                 len_indiv = len(indiv.genome)

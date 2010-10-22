@@ -9,22 +9,22 @@ type validation, all constructors should use ``type`` on an existing
 `Individual` to ensure the correct derivation is used.
 '''
 
-from itertools import izip as zip
+from itertools import izip as zip   #pylint: disable=W0622
 from esec.context import rand, notify
 
-def Uniform(src, per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5):
+def Uniform(_source, per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5):
     '''Performs uniform crossover by selecting genes at random from
     one of two individuals.
     
     Returns a sequence of crossed individuals based on the individuals
-    in `src`. The resulting sequence will contain as many individuals
-    as `src` (unless `src` contains an odd number, in which case one
+    in `_source`. The resulting sequence will contain as many individuals
+    as `_source` (unless `_source` contains an odd number, in which case one
     less will be returned).
     
     .. include:: epydoc_include.txt
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Individuals are taken two at a time
         from this sequence, recombined to produce two new individuals,
         and yielded separately.
@@ -43,13 +43,13 @@ def Uniform(src, per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5):
     '''
     if per_pair_rate == None: per_pair_rate = per_indiv_rate
     if per_pair_rate <= 0.0:
-        for indiv in src: yield indiv
+        for indiv in _source: yield indiv
         raise StopIteration
     
     do_all_pairs = (per_pair_rate >= 1.0)
     
     frand = rand.random
-    group = list(src)
+    group = list(_source)
     
     for i1_pre, i2_pre in zip(group[::2], group[1::2]):
         if do_all_pairs or frand() < per_pair_rate:
@@ -70,20 +70,20 @@ def Uniform(src, per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5):
             yield i1_pre
             yield i2_pre
 
-def OnePointSame(src, per_pair_rate=None, per_indiv_rate=1.0):
+def OnePointSame(_source, per_pair_rate=None, per_indiv_rate=1.0):
     '''Performs single-point crossover by selecting a single point
     common to both individuals and exchanging the sequence of genes
     to the right (including the selection).
     
     Returns a sequence of crossed individuals based on the individuals
-    in `src`. The resulting sequence will contain as many individuals
-    as `src` (unless `src` contains an odd number, in which case one
+    in `_source`. The resulting sequence will contain as many individuals
+    as `_source` (unless `_source` contains an odd number, in which case one
     less will be returned).
     
     .. include:: epydoc_include.txt
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Individuals are taken two at a time
         from this sequence, recombined to produce two new individuals,
         and yielded separately.
@@ -99,14 +99,14 @@ def OnePointSame(src, per_pair_rate=None, per_indiv_rate=1.0):
     '''
     if per_pair_rate == None: per_pair_rate = per_indiv_rate
     if per_pair_rate <= 0.0:
-        for indiv in src: yield indiv
+        for indiv in _source: yield indiv
         raise StopIteration
     
     do_all_pairs = (per_pair_rate >= 1.0)
     
     frand = rand.random
     irand = rand.randrange
-    group = list(src)
+    group = list(_source)
     
     for i1_pre, i2_pre in zip(group[::2], group[1::2]):
         if do_all_pairs or frand() < per_pair_rate:
@@ -125,21 +125,21 @@ def OnePointSame(src, per_pair_rate=None, per_indiv_rate=1.0):
             yield i1_pre
             yield i2_pre
 
-def OnePointDifferent(src, per_pair_rate=None, per_indiv_rate=1.0, longest_result=None):
+def OnePointDifferent(_source, per_pair_rate=None, per_indiv_rate=1.0, longest_result=None):
     '''Performs single-point crossover by selecting a point in each
     individual and exchanging the sequence of genes to the right
     (including the selection). The selected points are not necessarily
     the same in each individual.
     
     Returns a sequence of crossed individuals based on the individuals
-    in `src`. The resulting sequence will contain as many individuals
-    as `src` (unless `src` contains an odd number, in which case one
+    in `_source`. The resulting sequence will contain as many individuals
+    as `_source` (unless `_source` contains an odd number, in which case one
     less will be returned).
     
     .. include:: epydoc_include.txt
     
     :Parameters:
-      src : iterable(`Individual`)
+      _source : iterable(`Individual`)
         A sequence of individuals. Individuals are taken two at a time
         from this sequence, recombined to produce two new individuals,
         and yielded separately.
@@ -163,14 +163,14 @@ def OnePointDifferent(src, per_pair_rate=None, per_indiv_rate=1.0, longest_resul
     '''
     if per_pair_rate == None: per_pair_rate = per_indiv_rate
     if per_pair_rate <= 0.0:
-        for indiv in src: yield indiv
+        for indiv in _source: yield indiv
         raise StopIteration
     
     do_all_pairs = (per_pair_rate >= 1.0)
     
     frand = rand.random
     irand = rand.randrange
-    group = list(src)
+    group = list(_source)
     
     for i1_pre, i2_pre in zip(group[::2], group[1::2]):
         if do_all_pairs or frand() < per_pair_rate:
@@ -209,18 +209,18 @@ def OnePointDifferent(src, per_pair_rate=None, per_indiv_rate=1.0, longest_resul
             yield i1_pre
             yield i2_pre
 
-def PerGeneTuple(src, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=None):
+def PerGeneTuple(_source, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=None):
     '''Performs per-gene crossover by selecting one gene from each
-    individual in the tuples provided in `src`.
+    individual in the tuples provided in `_source`.
     
     Returns a sequence of crossed individuals based on the individuals
-    in `src`. The resulting sequence will contain as many individuals
-    as `src`.
+    in `_source`. The resulting sequence will contain as many individuals
+    as `_source`.
     
     .. include:: epydoc_include.txt
     
     :Parameters:
-      src : iterable(`JoinedIndividual`)
+      _source : iterable(`JoinedIndividual`)
         A sequence of joined individuals. The `Individual` instances
         making up the joined individual are used to select the new
         genes.
@@ -246,7 +246,7 @@ def PerGeneTuple(src, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=None
     '''
     if per_indiv_rate == None: per_indiv_rate = per_pair_rate
     if per_indiv_rate <= 0.0 or per_gene_rate >= 1.0:
-        for indiv in src: yield indiv[0]
+        for indiv in _source: yield indiv[0]
         raise StopIteration
     
     do_all_indiv = (per_indiv_rate >= 1.0)
@@ -255,7 +255,7 @@ def PerGeneTuple(src, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=None
     frand = rand.random
     choice = rand.choice
     
-    for indiv in src:
+    for indiv in _source:
         if do_all_indiv or frand() < per_indiv_rate:
             new_genes = [ ]
             # Iterate through tuples of the genes at each point in the

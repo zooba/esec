@@ -1,7 +1,7 @@
 '''Provides the `IntegerSpecies` and `IntegerIndividual` classes for
 integer-valued genomes.
 '''
-from itertools import izip as zip
+from itertools import izip as zip   #pylint: disable=W0622
 from esec.species import Species
 from esec.individual import Individual
 from esec.context import rand
@@ -409,13 +409,13 @@ class IntegerSpecies(Species):
             count += 1
             yield indiv
     
-    def mutate_random(self, src, per_indiv_rate=1.0, per_gene_rate=0.1):
+    def mutate_random(self, _source, per_indiv_rate=1.0, per_gene_rate=0.1):
         '''Mutates a group of individuals by replacing genes with random values.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`IntegerIndividual`)
+          _source : iterable(`IntegerIndividual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -435,7 +435,7 @@ class IntegerSpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        for indiv in src:
+        for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 new_genes = list(indiv.genome)
                 for i, low, high in zip(xrange(len(new_genes)), *indiv.bounds):
@@ -446,14 +446,14 @@ class IntegerSpecies(Species):
             else:
                 yield indiv
     
-    def mutate_delta(self, src, step_size=1, per_indiv_rate=1.0, per_gene_rate=0.1, positive_rate=0.5):
+    def mutate_delta(self, _source, step_size=1, per_indiv_rate=1.0, per_gene_rate=0.1, positive_rate=0.5):
         '''Mutates a group of individuals by adding or subtracting `step_size`
         to or from individiual genes.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`IntegerIndividual`)
+          _source : iterable(`IntegerIndividual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -485,7 +485,7 @@ class IntegerSpecies(Species):
         # Force step_size to be an integer
         step_size = int(step_size)
         
-        for indiv in src:
+        for indiv in _source:
             assert isinstance(indiv, IntegerIndividual), "Want `IntegerIndividual`, not `%s`" % type(indiv)
             
             if do_all_indiv or frand() < per_indiv_rate:
@@ -503,14 +503,14 @@ class IntegerSpecies(Species):
             else:
                 yield indiv
     
-    def mutate_gaussian(self, src, step_size=1.0, sigma=None, per_indiv_rate=1.0, per_gene_rate=0.1):
+    def mutate_gaussian(self, _source, step_size=1.0, sigma=None, per_indiv_rate=1.0, per_gene_rate=0.1):
         '''Mutates a group of individuals by adding or subtracting a random
         value with Gaussian distribution based on `step_size` or `sigma`.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`IntegerIndividual`)
+          _source : iterable(`IntegerIndividual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -541,7 +541,7 @@ class IntegerSpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        for indiv in src:
+        for indiv in _source:
             assert isinstance(indiv, IntegerIndividual), "Want `IntegerIndividual`, not `%s`" % type(indiv)
             
             if do_all_indiv or frand() < per_indiv_rate:

@@ -24,7 +24,7 @@ if used in an operation.
 
 import sys
 from types import GeneratorType as generator
-from itertools import izip as zip
+from itertools import izip as zip   #pylint: disable=W0622
 
 class Fitness(object):
     '''Represents a multi-stage fitness value.

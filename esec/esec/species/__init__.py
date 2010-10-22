@@ -71,7 +71,7 @@ class Species(object):
         '''
     
     #pylint: disable=R0201
-    def mutate_insert(self, src, per_indiv_rate=0.1, length=None, shortest=1, longest=10, longest_result=20):
+    def mutate_insert(self, _source, per_indiv_rate=0.1, length=None, shortest=1, longest=10, longest_result=20):
         '''Mutates a group of individuals by inserting random gene sequences.
         
         Gene sequences are created by using the ``init_random`` method provided by
@@ -85,7 +85,7 @@ class Species(object):
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`Individual`)
+          _source : iterable(`Individual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -125,7 +125,7 @@ class Species(object):
         
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        for indiv in src:
+        for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 len_indiv = len(indiv.genome)
                 cut = irand(len_indiv)
@@ -143,7 +143,7 @@ class Species(object):
                 yield indiv
     
     #pylint: disable=R0201
-    def mutate_delete(self, src, per_indiv_rate=0.1, length=None, shortest=1, longest=10, shortest_result=1):
+    def mutate_delete(self, _source, per_indiv_rate=0.1, length=None, shortest=1, longest=10, shortest_result=1):
         '''Mutates a group of individuals by deleting random gene sequences.
         
         The number of genes to delete is selected randomly. If this value is the same as
@@ -156,7 +156,7 @@ class Species(object):
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`Individual`)
+          _source : iterable(`Individual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -195,7 +195,7 @@ class Species(object):
         
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        for indiv in src:
+        for indiv in _source:
             len_indiv = len(indiv.genome)
             if len_indiv > shortest_result and (do_all_indiv or frand() < per_indiv_rate):
                 lmax = len_indiv - shortest_result

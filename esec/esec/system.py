@@ -4,6 +4,7 @@ for fully customisable breeding systems.
 
 from esec.utils import ConfigDict, cfg_validate, merge_cls_dicts
 import sys, random, traceback
+from warnings import warn
 
 from esec.compiler import Compiler
 from esec.monitors import MonitorBase
@@ -27,7 +28,9 @@ class System(object):
             '_group': '*',
             # The default evaluator (must have a method eval(self, individual))
             '_evaluator': '*',
-        }
+        },
+        # The block selector (must support iter(selector))
+        'selector?': '*'
     }
     
     default = {
@@ -119,13 +122,19 @@ class System(object):
         
         self._code_string = compiler.code
         
-        self.monitor = context.get('_monitor', MonitorBase())
+        self.monitor = context.get('_monitor', None) or MonitorBase()
+        self.selector = self.cfg['selector'] or compiler.blocks
+        self.selector_current = iter(self.selector)
         context['_on_yield'] = lambda name, group: self.monitor.on_yield(self, name, group)
+        
+        for var in compiler.uninit:
+            if var not in context:
+                warn("Variable '%s' is not initialised." % var)
         
         self._code = compile(self._code_string, 'ESDL Definition', 'exec')
         
         self._in_step = False
-        self._continue_step = False
+        self._next_block = [ ]
     
     def _do_notify(self, sender, name, value):
         '''Queues a message for the current monitor.
@@ -198,46 +207,75 @@ class System(object):
             self.monitor.on_run_end(self)
             return
     
-    def step(self, block="generation"):
-        '''Executes one generation.
+    def step(self, block=None):
+        '''Executes one or more iteration. If `step` is called from the monitor's
+        ``on_pre_breed``, ``on_post_breed`` or ``on_exception``, more than one iteration
+        will occur. Otherwise, only one iteration will be executed.
         
         :Parameters:
           block : string [optional]
-            The name of the block to execute. By default, this is ``generation`` for
-            compatibility with earlier definitions. This name is not case-sensitive:
-            it is converted to lowercase before use.
+            The name of the block to execute. If specified, the block is used for
+            every iteration executed. If omitted, the block selector associated
+            with the system is queried for each iteration.
+            
+            This name is not case-sensitive: it is converted to lowercase before use.
         '''
-        # Allowed to use exec
-        #pylint: disable=W0122
+        self._next_block.append(block)
         
         if self._in_step:
-            # Detect calls to step() from a callback and handle it
-            self._continue_step = True
+            # If step() has been called from one of our own callbacks, we should
+            # return now and let the while loop below pick up the next block.
             return
         
-        self._in_step = True
-        
-        self._continue_step = True
-        while self._continue_step:
-            # _continue_step may be set by a callback
-            self._continue_step = False
-            try:
-                self.monitor.on_pre_breed(self)
+        try:
+            self._in_step = True
+            while self._next_block:
+                # _next_block may be appended to by a callback
+                block = self._next_block[0]
+                del self._next_block[0]
                 
-                exec ('_block_%s()' % block.lower()) in self._context
-            
-            except KeyboardInterrupt:
-                self.monitor.on_run_end(self)
-                raise
-            except:
-                ex = sys.exc_info()
-                ex_type, ex_value = ex[0], ex[1]
-                ex_trace = ''.join(traceback.format_exception(*ex))
-                self.monitor.on_exception(self, ex_type, ex_value, ex_trace)
-            
-            self.monitor.on_post_breed(self)
-        
-        self._in_step = False
+                if block:
+                    block_name = str(block).lower()
+                elif isinstance(self.selector, list) and len(self.selector) == 1:
+                    # Minor performance optimisation for default single block case
+                    block_name = str(self.selector[0]).lower()
+                else:
+                    block_name = None
+                
+                try:
+                    self.monitor.on_pre_breed(self)
+                    
+                    if not block:
+                        block_name = None
+                        while not block_name:
+                            try:
+                                block_name = next(self.selector_current)
+                            except StopIteration:
+                                self.selector_current = iter(self.selector)
+                        block_name = str(block_name).lower()
+                    
+                    try:
+                        exec ('_block_' + block_name + '()') in self._context   #pylint: disable=W0122
+                        self.monitor.notify('System', 'Block', block_name)
+                    except NameError:
+                        if ('_block_' + block_name) not in self._context:
+                            # This will be caught immediately and passed to the monitor
+                            raise NameError('ESDL block %s is not defined' % block_name)
+                        else:
+                            raise
+                
+                except KeyboardInterrupt:
+                    self.monitor.on_run_end(self)
+                    raise
+                except:
+                    ex = sys.exc_info()
+                    ex_type, ex_value = ex[0], ex[1]
+                    ex_trace = ''.join(traceback.format_exception(*ex))
+                    self.monitor.on_exception(self, ex_type, ex_value, ex_trace)
+                
+                self.monitor.on_post_breed(self)
+        finally:
+            self._in_step = False
     
     def close(self):
         '''Executes clean-up code.

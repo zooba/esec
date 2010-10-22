@@ -20,7 +20,7 @@ problem.
 
 from esec.fitness import Fitness, EmptyFitness
 from esec.context import notify
-from itertools import izip as zip
+from itertools import izip as zip   #pylint: disable=W0622
 import itertools
 
 class Individual(object):
@@ -335,14 +335,14 @@ class OnIndividual(object):
         self.target = target
         self.default = default
     
-    def __call__(self, src, *params, **named):
-        '''Calls ``self.target`` on the first individual in `src`, passing
-        all of `src` as a parameter along with any other parameters.
+    def __call__(self, _source, *params, **named):
+        '''Calls ``self.target`` on the first individual in `_source`, passing
+        all of `_source` as a parameter along with any other parameters.
         '''
-        first = next(src)
+        first = next(_source)
         target = getattr(first, self.target, self.default)
         assert target, "Method %s does not exist on %s" % (self.target , type(first))
-        return target(itertools.chain((first,), src), *params, **named)
+        return target(_source=itertools.chain((first,), _source), *params, **named)
     
     def __repr__(self):
         if self.default:

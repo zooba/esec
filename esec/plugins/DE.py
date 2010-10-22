@@ -19,7 +19,7 @@ This plugin provides a Differential Evolution system definition.
 
 from itertools import izip as zip
 
-def mutate_DE(source, scale):
+def mutate_DE(_source, scale):
     '''A generator that yields one mutated Individual for every JoinedIndividual
     passed in source.
     '''
@@ -29,7 +29,7 @@ def mutate_DE(source, scale):
         result = result if result > low else low
         return result
     
-    for joined_individual in source:
+    for joined_individual in _source:
         base, parameter1, parameter2 = joined_individual[:]
         yield type(base)([_combine(b, p1, p2, l, h) for \
             b, p1, p2, l, h in zip(base, parameter1, parameter2, *base.bounds)], base)

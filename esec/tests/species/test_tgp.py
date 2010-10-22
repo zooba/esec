@@ -19,7 +19,7 @@ def _make_bool_indiv(names):
 
 def _cmp(source, expected):
     pop = [tgp.TgpIndividual([source], Species, instructions=Species.boolean_instructions, instruction_set='boolean', terminals=3)]
-    new_pop = list(Species.mutate_edit(pop))
+    new_pop = list(Species.mutate_edit(_source=pop))
 
     assert len(new_pop) == 1, "Expected one individual"
     indiv = new_pop[0]

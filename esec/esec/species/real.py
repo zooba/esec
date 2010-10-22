@@ -1,7 +1,7 @@
 '''Provides the `RealSpecies` and `RealIndividual` classes for
 real-valued genomes.
 '''
-from itertools import izip as zip
+from itertools import izip as zip   #pylint: disable=W0622
 from esec.species import Species
 from esec.individual import Individual
 from esec.context import rand
@@ -320,13 +320,13 @@ class RealSpecies(Species):
             yield next(high_gen)
             yield next(low_gen)
     
-    def mutate_random(self, src, per_indiv_rate=1.0, per_gene_rate=0.1):
+    def mutate_random(self, _source, per_indiv_rate=1.0, per_gene_rate=0.1):
         '''Mutates a group of individuals by replacing genes with random values.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`RealIndividual`)
+          _source : iterable(`RealIndividual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -345,7 +345,7 @@ class RealSpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        for indiv in src:
+        for indiv in _source:
             assert isinstance(indiv, RealIndividual), "Want `RealIndividual`, not `%s`" % type(indiv)
             
             if do_all_indiv or frand() < per_indiv_rate:
@@ -357,14 +357,14 @@ class RealSpecies(Species):
             else:
                 yield indiv
     
-    def mutate_delta(self, src, step_size=0.1, per_indiv_rate=1.0, per_gene_rate=0.1, positive_rate=0.5):
+    def mutate_delta(self, _source, step_size=0.1, per_indiv_rate=1.0, per_gene_rate=0.1, positive_rate=0.5):
         '''Mutates a group of individuals by adding or subtracting `step_size`
         to or from individiual genes.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`RealIndividual`)
+          _source : iterable(`RealIndividual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -390,7 +390,7 @@ class RealSpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        for indiv in src:
+        for indiv in _source:
             assert isinstance(indiv, RealIndividual), "Want `RealIndividual`, not `%s`" % type(indiv)
             
             if do_all_indiv or frand() < per_indiv_rate:
@@ -408,14 +408,14 @@ class RealSpecies(Species):
             else:
                 yield indiv
     
-    def mutate_gaussian(self, src, step_size=0.1, sigma=None, per_indiv_rate=1.0, per_gene_rate=0.1):
+    def mutate_gaussian(self, _source, step_size=0.1, sigma=None, per_indiv_rate=1.0, per_gene_rate=0.1):
         '''Mutates a group of individuals by adding or subtracting a random
         value with Gaussian distribution based on `step_size` or `sigma`.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
-          src : iterable(`RealIndividual`)
+          _source : iterable(`RealIndividual`)
             A sequence of individuals. Individuals are taken one at a time
             from this sequence and either returned unaltered or cloned and
             mutated.
@@ -446,7 +446,7 @@ class RealSpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
-        for indiv in src:
+        for indiv in _source:
             assert isinstance(indiv, RealIndividual), "Want `RealIndividual`, not `%s`" % type(indiv)
             
             if do_all_indiv or frand() < per_indiv_rate:
