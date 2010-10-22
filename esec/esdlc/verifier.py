@@ -220,15 +220,14 @@ class Verifier(object):
     def _verify_unused(cls, ast):
         '''Ensure that all global variables and groups are used.'''
         
-        unused_global = dict(ast.globals)
+        unused_global = dict(i for i in ast.globals.iteritems() \
+            if i[0] not in ast.init_block.variables_in and \
+               i[0] not in ast.init_block.variables_out)
         
         for block in ast.blocks.itervalues():
-            for var in block.variables_in:
-                if var in unused_global:
-                    del unused_global[var]
-            for var in block.variables_out:
-                if var in unused_global:
-                    del unused_global[var]
+            unused_global = dict(i for i in unused_global.iteritems() \
+                if i[0] not in block.variables_in and \
+                   i[0] not in block.variables_out)
         
         return [error.UnusedVariableError(cls._first_ref(var), key) \
                 for key, var in unused_global.iteritems()]
