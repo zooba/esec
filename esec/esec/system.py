@@ -38,7 +38,7 @@ class System(object):
             '_group': list,
             
             'select_all':       selectors.All,
-            'repeat':           selectors.Repeat,
+            'repeated':         selectors.Repeat,
             'best_only':        selectors.BestOnly,
             'worst_only':       selectors.WorstOnly,
             'best':             selectors.Best,
