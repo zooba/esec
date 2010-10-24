@@ -145,31 +145,26 @@ def _load_module(folder, mod_name):
     '''Loads a module. Has improved error handling that reveals more
     detail than `ImportError`.
     '''
-    try:
-        if '.' in mod_name:
-            mod_name = mod_name.replace('.', '_')
-        scoped_name = folder + '.' + mod_name
-        mod = __import__(scoped_name)
-        if not mod:
-            return None
-        while mod and mod.__name__ != scoped_name:
-            mod = getattr(mod, mod_name, None)
-        return mod
-    except ImportError:
-        # ImportErrors within mod cannot be distinguished, so re-run
-        # the file using exec and detect IOError
-        try:
-            code_object = compile(open(os.path.join(folder, mod_name + '.py')).read(), mod_name, 'exec')
-            exec code_object in { }     #pylint: disable=W0122
-            # exec worked, so re-raise ImportError
-            raise
-        except IOError:
-            if is_ironpython() or sys.exc_info()[1].errno == 2:
-                # File was not found or this is IronPython (which does not behave
-                # the same for errno)
-                return None
-            else:
-                raise
+    py_source = os.path.join(folder, mod_name + '.py')
+    if os.path.exists(py_source):
+        # This is a standard plugin file
+        
+        with open(py_source) as source:
+            code_object = compile(source.read(), mod_name, 'exec')
+        
+        items = {}
+        exec code_object in items   #pylint: disable=W0122
+        
+        return {
+            'batch': items.get('batch', None),
+            'config': items.get('config', None),
+            'configs': items.get('configs', None),
+            'defaults': items.get('defaults', None),
+            'settings': items.get('settings', None),
+        }
+    else:
+        return None
+
 
 def _load_config(config_string, defaults):
     '''Loads a configuration from a configuration string.
@@ -187,9 +182,9 @@ def _load_config(config_string, defaults):
             mod = _load_module('cfgs', name) or _load_module('plugins', name)
             if not mod: raise ImportError('Cannot find ' + name + ' as configuration or plugin.')
             
-            mod_cfg1 = getattr(mod, 'configs', None)
-            mod_def = getattr(mod, 'defaults', None)
-            mod_cfg2 = getattr(mod, 'config', None)
+            mod_cfg1 = mod.get('configs', None)
+            mod_def = mod.get('defaults', None)
+            mod_cfg2 = mod.get('config', None)
             if mod_cfg1: configs.update(mod_cfg1)
             if mod_def: cfg.overlay(mod_def)
             if mod_cfg2: cfg.overlay(mod_cfg2)
@@ -357,13 +352,13 @@ def esec_batch(options):
     # returns a sequence of tuples of settings.
     mod = _load_module('cfgs', options.batch)
     # Update configs with anything specified in the batch file
-    configs.update(getattr(mod, 'configs', { }))
+    configs.update(mod.get('configs', { }))
     # Get any settings overrides from the batch file
-    batch = mod.batch()
-    batch_settings = getattr(mod, 'settings', '')
+    batch = mod.get('batch')()
+    batch_settings = mod.get('settings', '')
     # Get config defaults (allows batch files to import plugins directly)
     batch_default = ConfigDict(default)
-    batch_default.overlay(getattr(mod, 'defaults', { }))
+    batch_default.overlay(mod.get('defaults', { }))
     
     print '>>>>', batch_settings
     

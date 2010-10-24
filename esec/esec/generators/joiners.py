@@ -8,7 +8,6 @@ which the joiners are executed.
 from itertools import product
 from itertools import izip as zip   #pylint: disable=W0622
 from esec.individual import JoinedIndividual
-from esec.species import JoinedSpecies
 from esec.generators.selectors import BestOnly
 from esec.context import rand
 
@@ -16,7 +15,7 @@ def All(_source):
     '''Returns all individuals matched with all other individuals.'''
     _source, names = _source
     for groups in product(*_source):
-        yield JoinedIndividual(groups, names, JoinedSpecies)
+        yield JoinedIndividual(groups, names)
 
 def BestWithAll(_source, best_from=0):
     '''Returns the best individual from group `best_from` (zero-based
@@ -32,13 +31,13 @@ def BestWithAll(_source, best_from=0):
         names = names[best_from] + names[:best_from] + names[best_from+1:]
     
     for groups in product(*rest):
-        yield JoinedIndividual(best + groups, names, JoinedSpecies)
+        yield JoinedIndividual(best + groups, names)
 
 def Tuples(_source):
     '''Returns all individuals matched with matching elements by index.'''
     _source, names = _source
     for groups in zip(*_source):
-        yield JoinedIndividual(groups, names, JoinedSpecies)
+        yield JoinedIndividual(groups, names)
 
 def RandomTuples(_source, distinct=False):
     '''Matches each individual from the first source with randomly
@@ -65,7 +64,7 @@ def RandomTuples(_source, distinct=False):
                 if limit <= 0:
                     indiv2 = next((i for i in other_group if i not in group), indiv2)
             group.append(indiv2)
-        yield JoinedIndividual(group, names, JoinedSpecies)
+        yield JoinedIndividual(group, names)
 
 def DistinctRandomTuples(_source):
     '''Matches each individual from the first source with randomly

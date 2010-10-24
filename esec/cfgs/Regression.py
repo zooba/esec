@@ -173,7 +173,6 @@ tests = bvp_tests + ivp_tests + rvp_tests + tgp_tests + ge_tests
 #tests = tgp_tests
 #tests = ge_tests
 
-# return (tags, cmd string, config, settings, report)
 def batch():
     for (landscape, dialects, config_overrides) in tests:
         for dialect in dialects:

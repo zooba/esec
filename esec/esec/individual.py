@@ -251,6 +251,9 @@ class JoinedIndividual(Individual):
             should inherit any specific characteristics (such as size
             or value limits) from the parent.
         '''
+        if not parent:
+            from esec.species import JoinedSpecies
+            parent = JoinedSpecies
         super(JoinedIndividual, self).__init__(members, parent)
         self.sources = { }
         for source, member in zip(sources, self.genome):
