@@ -92,11 +92,9 @@ class Individual(object):
         self.species = parent.species
         '''The species type of this individual.'''
         # We are allowed to read parent._eval
-        #pylint: disable=W0212
-        self._eval = parent._eval
-        '''The current evaluator for this individual. ``EVAL`` statements
-        in the system definition change this member.
-        '''
+        self.__eval = parent._eval      #pylint: disable=W0212
+        if hasattr(self.__eval, 'prepare'):
+            self.__eval.prepare(self)
         
         for key, value in parent.statistic.iteritems():
             if key in self.statistic:
@@ -125,6 +123,23 @@ class Individual(object):
         attr = getattr(self.species, name, None)
         if not attr: raise AttributeError("'%s' object has no attribute '%s'" % (type(self).__name__, name))
         else: return attr
+    
+    @property
+    def _eval(self):
+        '''The current evaluator for this individual. ``EVAL`` statements
+        in the system definition change this member.
+        '''
+        return self.__eval
+    
+    @_eval.setter
+    def _eval(self, value):
+        self.__eval = value
+        if hasattr(value, 'prepare'):
+            value.prepare(self)
+    
+    @_eval.deleter
+    def _eval(self):
+        self.__eval = None
     
     @property
     def fitness(self):
@@ -188,7 +203,7 @@ class Individual(object):
             If `fitness` has not previously been read, calling this method
             may trigger a fitness evaluation.
         '''
-        return '[%s: born=%d fitness=%s]' % (self.species.name, self.birthday, self.fitness)
+        return '[%s: born=%s fitness=%s]' % (self.species.name, self.birthday, self.fitness)
     
     @property
     def phenome(self):
