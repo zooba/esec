@@ -311,7 +311,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             '''Gets the appropriate value from ``opened_files``.'''
             if isinstance(filename, str):
                 return opened_files.get(filename, None)
-            elif filename == None:
+            elif filename is None:
                 return NullStream()
             else:
                 return filename
@@ -337,7 +337,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         
         # - Delete any limits that are set to None
         if self.limits:
-            none_limits = [k for k in self.limits if self.limits[k] == None]
+            none_limits = [k for k in self.limits if self.limits[k] is None]
             for k in none_limits: del self.limits[k]
         
         self.primary = self.cfg.primary
@@ -399,7 +399,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         
         def __call__(self, owner):
             value = owner._stats.get(self.key)     #pylint: disable=W0212
-            if value != None and self.member:
+            if value is not None and self.member:
                 for part in self.member:
                     if hasattr(value, '__getitem__'):
                         try:
@@ -410,8 +410,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                             value = self.default
                     else:
                         value = getattr(value, part, self.default)
-                    assert value != None, 'Statistic ' + self.key + ' has no member ' + '.'.join(self.member) + '.'
-            if value == None and self.default != None:
+                    assert value is not None, 'Statistic ' + self.key + ' has no member ' + '.'.join(self.member) + '.'
+            if value is None and self.default is not None:
                 value = self.default
             if isinstance(value, tuple):
                 return value
@@ -437,7 +437,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         '''
         def make_call(call, default):
             '''Converts a string into a method reference.'''
-            if call == None: return self._noop
+            if call is None: return self._noop
             if hasattr(call, '__call__'): return call
             
             bit, _, stat = call.partition('.')
@@ -816,7 +816,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         '''
         prev_time = self._last_time_ms
         now_time = self._last_time_ms = self._get_ms()
-        if prev_time == None:
+        if prev_time is None:
             return (0, 0, 0, 0)
         else:
             milliseconds = now_time - prev_time
@@ -849,7 +849,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         '''
         prev_time = self._last_time_us
         now_time = self._last_time_us = self._get_us()
-        if prev_time == None:
+        if prev_time is None:
             return (0, 0, 0, 0, 0)
         else:
             microseconds = now_time - prev_time

@@ -170,7 +170,7 @@ def is_ironpython():
     :Returns: ``True`` if running under IronPython; otherwise, ``False``.
     '''
     global _is_ironpython       #pylint: disable=W0603
-    if _is_ironpython == None:
+    if _is_ironpython is None:
         import platform
         try:
             # This will crash when using lib 2.6 on IronPython 2

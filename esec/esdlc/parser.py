@@ -78,7 +78,7 @@ class AST(object):
                 if not statement: continue
                 token = statement[0]
                 
-                if current_block == None and token.tag not in ('BEGIN', 'eos'):
+                if current_block is None and token.tag not in ('BEGIN', 'eos'):
                     raise error.UnexpectedCommandError(token)
                 
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

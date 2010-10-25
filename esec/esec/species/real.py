@@ -96,7 +96,7 @@ class RealSpecies(Species):
         '''Returns instances of `RealIndividual` initialised using the function in
         `_gen`.
         '''
-        if length != None: shortest = longest = length
+        if length is not None: shortest = longest = length
         assert shortest > 0, "Shortest must be greater than zero"
         assert longest >= shortest, \
             "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
@@ -371,7 +371,9 @@ class RealSpecies(Species):
             else:
                 yield indiv
     
-    def mutate_delta(self, _source, step_size=0.1, per_indiv_rate=1.0, per_gene_rate=0.1, genes=None, positive_rate=0.5):
+    def mutate_delta(self, _source, step_size=0.1, per_indiv_rate=1.0,
+                     per_gene_rate=0.1, genes=None,
+                     positive_rate=0.5):
         '''Mutates a group of individuals by adding or subtracting `step_size`
         to or from individiual genes.
         
@@ -404,6 +406,7 @@ class RealSpecies(Species):
             Otherwise, `step_size` is subtracted.
         '''
         frand = rand.random
+        shuffle = rand.shuffle
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
@@ -471,6 +474,7 @@ class RealSpecies(Species):
         '''
         sigma = sigma or (step_size * 1.253)
         frand = rand.random
+        shuffle = rand.shuffle
         gauss = rand.gauss
         
         do_all_gene = (per_gene_rate >= 1.0)

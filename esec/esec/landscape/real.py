@@ -73,12 +73,12 @@ class Real(Landscape):
         
         # landscape bounds ([lowest value per gene], [highest value per gene])
         lbd = self.cfg.bounds.lower
-        if lbd == None: lbd = '-inf'
+        if lbd is None: lbd = '-inf'
         if isinstance(lbd, (int, float, str)): lbd = [float(lbd)] * self.size.max
         assert len(lbd) >= self.size.max, 'At least %d lower bound values are required' % self.size.max
         
         ubd = self.cfg.bounds.upper
-        if ubd == None: ubd = 'inf'
+        if ubd is None: ubd = 'inf'
         if isinstance(ubd, (int, float, str)): ubd = [float(ubd)] * self.size.max
         assert len(ubd) >= self.size.max, 'At least %d upper bound values are required' % self.size.max
         

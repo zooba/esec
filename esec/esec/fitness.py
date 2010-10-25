@@ -91,7 +91,7 @@ class Fitness(object):
         
         if _direct:
             self.values = values
-        elif values == None:
+        elif values is None:
             self.values = tuple(self.check(i, *args) for i, args in \
                 enumerate(zip(self.types, self.defaults, self.defaults)))
         elif isinstance(values, Fitness):
@@ -135,13 +135,13 @@ class Fitness(object):
             This method is used internally and is not used at all when ``__debug__``
             is ``False``.
         '''
-        if self.values != None:
+        if self.values is not None:
             if not all((isinstance(*args) for args in zip(self.values, self.types))):
                 print >> sys.stderr, self.types
                 print >> sys.stderr, self.values
                 assert False, "Incorrect value type in Fitness object"
         if isinstance(other, EmptyFitness): return
-        if other != None:
+        if other is not None:
             assert isinstance(other, Fitness), "Not comparing to a Fitness object"
             assert self.types == other.types, "Part types do not match between Fitness objects"
             other.validate()

@@ -233,7 +233,7 @@ class CSVMonitor(ConsoleMonitor):
         '''Returns ``(milliseconds,)`` since the last call to `_time_delta`.'''
         prev_time = self._last_time_ms
         now_time = self._last_time_ms = self._get_ms()
-        return (now_time - prev_time,) if prev_time != None else (0,)
+        return (now_time - prev_time,) if prev_time is not None else (0,)
     
     def _time_precise(self, owner):
         '''Returns ``(microseconds,)`` since the first call to `_time_precise`.'''
@@ -243,4 +243,4 @@ class CSVMonitor(ConsoleMonitor):
         '''Returns ``(microseconds,)`` since the last call to `_time_delta_precise`.'''
         prev_time = self._last_time_us
         now_time = self._last_time_us = self._get_us()
-        return (now_time - prev_time,) if prev_time != None else (0,)
+        return (now_time - prev_time,) if prev_time is not None else (0,)

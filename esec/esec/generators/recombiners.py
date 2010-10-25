@@ -41,7 +41,7 @@ def Uniform(_source, per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5):
       per_gene_rate : |prob|
         The probability of any particular pair of genes being swapped.
     '''
-    if per_pair_rate == None: per_pair_rate = per_indiv_rate
+    if per_pair_rate is None: per_pair_rate = per_indiv_rate
     if per_pair_rate <= 0.0:
         for indiv in _source: yield indiv
         raise StopIteration
@@ -97,7 +97,7 @@ def OnePointSame(_source, per_pair_rate=None, per_indiv_rate=1.0):
       per_indiv_rate : |prob|
         A synonym for `per_pair_rate`.
     '''
-    if per_pair_rate == None: per_pair_rate = per_indiv_rate
+    if per_pair_rate is None: per_pair_rate = per_indiv_rate
     if per_pair_rate <= 0.0:
         for indiv in _source: yield indiv
         raise StopIteration
@@ -161,7 +161,7 @@ def OnePointDifferent(_source, per_pair_rate=None, per_indiv_rate=1.0, longest_r
         notification is sent to the monitor from
         ``'crossover_one_different'``.
     '''
-    if per_pair_rate == None: per_pair_rate = per_indiv_rate
+    if per_pair_rate is None: per_pair_rate = per_indiv_rate
     if per_pair_rate <= 0.0:
         for indiv in _source: yield indiv
         raise StopIteration
@@ -244,13 +244,13 @@ def PerGeneTuple(_source, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=
         probability. If set to 1.0 or higher, the first individual in
         each joined individual is returned unmodified.
     '''
-    if per_indiv_rate == None: per_indiv_rate = per_pair_rate
+    if per_indiv_rate is None: per_indiv_rate = per_pair_rate
     if per_indiv_rate <= 0.0 or per_gene_rate >= 1.0:
         for indiv in _source: yield indiv[0]
         raise StopIteration
     
     do_all_indiv = (per_indiv_rate >= 1.0)
-    equal_per_gene_rate = (per_gene_rate == None)
+    equal_per_gene_rate = (per_gene_rate is None)
     
     frand = rand.random
     choice = rand.choice
@@ -262,7 +262,7 @@ def PerGeneTuple(_source, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=
             # genomes, filling with None if an individual is shorter than
             # the rest.
             for genes in map(lambda *args: args, *(i.genome for i in indiv)):
-                genes = [i for i in genes if i != None]
+                genes = [i for i in genes if i is not None]
                 len_genes = len(genes)
                 if len_genes == 0: break
                 elif len_genes == 1: new_genes.append(genes[0])

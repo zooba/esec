@@ -64,7 +64,7 @@ class GE(Landscape):
     def legal(self, indiv):
         '''Check to see if an individual is legal.
         '''
-        return indiv.Eval != None
+        return indiv.Eval is not None
 
 
 #==============================================================================
@@ -129,12 +129,12 @@ class Multiplexer(GE):
         fitness = 0
         Eval = indiv.Eval       #pylint: disable=C0103
         
-        if Eval == None:
+        if Eval is None:
             return -1
         
         for case in self.test_cases:
             result = Eval(case[0], [0] * 10)
-            if result == None: return 0
+            if result is None: return 0
             fitness += 1 if (result == case[1]) else 0
         
         if len(indiv) <= 3: fitness = 0
@@ -216,12 +216,12 @@ F1 = F(1.0)
         fitness = 0
         Eval = indiv.Eval       #pylint: disable=C0103
         
-        if Eval == None: return -1000.0
+        if Eval is None: return -1000.0
         
         for case in self.test_cases:
             try:
                 result = Eval(case[0])
-                if result == None: return -1000.0
+                if result is None: return -1000.0
                 fitness += abs(result - case[1])
             except KeyboardInterrupt:
                 raise

@@ -124,7 +124,7 @@ class GEIndividual(IntegerIndividual):
         '''Returns the number of codon (gene) values actually used when
         mapped to a program. This value may be larger than the length
         of the genome if `wrap_count` is greater than zero.'''
-        if self._effective_size == None:
+        if self._effective_size is None:
             _ = self.Eval
         return self._effective_size
     
@@ -132,7 +132,7 @@ class GEIndividual(IntegerIndividual):
     def phenome_string(self):
         '''Returns a multiline string containing the generated code for
         this individual.'''
-        if self._phenome == None:
+        if self._phenome is None:
             _ = self.Eval
         return self._phenome
     

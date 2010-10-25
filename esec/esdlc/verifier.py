@@ -274,7 +274,7 @@ class Verifier(object):
                 all_bounded = True
                 for dest in dests:
                     if all_bounded:
-                        if dest.size == None: all_bounded = False
+                        if dest.size is None: all_bounded = False
                     else:
                         errors.append(error.UnusedGroupError(min(dest.tokens), dest.group.name))
                 

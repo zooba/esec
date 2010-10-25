@@ -115,7 +115,7 @@ class Species(object):
             is returned and an ``'aborted'`` notification is sent to
             the monitor from ``'mutate_insert'``.
         '''
-        if length != None:
+        if length is not None:
             shortest = longest = length
         assert longest >= shortest, \
                "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
@@ -185,7 +185,7 @@ class Species(object):
             individual is this length or shorter, it is returned
             unmodified.
         '''
-        if length != None:
+        if length is not None:
             shortest = longest = length
         assert longest >= shortest, \
                "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)

@@ -108,7 +108,7 @@ class Individual(object):
         
         :Returns: `self`
         '''
-        if self.birthday == None:
+        if self.birthday is None:
             self.birthday = Individual._next_birthday()
         return self
     
@@ -123,6 +123,9 @@ class Individual(object):
         attr = getattr(self.species, name, None)
         if not attr: raise AttributeError("'%s' object has no attribute '%s'" % (type(self).__name__, name))
         else: return attr
+    
+    # Pylint doesn't understand properties correctly
+    #pylint: disable=E0102,E0202,E1101,C0111
     
     @property
     def _eval(self):
@@ -155,21 +158,15 @@ class Individual(object):
             # `statistic` is intended for counting events that only matter if they remain
             # in the population.
             if not self._eval: self._eval = self._eval_default
-            _fit = self._eval.eval(self)
-            if isinstance(_fit, Fitness): self._fitness = _fit
-            elif _fit != None: self._fitness = Fitness(_fit)
-            else: self._fitness = EmptyFitness()
+            self.fitness = self._eval.eval(self)
             notify('individual', 'statistic', 'local_evals+global_evals')
         return self._fitness
-    
-    # Pylint doesn't understand @x.setter and @x.deleter
-    #pylint: disable=E1101,E0102,C0111
     
     @fitness.setter
     def fitness(self, value):
         if isinstance(value, Fitness):
             self._fitness = value
-        elif value == None:
+        elif value is None:
             self._fitness = EmptyFitness()
         else:
             self._fitness = Fitness(value)
@@ -177,6 +174,8 @@ class Individual(object):
     @fitness.deleter
     def fitness(self):
         self._fitness = EmptyFitness()
+    
+    #pylint: enable=E0102,E0202,E1101,C0111
     
     def __len__(self):
         '''Returns the number of values in the phenome.

@@ -526,7 +526,7 @@ class TgpSpecies(Species):
         '''
         instructions = TgpSpecies.real_instructions
         instruction_set = 'real'
-        if lowest_constant == None or highest_constant == None or lowest_constant > highest_constant:
+        if lowest_constant is None or highest_constant is None or lowest_constant > highest_constant:
             constant_bounds = None
         else:
             constant_bounds = (lowest_constant, highest_constant)
@@ -585,7 +585,7 @@ class TgpSpecies(Species):
         '''
         instructions = TgpSpecies.integer_instructions
         instruction_set = 'integer'
-        if lowest_constant == None or highest_constant == None or lowest_constant > highest_constant:
+        if lowest_constant is None or highest_constant is None or lowest_constant > highest_constant:
             constant_bounds = None
         else:
             constant_bounds = (lowest_constant, highest_constant + 1)
@@ -663,11 +663,11 @@ class TgpSpecies(Species):
         '''
         frand = rand.random
         
-        if per_pair_rate == None: per_pair_rate = per_indiv_rate
+        if per_pair_rate is None: per_pair_rate = per_indiv_rate
         do_all_pairs = (per_pair_rate >= 1.0)
         do_all_adf = (per_adf_rate >= 1.0)
         
-        if deepest_result == None: deepest_result = longest_result
+        if deepest_result is None: deepest_result = longest_result
         
         group = list(_source)
         for i1_pre, i2_pre in zip(group[::2], group[1::2]):
@@ -751,7 +751,7 @@ class TgpSpecies(Species):
         '''
         frand = rand.random
         
-        if per_gene_rate != None: per_adf_rate = per_gene_rate
+        if per_gene_rate is not None: per_adf_rate = per_gene_rate
         do_all_indiv = (per_indiv_rate >= 1.0)
         do_all_adf = (per_adf_rate >= 1.0)
         

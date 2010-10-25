@@ -487,7 +487,7 @@ class GroupNode(NodeBase):
             token_i, group_name = UnknownNode.parse(tokens, token_i)
             token = _get_token(tokens, token_i)
         
-        if group_name == None: raise error.ExpectedGroupError(tokens[-1])
+        if group_name is None: raise error.ExpectedGroupError(tokens[-1])
         
         return token_i, GroupNode(group_name, group_size, tokens[first_token:token_i])
     

@@ -86,7 +86,7 @@ class IntegerSpecies(Species):
         '''Returns instances of `IntegerIndividual` initialised using the function
         in `_gen`.
         '''
-        if length != None: shortest = longest = length
+        if length is not None: shortest = longest = length
         assert shortest > 0, "Shortest must be greater than zero"
         assert longest >= shortest, \
             "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
@@ -436,6 +436,7 @@ class IntegerSpecies(Species):
         '''
         frand = rand.random
         irand = rand.randrange
+        shuffle = rand.shuffle
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
@@ -493,6 +494,7 @@ class IntegerSpecies(Species):
             Otherwise, `step_size` is subtracted.
         '''
         frand = rand.random
+        shuffle = rand.shuffle
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
@@ -565,6 +567,7 @@ class IntegerSpecies(Species):
         '''
         sigma = sigma or (step_size * 1.253)
         frand = rand.random
+        shuffle = rand.shuffle
         gauss = rand.gauss
         
         do_all_gene = (per_gene_rate >= 1.0)

@@ -47,13 +47,13 @@ class Integer(Landscape):
         
         # landscape bounds ([lowest value per gene], [highest value per gene])
         lbd = self.cfg.bounds.lower
-        if lbd == None: lbd = -maxsize - 1
+        if lbd is None: lbd = -maxsize - 1
         if isinstance(lbd, (int, long)): lbd = [lbd] * self.size.max
         elif isinstance(lbd, (float, str)): lbd = [int(lbd)] * self.size.max
         assert len(lbd) >= self.size.max, 'At least %d lower bound values are required' % self.size.max
         
         ubd = self.cfg.bounds.upper
-        if ubd == None: ubd = maxsize
+        if ubd is None: ubd = maxsize
         if isinstance(ubd, (int, long)): ubd = [ubd] * self.size.max
         elif isinstance(ubd, (float, str)): ubd = [int(ubd)] * self.size.max
         assert len(ubd) >= self.size.max, 'At least %d upper bound values are required' % self.size.max

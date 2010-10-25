@@ -1,6 +1,5 @@
 '''Provides the `BinarySpecies` class for binary-valued genomes.
 '''
-from itertools import izip as zip   #pylint: disable=W0622
 from itertools import islice, chain
 from esec.species import Species
 from esec.individual import Individual
@@ -208,7 +207,7 @@ class BinarySpecies(Species):
     
     def _len(self, length, shortest, longest):
         '''Returns a randomly selected length for a new individual.'''
-        if length != None:
+        if length is not None:
             shortest = longest = length
         assert longest >= shortest, \
             "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
@@ -440,6 +439,7 @@ class BinarySpecies(Species):
             used instead.
         '''
         frand = rand.random
+        shuffle = rand.shuffle
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
