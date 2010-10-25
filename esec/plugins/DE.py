@@ -35,7 +35,7 @@ def mutate_DE(_source, scale):
             b, p1, p2, l, h in zip(base, parameter1, parameter2, *base.bounds)], base)
 
 DE_DEF = r'''
-FROM random_real(length=config.landscape.size.exact,
+FROM random_real(length=config.landscape.size.exact, \
                  lowest=config.landscape.bounds[0],highest=config.landscape.bounds[1]) \
         SELECT (size) population
 YIELD population
