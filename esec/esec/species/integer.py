@@ -2,6 +2,7 @@
 integer-valued genomes.
 '''
 from itertools import izip as zip   #pylint: disable=W0622
+from itertools import islice
 from esec.species import Species
 from esec.individual import Individual
 from esec.context import rand
@@ -409,7 +410,7 @@ class IntegerSpecies(Species):
             count += 1
             yield indiv
     
-    def mutate_random(self, _source, per_indiv_rate=1.0, per_gene_rate=0.1):
+    def mutate_random(self, _source, per_indiv_rate=1.0, per_gene_rate=0.1, genes=None):
         '''Mutates a group of individuals by replacing genes with random values.
         
         .. include:: epydoc_include.txt
@@ -428,6 +429,10 @@ class IntegerSpecies(Species):
             The probability of any gene being mutated. If an individual is not
             selected for mutation (under `per_indiv_rate`) then this value is
             unused.
+          
+          genes : int
+            The exact number of genes to mutate. If `None`, `per_gene_rate` is
+            used instead.
         '''
         frand = rand.random
         irand = rand.randrange
@@ -438,7 +443,15 @@ class IntegerSpecies(Species):
         for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 new_genes = list(indiv.genome)
-                for i, low, high in zip(xrange(len(new_genes)), *indiv.bounds):
+                source = zip(xrange(len(new_genes)), *indiv.bounds)
+                
+                if genes:
+                    do_all_gene = True
+                    source = list(source)
+                    shuffle(source)
+                    source = islice(source, genes)
+                
+                for i, low, high in source:
                     if do_all_gene or frand() < per_gene_rate:
                         new_genes[i] = irand(low, high)
                 
@@ -446,7 +459,7 @@ class IntegerSpecies(Species):
             else:
                 yield indiv
     
-    def mutate_delta(self, _source, step_size=1, per_indiv_rate=1.0, per_gene_rate=0.1, positive_rate=0.5):
+    def mutate_delta(self, _source, step_size=1, per_indiv_rate=1.0, per_gene_rate=0.1, genes=None, positive_rate=0.5):
         '''Mutates a group of individuals by adding or subtracting `step_size`
         to or from individiual genes.
         
@@ -471,6 +484,10 @@ class IntegerSpecies(Species):
             selected for mutation (under `per_indiv_rate`) then this value is
             unused.
           
+          genes : int
+            The exact number of genes to mutate. If `None`, `per_gene_rate` is
+            used instead.
+          
           positive_rate : |prob|
             The probability of `step_size` being added to the gene value.
             Otherwise, `step_size` is subtracted.
@@ -491,7 +508,15 @@ class IntegerSpecies(Species):
             if do_all_indiv or frand() < per_indiv_rate:
                 step_size_sum = 0
                 new_genes = list(indiv.genome)
-                for i, gene, low, high in zip(xrange(len(new_genes)), new_genes, *indiv.bounds):
+                source = zip(xrange(len(new_genes)), new_genes, *indiv.bounds)
+                
+                if genes:
+                    do_all_gene = True
+                    source = list(source)
+                    shuffle(source)
+                    source = islice(source, genes)
+                
+                for i, gene, low, high in source:
                     if do_all_gene or frand() < per_gene_rate:
                         step_size_sum += step_size
                         new_gene = gene + (step_size if frand() < positive_rate else -step_size)
@@ -503,7 +528,7 @@ class IntegerSpecies(Species):
             else:
                 yield indiv
     
-    def mutate_gaussian(self, _source, step_size=1.0, sigma=None, per_indiv_rate=1.0, per_gene_rate=0.1):
+    def mutate_gaussian(self, _source, step_size=1.0, sigma=None, per_indiv_rate=1.0, per_gene_rate=0.1, genes=None):
         '''Mutates a group of individuals by adding or subtracting a random
         value with Gaussian distribution based on `step_size` or `sigma`.
         
@@ -533,6 +558,10 @@ class IntegerSpecies(Species):
             The probability of any gene being mutated. If an individual is not
             selected for mutation (under `per_indiv_rate`) then this value is
             unused.
+          
+          genes : int
+            The exact number of genes to mutate. If `None`, `per_gene_rate` is
+            used instead.
         '''
         sigma = sigma or (step_size * 1.253)
         frand = rand.random
@@ -547,7 +576,15 @@ class IntegerSpecies(Species):
             if do_all_indiv or frand() < per_indiv_rate:
                 step_size_sum = 0
                 new_genes = list(indiv.genome)
-                for i, gene, low, high in zip(xrange(len(new_genes)), new_genes, *indiv.bounds):
+                source = zip(xrange(len(new_genes)), new_genes, *indiv.bounds)
+                
+                if genes:
+                    do_all_gene = True
+                    source = list(source)
+                    shuffle(source)
+                    source = islice(source, genes)
+                
+                for i, gene, low, high in source:
                     if do_all_gene or frand() < per_gene_rate:
                         step = int(gauss(0, sigma))
                         step_size_sum += step

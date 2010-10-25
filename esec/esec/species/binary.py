@@ -1,5 +1,7 @@
 '''Provides the `BinarySpecies` class for binary-valued genomes.
 '''
+from itertools import izip as zip   #pylint: disable=W0622
+from itertools import islice, chain
 from esec.species import Species
 from esec.individual import Individual
 from esec.context import rand
@@ -364,7 +366,7 @@ class BinarySpecies(Species):
             yield BinaryIndividual([1] * self._len(length, shortest, longest), self)
             yield BinaryIndividual([0] * self._len(length, shortest, longest), self)
     
-    def mutate_random(self, _source, per_indiv_rate=1.0, per_gene_rate=0.1):
+    def mutate_random(self, _source, per_indiv_rate=1.0, per_gene_rate=0.1, genes=None):
         '''Mutates a group of individuals by replacing genes with random values.
         
         .. include:: epydoc_include.txt
@@ -383,8 +385,13 @@ class BinarySpecies(Species):
             The probability of any gene being mutated. If an individual is not
             selected for mutation (under `per_indiv_rate`) then this value is
             unused.
+          
+          genes : int
+            The exact number of genes to mutate. If `None`, `per_gene_rate` is
+            used instead.
         '''
         frand = rand.random
+        shuffle = rand.shuffle
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
@@ -392,7 +399,15 @@ class BinarySpecies(Species):
         for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 new_genes = list(indiv.genome)
-                for i in xrange(len(new_genes)):
+                source = xrange(len(new_genes))
+                
+                if genes:
+                    do_all_gene = True
+                    source = list(source)
+                    shuffle(source)
+                    source = islice(source, genes)
+                
+                for i in source:
                     if do_all_gene or frand() < per_gene_rate:
                         new_genes[i] = 0 if frand() < 0.5 else 1
                 
@@ -400,7 +415,7 @@ class BinarySpecies(Species):
             else:
                 yield indiv
     
-    def mutate_bitflip(self, _source, per_indiv_rate=1.0, per_gene_rate=0.1):
+    def mutate_bitflip(self, _source, per_indiv_rate=1.0, per_gene_rate=0.1, genes=None):
         '''Mutates a group of individuals by inverting genes.
         
         .. include:: epydoc_include.txt
@@ -419,6 +434,10 @@ class BinarySpecies(Species):
             The probability of any gene being inverted. If an individual is not
             selected for mutation (under `per_indiv_rate`) then this value is
             unused.
+          
+          genes : int
+            The exact number of genes to mutate. If `None`, `per_gene_rate` is
+            used instead.
         '''
         frand = rand.random
         
@@ -428,7 +447,16 @@ class BinarySpecies(Species):
         for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 new_genes = list(indiv.genome)
-                for i, gene in enumerate(new_genes):
+                
+                source = enumerate(new_genes)
+                
+                if genes:
+                    do_all_gene = True
+                    source = list(source)
+                    shuffle(source)
+                    source = islice(source, genes)
+                
+                for i, gene in source:
                     if do_all_gene or frand() < per_gene_rate:
                         new_genes[i] = 1 - gene
                 
@@ -510,7 +538,9 @@ class BinarySpecies(Species):
                     cut2 = cut1 + length
                 else:
                     cut1, cut2 = 0, len_indiv
-                new_genes = indiv.genome[:cut1] + [(1 - g) for g in indiv.genome[cut1:cut2]] + indiv.genome[cut2:]
+                new_genes = list(chain(islice(indiv.genome, cut1), \
+                                       ((1 - g) for g in islice(indiv.genome, cut1, cut2)), \
+                                       islice(indiv.genome, cut2, len(indiv.genome))))
                 yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1 })
             else:
                 yield indiv
