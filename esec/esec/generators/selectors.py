@@ -371,7 +371,7 @@ def FitnessProportionalSUS(_source, mu=None):
     '''
     return FitnessProportional(_source, sus=True, mu=mu)
 
-def RankProportional(_source, replacement=True, sus=False, mu=None):
+def RankProportional(_source, replacement=True, sus=False, mu=None, invert=False):
     '''Returns a sequence of individuals selected in proportion to their
     rank.
     
@@ -400,9 +400,14 @@ def RankProportional(_source, replacement=True, sus=False, mu=None):
         not provided, the total number of individuals in `_source`
         is used.
         If `sus` is ``False``, `mu` is ignored.
+      
+      invert : bool [optional]
+        ``False`` to give the highest probabilities to the most
+        fit individuals; otherwise, ``True`` to give the
+        highest probabilities to the least fit individuals.
     '''
     
-    group = sorted(_source, key=_key_fitness, reverse=True)
+    group = sorted(_source, key=_key_fitness, reverse=not invert)
     frand = rand.random     #pylint: disable=E0602
     irand = rand.randrange  #pylint: disable=E0602
     
