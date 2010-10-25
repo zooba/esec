@@ -37,16 +37,21 @@ class Token(object):    #pylint: disable=R0903
     
     def __eq__(self, other):
         if type(other) is str: return False
-        return (self.tag, self.line, self.col) == (other.tag, other.line, other.col)
+        return (self.tag, self.value, self.line, self.col) == (other.tag, other.value, other.line, other.col)
     
     def __gt__(self, other): return (self.line, self.col) > (other.line, other.col)
     def __lt__(self, other): return (self.line, self.col) < (other.line, other.col)
     
     def __str__(self):
-        return '%s (%d:%d)' % (self.value, self.line, self.col)
+        if self.tag == 'eos':
+            return '<eos> (%d:%d)' % (self.line, self.col)
+        else:
+            return '%s (%d:%d)' % (self.value, self.line, self.col)
     
     def __repr__(self):
-        if self.tag != self.value:
+        if self.tag == 'eos':
+            return '<eos> (%d:%d)' % (self.line, self.col)
+        elif self.tag != self.value:
             return '<%s>%s (%d:%d)' % (self.tag, self.value, self.line, self.col)
         else:
             return '<%s> (%d:%d)' % (self.tag, self.line, self.col)
@@ -66,8 +71,11 @@ def _tokenise(source):  #pylint: disable=R0912,R0915
     source = source.strip()
     while i <= len(source):
         char = source[i] if i < len(source) else ''
+        
         if mode == '':
-            if char.isdigit():
+            if not char:
+                i += 1
+            elif char.isdigit():
                 mode = 'number'
             elif char.isalpha() or char == '_':
                 mode = 'name'
@@ -101,7 +109,9 @@ def _tokenise(source):  #pylint: disable=R0912,R0915
                 i += 1
         
         elif mode in ('comment', 'backtick'):
-            if char in '\r\n':
+            if not char:
+                i += 1
+            elif char in '\r\n':
                 yield Token(mode, word, line, i-i_start-len(word))
                 mode = ''
                 word = ''
@@ -110,7 +120,12 @@ def _tokenise(source):  #pylint: disable=R0912,R0915
                 i += 1
         
         elif mode == 'number':
-            if char.isdigit() or char in '.eE':
+            if not char:
+                yield Token(mode, word, line, i-i_start-len(word))
+                mode = ''
+                word = ''
+                i += 1
+            elif char.isdigit() or char in '.eE':
                 word += char
                 i += 1
             elif char in '+-' and word[-1] in 'eE':
@@ -122,7 +137,7 @@ def _tokenise(source):  #pylint: disable=R0912,R0915
                 word = ''
         
         elif mode == 'name':
-            if char.isalpha() or char.isdigit() or char in '_.':
+            if char.isalpha() or char.isdigit() or char and char in '_.':
                 word += char
                 i += 1
             else:
@@ -138,6 +153,8 @@ def _tokenise(source):  #pylint: disable=R0912,R0915
                 mode = ''
                 word = ''
     
+    if mode in ('comment', 'backtick'):
+        yield Token(mode, word, line, i-i_start-len(word))
     yield Token('eos', '\n', line, i-i_start)
 
 def tokenise(source):
