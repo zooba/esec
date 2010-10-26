@@ -105,16 +105,16 @@ class ConfigDict(object):
                 # do we validate?
                 if valuetype != '*':
                     # check for nested keys and do recursion check
-                    if type(valuetype) is dict and value is not None:
+                    if isinstance(valuetype, dict) and value is not None:
                         err, other_keys = value.validate(valuetype, scopekey+'.')
                         errors.extend(err)
                         unrecognised_keys.extend(other_keys)
                     # check for valid keyword in tuple
-                    elif type(valuetype) is tuple:
+                    elif isinstance(valuetype, tuple):
                         if value not in valuetype:
                             errors.append(ValueError("Value '%s' not in %s" % (value, str(valuetype)), scopekey))
                     # check for valid type in a list of types
-                    elif type(valuetype) is list:
+                    elif isinstance(valuetype, list):
                         # accept None as a type...
                         if None in valuetype:
                             valuetype.append(type(None))
@@ -122,12 +122,12 @@ class ConfigDict(object):
                         if dict in valuetype:
                             valuetype.append(ConfigDict)
                         # check the value type...
-                        if type(value) not in valuetype:
+                        if not isinstance(value, tuple(t for t in valuetype if isinstance(t, type))):
                             errors.append(TypeError("Type '%s' not in %s" % (type(value), str(valuetype)), scopekey))
                     # check for simple valid types (int, str, float etc)
-                    elif type(value) is not valuetype:
+                    elif not isinstance(value, valuetype):
                         # check for simple dictionary type (unspecified content)
-                        if valuetype is dict and type(value) in [dict, ConfigDict]:
+                        if valuetype is dict and isinstance(value, (dict, ConfigDict)):
                             continue
                         # check for literal string match with type
                         if valuetype == value:
