@@ -164,7 +164,7 @@ class Individual(object):
     
     @fitness.setter
     def fitness(self, value):
-        if isinstance(value, Fitness):
+        if isinstance(value, (Fitness, EmptyFitness)):
             self._fitness = value
         elif value is None:
             self._fitness = EmptyFitness()
