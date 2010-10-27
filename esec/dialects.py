@@ -129,7 +129,7 @@ adapt_step = 0.1
 
 BEGIN generation
     FROM population SELECT 1 parent       USING uniform_random
-    FROM parent     SELECT (size) parents USING repeat
+    FROM parent     SELECT (size) parents USING repeated
     FROM parents    SELECT offspring      USING mutate_gaussian(step_size=current_step,per_gene_rate=1.0)
     YIELD offspring
     
