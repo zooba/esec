@@ -168,6 +168,7 @@ def Tournament(_source, k=2, replacement=True, greediness=1.0):
         selected. If this does not occur, one of the remaining
         individuals is selected at random.
     '''
+    k = int(k)
     assert k >= 2, "k must be at least 2"
     irand = rand.randrange
     frand = rand.random
@@ -322,7 +323,7 @@ def FitnessProportional(_source, replacement=True, sus=False, mu=None):
     total = sum(i[0] for i in wheel)
     
     size = len(group)
-    mu = mu or size
+    mu = int(mu or size)
     one_on_mu = 1.0 / mu
     if sus:
         sus_prob = frand() * one_on_mu - one_on_mu
@@ -425,7 +426,7 @@ def RankProportional(_source, replacement=True,
     
     if neta is not None: expectation = neta
     size = len(group)
-    mu = mu or size
+    mu = int(mu or size)
     one_on_mu = 1.0 / mu
     wheel = [(expectation - 2.0*(expectation-1.0)*(i-1.0)/(size-1.0), j) for i, j in enumerate(group)]
     total = sum([i[0] for i in wheel])

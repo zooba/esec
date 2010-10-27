@@ -97,11 +97,12 @@ class RealSpecies(Species):
         `_gen`.
         '''
         if length is not None: shortest = longest = length
+        shortest = int(shortest)
+        longest = int(longest)
+        
         assert shortest > 0, "Shortest must be greater than zero"
         assert longest >= shortest, \
             "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
-        
-        if template: lowest, highest = template.bounds
         
         lowest = self._convert_bounds(lowest, longest)
         highest = self._convert_bounds(highest, longest)
@@ -110,15 +111,15 @@ class RealSpecies(Species):
             "Values of highest (%s) must be greater than or equal to those in lowest (%s)" % (highest, lowest)
         
         assert not bounds or len(bounds) == 2, "bounds must have two elements (%s)" % str(bounds)
-        if not bounds: bounds = (lowest, highest)
+        if not bounds: bounds = template.bounds if template else (lowest, highest)
         bounds = [self._convert_bounds(bounds[0], longest), self._convert_bounds(bounds[1], longest)]
 
-        irand = rand.randrange
         if shortest == longest:
             while True:
                 genes = [_gen(*i) for i in zip(lowest, highest, xrange(shortest))]
                 yield RealIndividual(genes, self, bounds)
         else:
+            irand = rand.randrange
             while True:
                 length = irand(shortest, longest+1)
                 genes = [_gen(*i) for i in zip(lowest, highest, xrange(length))]
@@ -351,6 +352,8 @@ class RealSpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
+        genes = int(genes or 0)
+        
         for indiv in _source:
             assert isinstance(indiv, RealIndividual), "Want `RealIndividual`, not `%s`" % type(indiv)
             
@@ -410,6 +413,8 @@ class RealSpecies(Species):
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
+        
+        genes = int(genes or 0)
         
         for indiv in _source:
             assert isinstance(indiv, RealIndividual), "Want `RealIndividual`, not `%s`" % type(indiv)
@@ -479,6 +484,8 @@ class RealSpecies(Species):
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
+        
+        genes = int(genes or 0)
         
         for indiv in _source:
             assert isinstance(indiv, RealIndividual), "Want `RealIndividual`, not `%s`" % type(indiv)

@@ -27,24 +27,23 @@ class MaxSetGaussians(object):
     '''Helper class for `MSG`. Initialises covariance, meanvector and optimum
     values needed.
     '''
-    def __init__(self, ndims, ngauss, lower, upper, globalvalue, ratio, seed=1234):
+    def __init__(self, ndims, ngauss, lower, upper, globalvalue, ratio, seed=1):
         # keep a copy of the parameters
-        self.ndims = ndims    # dimensionality
-        self.ngauss = ngauss  # number of gaussian components
-        self.upper = upper    # upper boundary
-        self.lower = lower    # lower boundary
-        self.globalvalue = globalvalue # the value of the global optimum
-        self.ratio = ratio    # values of local optima ([0,ratio*globalvalue])
+        self.ndims = ndims = int(ndims)     # dimensionality
+        self.ngauss = ngauss = int(ngauss)  # number of gaussian components
+        self.upper = upper                  # upper boundary
+        self.lower = lower                  # lower boundary
+        self.globalvalue = globalvalue      # the value of the global optimum
+        self.ratio = ratio                  # values of local optima ([0,ratio*globalvalue])
         
         # Make namespace for each gaussian component
-        self.covmatrix_inv = [None]*self.ngauss # inverse convariance matrix
+        self.covmatrix_inv = [None] * ngauss    # inverse convariance matrix
         self.meanvector    = None               # mean of each component
-        self.optimumvalue  = zeros(self.ngauss) # peak value of each components
+        self.optimumvalue  = zeros(ngauss)      # peak value of each components
         
         # Create a seeded random object for repeatable testing.
         # However - uses the numpy.random module, so seed
         robj = random.RandomState(seed)
-        #robj = random.RandomState()
         frand = robj.normal
         rand = robj.rand
         

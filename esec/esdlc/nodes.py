@@ -411,8 +411,6 @@ class ValueNode(NodeBase):
     
     def __str__(self):
         value_type = type(self.value).__name__
-        if value_type == 'float' and int(self.value) == self.value:
-            return '%s <int>' % int(self.value)
         return '%s <%s>' % (self.value, value_type)
     def __repr__(self): return self.tag + ':' + str(self)
 

@@ -179,6 +179,7 @@ def Same(_source,
         raise StopIteration
     
     do_all_pairs = (per_pair_rate >= 1.0)
+    points = int(points)
     
     frand = rand.random
     shuffle = rand.shuffle
@@ -303,6 +304,7 @@ def Different(_source,
         raise StopIteration
     
     do_all_pairs = (per_pair_rate >= 1.0)
+    points = int(points)
     
     frand = rand.random
     shuffle = rand.shuffle

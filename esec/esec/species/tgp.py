@@ -68,7 +68,7 @@ class TgpIndividual(Individual):
         self._phenome_string = None
         self.instructions = instructions
         self.instruction_set = instruction_set
-        self.terminals = terminals
+        self.terminals = int(terminals or 0)
         self.constant_bounds = constant_bounds
         self.constant_type = constant_type
         if isinstance(parent, TgpIndividual):
@@ -404,6 +404,10 @@ class TgpSpecies(Species):
         irand = rand.randrange
         frand = rand.random
         choice = rand.choice
+        terminals = int(terminals or 0)
+        deepest = int(deepest or 0)
+        adfs = int(adfs or 0)
+        adf_index = int(adf_index or 0)
         constants = (terminals or 1) if constant_bounds else 0
         assert (adfs - adf_index) + terminals + constants, "No terminals available"
         
@@ -411,7 +415,7 @@ class TgpSpecies(Species):
             '''Recursively creates an instruction and its parameters
             (if any).
             '''
-            if depth >= deepest or frand() < terminal_prob:
+            if (deepest and depth >= deepest) or frand() < terminal_prob:
                 i = irand(-adfs + adf_index, constants + terminals)
                 if i < 0:
                     root = [CallAdf(-i + adf_index)]
@@ -588,7 +592,7 @@ class TgpSpecies(Species):
         if lowest_constant is None or highest_constant is None or lowest_constant > highest_constant:
             constant_bounds = None
         else:
-            constant_bounds = (lowest_constant, highest_constant + 1)
+            constant_bounds = (int(lowest_constant), int(highest_constant) + 1)
         while True:
             genes = [self._init_one( \
                 instructions, terminals, deepest, \
@@ -669,6 +673,8 @@ class TgpSpecies(Species):
         
         if deepest_result is None: deepest_result = longest_result
         
+        deepest_result = int(deepest_result or 0)
+        
         group = list(_source)
         for i1_pre, i2_pre in zip(group[::2], group[1::2]):
             if do_all_pairs or frand() < per_pair_rate:
@@ -686,7 +692,8 @@ class TgpSpecies(Species):
                             start2, end2 = self._pick_random_node(program2)
                             new1 = program1[:start1] + program2[start2:end2] + program1[end1:]
                             new2 = program2[:start2] + program1[start1:end1] + program2[end2:]
-                            if self.depth(new1) > deepest_result or self.depth(new2) > deepest_result:
+                            if deepest_result and \
+                               (self.depth(new1) > deepest_result or self.depth(new2) > deepest_result):
                                 stats = { 'i1': i1_pre, 'i2': i2_pre, 'adf': adf, 'deepest_result': deepest_result }
                                 notify('crossover_one', 'aborted', stats)
                                 i1_post.append(program1)
@@ -754,6 +761,8 @@ class TgpSpecies(Species):
         if per_gene_rate is not None: per_adf_rate = per_gene_rate
         do_all_indiv = (per_indiv_rate >= 1.0)
         do_all_adf = (per_adf_rate >= 1.0)
+        
+        deepest_result = int(deepest_result or 0)
         
         def _mutate(indiv):
             '''Returns a potentially mutated individual.'''

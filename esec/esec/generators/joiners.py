@@ -22,6 +22,7 @@ def BestWithAll(_source, best_from=0):
     index into `_source`) matched.'''
     _source, names = _source
     _source = list(_source)
+    best_from = int(best_from)
     best_group = _source[best_from]
     best = (next(BestOnly(best_group)),)  # make it a tuple
     rest = _source

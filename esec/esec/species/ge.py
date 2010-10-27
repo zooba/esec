@@ -65,7 +65,7 @@ class GEIndividual(IntegerIndividual):
             self.grammar = grammar
         '''The grammar used for this individiual.'''
         self.defines = defines
-        self.wrap_count = wrap_count
+        self.wrap_count = int(wrap_count)
         '''The number of times to reuse the genome when mapping.'''
         if isinstance(parent, GEIndividual):
             self.grammar = parent.grammar
@@ -204,6 +204,11 @@ class GESpecies(IntegerSpecies):
             The number of times the genome may be reused when mapping
             to a phenome.
         '''
+        lowest = int(lowest)
+        highest = int(highest)
+        longest = int(longest)
+        wrap_count = int(wrap_count)
+        
         for indiv in self.init_random(length, shortest, longest, lowest, highest, None):
             yield GEIndividual(indiv.genome,            #pylint: disable=W0212
                                parent=self,
@@ -335,7 +340,7 @@ class Grammar(object):
                     yield codon
         
         eff_size = 0
-        gen = _gen(genome, wrap)
+        gen = _gen(genome, int(wrap))
         
         try:
             result = ''

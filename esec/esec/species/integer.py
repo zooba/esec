@@ -87,11 +87,12 @@ class IntegerSpecies(Species):
         in `_gen`.
         '''
         if length is not None: shortest = longest = length
+        shortest = int(shortest)
+        longest = int(longest)
+        
         assert shortest > 0, "Shortest must be greater than zero"
         assert longest >= shortest, \
             "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
-        
-        if template: lowest, highest = template.bounds
         
         lowest = self._convert_bounds(lowest, longest)
         highest = self._convert_bounds(highest, longest)
@@ -100,15 +101,14 @@ class IntegerSpecies(Species):
             "Values of highest (%s) must be greater than or equal to those in lowest (%s)" % (highest, lowest)
         
         assert not bounds or len(bounds) == 2, "bounds must have two elements (%s)" % str(bounds)
-        if not bounds: bounds = (lowest, highest)
-        bounds = [self._convert_bounds(bounds[0], longest), self._convert_bounds(bounds[1], longest)]
-
-        irand = rand.randrange
-        if shortest == longest:
+        if not bounds: bounds = template.bounds if template else (lowest, highest)
+        
+        if shortest >= longest:
             while True:
                 genes = [_gen(*i) for i in zip(lowest, highest, xrange(shortest))]
                 yield IntegerIndividual(genes, self, bounds)
         else:
+            irand = rand.randrange
             while True:
                 length = irand(shortest, longest+1)
                 genes = [_gen(*i) for i in zip(lowest, highest, xrange(length))]
@@ -441,6 +441,8 @@ class IntegerSpecies(Species):
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
         
+        genes = int(genes or 0)
+        
         for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 new_genes = list(indiv.genome)
@@ -498,6 +500,8 @@ class IntegerSpecies(Species):
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
+        
+        genes = int(genes or 0)
         
         # Die (if debugging) if step_size is not an integer
         assert step_size == int(step_size), "step_size must be an integer for integer species"
@@ -572,6 +576,8 @@ class IntegerSpecies(Species):
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
+        
+        genes = int(genes or 0)
         
         for indiv in _source:
             assert isinstance(indiv, IntegerIndividual), "Want `IntegerIndividual`, not `%s`" % type(indiv)

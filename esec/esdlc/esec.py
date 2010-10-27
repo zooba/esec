@@ -32,7 +32,8 @@ class _born_iter(object):
         '_assign': '%(destination)s = %(source)s',
         #'_call': handled separately
         #'_list': handled separately
-        '_getitem': '%(source)s[%(key)s]',
+        '_getitem': '%(source)s[int(%(key)s) if isinstance(%(source)s, (list, tuple)) else %(key)s]',
+        '_getitem_int': '%(source)s[%(key)s]',
         '_op_+': '(%(#0)s + %(#1)s)',
         '_op_-': '(%(#0)s - %(#1)s)',
         '_op_*': '(%(#0)s * %(#1)s)',
@@ -48,7 +49,13 @@ class _born_iter(object):
     def write_function(self, node):
         fmt = self.FUNCTIONS.get(node.name, None)
         args = dict((k, ''.join(self.write(v))) for k, v in node.arguments.iteritems())
-        if fmt:
+        if node.name == '_getitem':
+            if node.arguments['key'].tag == 'value':
+                yield self.FUNCTIONS['_getitem_int'] % \
+                    { 'source': args['source'], 'key': str(int(node.arguments['key'].value)) }
+            else:
+                yield fmt % args
+        elif fmt:
             yield fmt % args
         else:
             func_name = node.name
@@ -72,10 +79,7 @@ class _born_iter(object):
         yield node.text
     
     def write_value(self, node):
-        if type(node.value) is float and int(node.value) == node.value:
-            return (str(int(node.value)),)
-        else:
-            return (str(node.value),)
+        return (str(node.value),)
     
     @classmethod
     def safe_variable(cls, name):
@@ -120,7 +124,7 @@ class _born_iter(object):
             group_name = ''.join(self.write(g.group))
             if g.size:
                 group_size = ''.join(self.write(g.size))
-                yield '%s[:] = islice(_gen, %s)' % (group_name, group_size)
+                yield '%s[:] = islice(_gen, int(%s))' % (group_name, group_size)
             else:
                 yield '%s[:] = %s.rest()' % (group_name, src)
                 break
@@ -138,7 +142,7 @@ class _born_iter(object):
             group_name = ''.join(self.write(g.group))
             if g.size:
                 group_size = ''.join(self.write(g.size))
-                yield '%s[:] = islice(_gen, %s)' % (group_name, group_size)
+                yield '%s[:] = islice(_gen, int(%s))' % (group_name, group_size)
             else:
                 yield '%s[:] = _gen.rest()' % group_name
                 break

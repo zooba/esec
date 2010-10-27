@@ -66,7 +66,7 @@ class BinaryRealIndividual(Individual):
             self.offset = parent.offset
         else:
             self.resolution = resolution
-            self.bits_per_value = bits_per_value
+            self.bits_per_value = int(bits_per_value)
             self.offset = offset
         
         self._format = '%f'
@@ -155,7 +155,7 @@ class BinaryIntegerIndividual(Individual):
             self.offset = parent.offset
         else:
             self.resolution = int(resolution)
-            self.bits_per_value = bits_per_value
+            self.bits_per_value = int(bits_per_value)
             self.offset = int(offset)
     
     @property
@@ -207,13 +207,16 @@ class BinarySpecies(Species):
     
     def _len(self, length, shortest, longest):
         '''Returns a randomly selected length for a new individual.'''
-        if length is not None:
-            shortest = longest = length
+        if length is not None: shortest = longest = length
+        
+        shortest = int(shortest)
+        longest = int(longest)
+
         assert longest >= shortest, \
             "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
         assert shortest > 0, "Shortest must be greater than zero"
         
-        return rand.randrange(shortest, longest+1)
+        return lambda: rand.randrange(shortest, longest+1)
     
     def init_random(self, length=None, shortest=10, longest=10, template=None): #pylint: disable=W0613
         '''Returns instances of `BinaryIndividual` initialised with random bitstrings.
@@ -237,8 +240,9 @@ class BinarySpecies(Species):
         def _bit():
             '''Picks a random bit value.'''
             return 0 if rand.random() <= 0.5 else 1
+        len_ = self._len(length, shortest, longest)
         while True:
-            yield BinaryIndividual([_bit() for _ in xrange(self._len(length, shortest, longest))], self)
+            yield BinaryIndividual([_bit() for _ in xrange(len_())], self)
     
     def init_random_real(self, length=None, shortest=10, longest=10, resolution=0.1, offset=0.0, bits_per_value=None):
         '''Returns instances of `BinaryRealIndividual` initialised with random bitstrings.
@@ -269,8 +273,10 @@ class BinarySpecies(Species):
         def _bit():
             '''Picks a random bit value.'''
             return 0 if rand.random() <= 0.5 else 1
+        len_ = self._len(length, shortest, longest)
+        bits_per_value = int(bits_per_value)
         while True:
-            yield BinaryRealIndividual([_bit() for _ in xrange(self._len(length, shortest, longest))], self, \
+            yield BinaryRealIndividual([_bit() for _ in xrange(len_())], self, \
                                        resolution, offset, bits_per_value)
     
     def init_random_integer(self, length=None, shortest=10, longest=10, resolution=1, offset=0, bits_per_value=None):
@@ -302,9 +308,10 @@ class BinarySpecies(Species):
         def _bit():
             '''Picks a random bit value.'''
             return 0 if rand.random() <= 0.5 else 1
+        len_ = self._len(length, shortest, longest)
         while True:
-            yield BinaryIntegerIndividual([_bit() for _ in xrange(self._len(length, shortest, longest))], self, \
-                                       resolution, offset, bits_per_value)
+            yield BinaryIntegerIndividual([_bit() for _ in xrange(len_())], self, \
+                                          resolution, offset, bits_per_value)
     
     def init_zero(self, length=None, shortest=10, longest=10):
         '''Returns instances of `Individual` initialised with zeros.
@@ -322,8 +329,9 @@ class BinarySpecies(Species):
           longest : int > `shortest`
             The largest number of genes in any individual.
         '''
+        len_ = self._len(length, shortest, longest)
         while True:
-            yield BinaryIndividual([0] * self._len(length, shortest, longest), self)
+            yield BinaryIndividual([0] * len_(), self)
     
     def init_one(self, length=None, shortest=10, longest=10):
         '''Returns instances of `Individual` initialised with ones.
@@ -341,8 +349,9 @@ class BinarySpecies(Species):
           longest : int > `shortest`
             The largest number of genes in any individual.
         '''
+        len_ = self._len(length, shortest, longest)
         while True:
-            yield BinaryIndividual([1] * self._len(length, shortest, longest), self)
+            yield BinaryIndividual([1] * len_(), self)
     
     def init_toggle(self, length=None, shortest=10, longest=10):
         '''Returns instances of `Individual`. Every second individual (from
@@ -361,9 +370,10 @@ class BinarySpecies(Species):
           longest : int > `shortest`
             The largest number of genes in any individual.
         '''
+        len_ = self._len(length, shortest, longest)
         while True:
-            yield BinaryIndividual([1] * self._len(length, shortest, longest), self)
-            yield BinaryIndividual([0] * self._len(length, shortest, longest), self)
+            yield BinaryIndividual([1] * len_(), self)
+            yield BinaryIndividual([0] * len_(), self)
     
     def mutate_random(self, _source, per_indiv_rate=1.0, per_gene_rate=0.1, genes=None):
         '''Mutates a group of individuals by replacing genes with random values.
@@ -394,6 +404,8 @@ class BinarySpecies(Species):
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
+        
+        genes = int(genes or 0)
         
         for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
@@ -443,6 +455,8 @@ class BinarySpecies(Species):
         
         do_all_gene = (per_gene_rate >= 1.0)
         do_all_indiv = (per_indiv_rate >= 1.0)
+        
+        genes = int(genes or 0)
         
         for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
@@ -520,8 +534,7 @@ class BinarySpecies(Species):
             The largest number of genes that may be inverted at any
             mutation.
         '''
-        if length:
-            shortest = longest = length
+        len_ = self._len(length, shortest, longest)
         
         frand = rand.random
         irand = rand.randrange
@@ -530,7 +543,7 @@ class BinarySpecies(Species):
         
         for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
-                length = irand(shortest, longest+1)
+                length = len_()
                 len_indiv = len(indiv.genome)
                 max_cut1 = len_indiv - length
                 if max_cut1 > 0:
