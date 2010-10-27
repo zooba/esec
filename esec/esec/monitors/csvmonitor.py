@@ -192,7 +192,7 @@ class CSVMonitor(ConsoleMonitor):
                     yield value
     
     def parse_report(self, report): #pylint: disable=C0111
-        self.cfg.formats = self.cfg.csv_formats
+        self.cfg.formats.overlay(self.cfg.csv_formats)
         hdrs, fmts, calls = self._parse_report(report)
         return (','.join(hdrs), ','.join(fmts), self._CallsWrapper(calls))
     
