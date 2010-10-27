@@ -352,7 +352,7 @@ def esec_batch(options):
     # returns a sequence of tuples of settings.
     mod = _load_module('cfgs', options.batch)
     # Update configs with anything specified in the batch file
-    configs.update(mod.get('configs', { }))
+    configs.update(mod.get('configs', None) or { })
     # Get any settings overrides from the batch file
     batch = mod.get('batch')()
     batch_settings = mod.get('settings', '')
