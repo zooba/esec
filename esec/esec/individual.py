@@ -92,9 +92,7 @@ class Individual(object):
         self.species = parent.species
         '''The species type of this individual.'''
         # We are allowed to read parent._eval
-        self.__eval = parent._eval      #pylint: disable=W0212
-        if hasattr(self.__eval, 'prepare'):
-            self.__eval.prepare(self)
+        self._eval = parent._eval      #pylint: disable=W0212
         
         for key, value in parent.statistic.iteritems():
             if key in self.statistic:
@@ -110,6 +108,9 @@ class Individual(object):
         '''
         if self.birthday is None:
             self.birthday = Individual._next_birthday()
+        if self._eval and hasattr(self._eval, 'prepare'):
+            self._eval.prepare(self)
+
         return self
     
     def __getattr__(self, name):
@@ -126,23 +127,6 @@ class Individual(object):
     
     # Pylint doesn't understand properties correctly
     #pylint: disable=E0102,E0202,E1101,C0111
-    
-    @property
-    def _eval(self):
-        '''The current evaluator for this individual. ``EVAL`` statements
-        in the system definition change this member.
-        '''
-        return self.__eval
-    
-    @_eval.setter
-    def _eval(self, value):
-        self.__eval = value
-        if hasattr(value, 'prepare'):
-            value.prepare(self)
-    
-    @_eval.deleter
-    def _eval(self):
-        self.__eval = None
     
     @property
     def fitness(self):
