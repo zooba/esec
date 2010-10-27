@@ -183,8 +183,8 @@ def check_selectors_FitnessProportional(population):
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     assert len(set(offspring)) == len(offspring), "Individuals are not all unique"
     fit = [i.fitness.simple for i in offspring]
-    print "fit[:50] = %d, fit[50:] = %d" % (sum(fit[:50]), sum(fit[50:]))
-    assert sum(fit[:50]) > sum(fit[50:]), "Average fitness is not better in early selections"
+    print "fit[:20] = %d, fit[-20:] = %d" % (sum(fit[:20]), sum(fit[-20:]))
+    assert sum(fit[:20]) > sum(fit[-20:]), "Average fitness is not better in early selections (INTERMITTENT)"
     
 def check_selectors_RankProportional(population):
     _gen = selectors.RankProportional(_source=iter(population), replacement=True)
@@ -200,8 +200,8 @@ def check_selectors_RankProportional(population):
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     assert len(set(offspring)) == len(offspring), "Individuals are not all unique"
     fit = [i.fitness.simple for i in offspring]
-    print "fit[:50] = %d, fit[50:] = %d" % (sum(fit[:50]), sum(fit[50:]))
-    assert sum(fit[:50]) > sum(fit[50:]), "Average fitness is not better in early selections"
+    print "fit[:20] = %d, fit[-20:] = %d" % (sum(fit[:20]), sum(fit[-20:]))
+    assert sum(fit[:20]) > sum(fit[-20:]), "Average fitness is not better in early selections (INTERMITTENT)"
     
 def check_selectors_BestOfTuple(population, best_population):
     _gen = joiners.DistinctRandomTuples(_source=([best_population, population, population], \

@@ -371,9 +371,14 @@ def FitnessProportionalSUS(_source, mu=None):
     '''
     return FitnessProportional(_source, sus=True, mu=mu)
 
-def RankProportional(_source, replacement=True, sus=False, mu=None, invert=False):
+def RankProportional(_source, replacement=True,
+                     expectation=1.1, neta=None,
+                     invert=False,
+                     sus=False, mu=None):
     '''Returns a sequence of individuals selected in proportion to their
     rank.
+    
+    .. include:: epydoc_include.txt
     
     :Parameters:
       _source : iterable(`Individual`)
@@ -389,6 +394,19 @@ def RankProportional(_source, replacement=True, sus=False, mu=None, invert=False
         If ``True``, the generator will never terminate.
         If `sus` is ``True``, `replacement` is ignored.
       
+      expectation : float |isin| [1.0, 2.0]
+        The relative probability of selecting the highest ranked
+        individual. Defaults to 1.1.
+        If `neta` is provided, its value is used instead.
+      
+      neta : float
+        A synonym for `expectation`.
+      
+      invert : bool [optional]
+        ``False`` to give the highest probabilities to the most
+        fit individuals; otherwise, ``True`` to give the
+        highest probabilities to the least fit individuals.
+      
       sus : bool
         ``True`` to use stochastic universal sampling (SUS). SUS
         equally spaces selections based on `mu`, resulting in a
@@ -400,21 +418,16 @@ def RankProportional(_source, replacement=True, sus=False, mu=None, invert=False
         not provided, the total number of individuals in `_source`
         is used.
         If `sus` is ``False``, `mu` is ignored.
-      
-      invert : bool [optional]
-        ``False`` to give the highest probabilities to the most
-        fit individuals; otherwise, ``True`` to give the
-        highest probabilities to the least fit individuals.
     '''
-    
     group = sorted(_source, key=_key_fitness, reverse=not invert)
-    frand = rand.random     #pylint: disable=E0602
-    irand = rand.randrange  #pylint: disable=E0602
+    frand = rand.random
+    irand = rand.randrange
     
+    if neta is not None: expectation = neta
     size = len(group)
     mu = mu or size
     one_on_mu = 1.0 / mu
-    wheel = [(size - i, j) for i, j in enumerate(group)]
+    wheel = [(expectation - 2.0*(expectation-1.0)*(i-1.0)/(size-1.0), j) for i, j in enumerate(group)]
     total = sum([i[0] for i in wheel])
     
     if sus:
@@ -424,9 +437,9 @@ def RankProportional(_source, replacement=True, sus=False, mu=None, invert=False
         if sus:
             sus_prob += one_on_mu
             if sus_prob > 1.0: sus_prob -= 1.0
-            prob = int(sus_prob * total)
+            prob = sus_prob * total
         else:
-            prob = irand(total)
+            prob = frand() * total
         
         i = 0
         while i < size and prob > wheel[i][0]:

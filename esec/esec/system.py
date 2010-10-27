@@ -37,16 +37,16 @@ class System(object):
         'system': {
             '_group': list,
             
-            'select_all':       selectors.All,
-            'repeated':         selectors.Repeat,
-            'best_only':        selectors.BestOnly,
-            'worst_only':       selectors.WorstOnly,
-            'best':             selectors.Best,
-            'worst':            selectors.Worst,
-            'truncate_best':    selectors.Best,
-            'truncate_worst':   selectors.Worst,
-            'unique':           selectors.Unique,
-            'best_of_tuple':    selectors.BestOfTuple,
+            'select_all':           selectors.All,
+            'repeated':             selectors.Repeat,
+            'best_only':            selectors.BestOnly,
+            'worst_only':           selectors.WorstOnly,
+            'best':                 selectors.Best,
+            'worst':                selectors.Worst,
+            'truncate_best':        selectors.Best,
+            'truncate_worst':       selectors.Worst,
+            'unique':               selectors.Unique,
+            'best_of_tuple':        selectors.BestOfTuple,
 
             'tournament':           selectors.Tournament,
             'binary_tournament':    selectors.BinaryTournament,
@@ -59,27 +59,31 @@ class System(object):
             'rank_sus':             selectors.RankProportionalSUS,
             
             
+            'crossover':                OnIndividual('crossover', recombiners.Same),
+            'crossover_different':      OnIndividual('crossover_different', recombiners.Different),
             'crossover_uniform':        OnIndividual('crossover_uniform', recombiners.Uniform),
-            'crossover_one':            OnIndividual('crossover_one', recombiners.OnePointSame),
-            'crossover_one_different':  OnIndividual('crossover_one_different', recombiners.OnePointDifferent),
+            'crossover_one':            OnIndividual('crossover_one', recombiners.SingleSame),
+            'crossover_one_different':  OnIndividual('crossover_one_different', recombiners.SingleDifferent),
+            'crossover_two':            OnIndividual('crossover_one', recombiners.DoubleSame),
+            'crossover_two_different':  OnIndividual('crossover_one_different', recombiners.DoubleDifferent),
             'crossover_tuple':          OnIndividual('crossover_tuple', recombiners.PerGeneTuple),
             
-            'OnIndividual':     OnIndividual,  # for in-definition specifications
-            'mutate_random':    OnIndividual('mutate_random'),
-            'mutate_bitflip':   OnIndividual('mutate_bitflip'),
-            'mutate_inversion':     OnIndividual('mutate_inversion'),
-            'mutate_gap_inversion': OnIndividual('mutate_gap_inversion'),
-            'mutate_delta':     OnIndividual('mutate_delta'),
-            'mutate_gaussian':  OnIndividual('mutate_gaussian'),
-            'mutate_insert':     OnIndividual('mutate_insert'),
-            'mutate_delete':     OnIndividual('mutate_delete'),
+            'OnIndividual':             OnIndividual,  # for in-definition specifications
+            'mutate_random':            OnIndividual('mutate_random'),
+            'mutate_bitflip':           OnIndividual('mutate_bitflip'),
+            'mutate_inversion':         OnIndividual('mutate_inversion'),
+            'mutate_gap_inversion':     OnIndividual('mutate_gap_inversion'),
+            'mutate_delta':             OnIndividual('mutate_delta'),
+            'mutate_gaussian':          OnIndividual('mutate_gaussian'),
+            'mutate_insert':            OnIndividual('mutate_insert'),
+            'mutate_delete':            OnIndividual('mutate_delete'),
             
-            '_default_join':    joiners.Tuples, # key is hard-coded in compiler.py
-            'full_combine':     joiners.All,
-            'best_with_rest':   joiners.BestWithAll,
-            'tuples':           joiners.Tuples,
-            'random_tuples':    joiners.RandomTuples,
-            'distinct_random_tuples': joiners.DistinctRandomTuples,
+            '_default_join':            joiners.Tuples, # key is hard-coded in compiler.py
+            'full_combine':             joiners.All,
+            'best_with_rest':           joiners.BestWithAll,
+            'tuples':                   joiners.Tuples,
+            'random_tuples':            joiners.RandomTuples,
+            'distinct_random_tuples':   joiners.DistinctRandomTuples,
         }
     }
     
