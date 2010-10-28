@@ -261,47 +261,10 @@ class IntegerSpecies(Species):
         from `lowest` to `highest`. Each genome contains only a single value.
         When `highest` is reached, counting restarts at `lowest`.
         
-        .. include:: epydoc_include.txt
-        
-        :Parameters:
-          length : int > 0
-            The number of genes to include in each individual. If left
-            unspecified, a random number between `shortest` and
-            `longest` (inclusive) is used to determine the length of
-            each individual.
-          
-          shortest : int > 0
-            The smallest number of genes in any individual.
-          
-          longest : int > `shortest`
-            The largest number of genes in any individual.
-          
-          lowest : int or iterable(int)
-            The smallest initialisation value of any particular gene.
-            
-            If a list of values is provided it must be at least
-            `longest` long. Otherwise, the last value in the sequence
-            will be used for all subsequent positions.
-          
-          highest : int |ge| `lowest` or iterable(int)
-            The largest initialisation value of any particular gene.
-            
-            If a list of values is provided it must be at least
-            `longest` long. Otherwise, the last value in the sequence
-            will be used for all subsequent positions.
-          
-          lower_bounds : int or iterable(int) [optional]
-            The hard inclusive lower limit for each gene (or all genes)
-            of the individual.
-            
-            If unspecified, `lowest` is used as the hard limit.
-          
-          upper_bounds : int or iterable(int) [optional]
-            The hard inclusive upper limit for each gene (or all genes)
-            of the individual.
-            
-            If unspecified, `highest` is used as the hard limit.
+        Parameters are the same as for `init_random`.
         '''
+        lowest = int(lowest)
+        highest = int(highest)
         low_gen = self.init_low(length, shortest, longest, lowest, highest, lower_bounds, upper_bounds)
         count = 0
         while True:
@@ -356,7 +319,7 @@ class IntegerSpecies(Species):
                 
                 for i, low, high in source:
                     if do_all_gene or frand() < per_gene_rate:
-                        new_genes[i] = irand(low, high)
+                        new_genes[i] = irand(low, high + 1)
                 
                 yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1 })
             else:
