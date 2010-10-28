@@ -64,7 +64,7 @@ ivp_tests = [
     ('IVP.Robbins',     std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
 ]
 
-std_dialects = ['GA', 'SSGA', 'binary_real_map']
+std_dialects = ['GA', 'SSGA', 'EP', 'ES', 'binary_real_map']
 rvp_tests = [
     ('RVP.Linear',          std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
     ('RVP.Neutral',         std_dialects, [None, { 'landscape': { 'size': { 'min': 1, 'max': 10 } } }]),
@@ -121,8 +121,8 @@ TGP_INT_DEFS =  [TGP_DEF_TEMPLATE % i for i in [('integer', ''), ('integer', 'lo
 TGP_REAL_DEFS = [TGP_DEF_TEMPLATE % i for i in [('real', ''), ('real', 'transcendentals=True'), ('real', 'lowest_constant=-1.0, highest_constant=1.0')]]
 
 REAL_MAP_DEF = r'''FROM random_real_binary(longest=config.landscape.size.max*10,shortest=config.landscape.size.min*10, \
-                        resolution=config.landscape.bounds[1][0]-config.landscape.bounds[0][0] / 10.0, \
-                        offset=config.landscape.bounds[0][0], \
+                        resolution=(config.landscape.upper_bounds[0]-config.landscape.lower_bounds[0]) / 10.0, \
+                        offset=config.landscape.lower_bounds[0], \
                         bits_per_value=10) SELECT (size) population
 
 YIELD population
@@ -136,8 +136,8 @@ END generation
 '''
 
 INT_MAP_DEF = r'''FROM random_integer_binary(longest=config.landscape.size.max*10,shortest=config.landscape.size.min*10, \
-                        resolution=config.landscape.bounds[1][0]-config.landscape.bounds[0][0] / 10, \
-                        offset=config.landscape.bounds[0][0], \
+                        resolution=(config.landscape.upper_bounds[0]-config.landscape.lower_bounds[0]) / 10, \
+                        offset=config.landscape.lower_bounds[0], \
                         bits_per_value=10) SELECT (size) population
 
 YIELD population

@@ -63,7 +63,7 @@ class ConfigDict(object):
                         self.set_by_name(name, eval(value))
     
     
-    def validate(self, syntax, scope=''):
+    def validate(self, syntax, scope=''):   #pylint: disable=R0912,R0915
         '''Check internal keys/value type against provided syntax
         
         - Uses a plain dictionary for syntax (supports nesting) for valid
@@ -80,6 +80,7 @@ class ConfigDict(object):
         Returns tuple of (Errors, unrecognised keys) lists with string message details.
         '''
         errors = []
+        warnings = []
         unrecognised_keys = []
         
         allkeys = self._dict.keys()
@@ -106,13 +107,19 @@ class ConfigDict(object):
                 if valuetype != '*':
                     # check for nested keys and do recursion check
                     if isinstance(valuetype, dict) and value is not None:
-                        err, other_keys = value.validate(valuetype, scopekey+'.')
+                        err, warns, other_keys = value.validate(valuetype, scopekey+'.')
                         errors.extend(err)
+                        warnings.extend(warns)
                         unrecognised_keys.extend(other_keys)
                     # check for valid keyword in tuple
                     elif isinstance(valuetype, tuple):
                         if value not in valuetype:
-                            errors.append(ValueError("Value '%s' not in %s" % (value, str(valuetype)), scopekey))
+                            if isinstance(value, float) and int in valuetype:
+                                ivalue = int(value)
+                                if ivalue != value: warnings.append(UserWarning("Cast '%s' value to int" % scopekey))
+                                self._dict[key] = value = ivalue
+                            else:
+                                errors.append(ValueError("Value '%s' not in %s" % (value, str(valuetype)), scopekey))
                     # check for valid type in a list of types
                     elif isinstance(valuetype, list):
                         # accept None as a type...
@@ -121,6 +128,11 @@ class ConfigDict(object):
                         # accept ConfigDict's in place of normal dict's
                         if dict in valuetype:
                             valuetype.append(ConfigDict)
+                        # handle float/int conversions
+                        if isinstance(value, float) and float not in valuetype and int in valuetype:
+                            ivalue = int(value)
+                            if ivalue != value: warnings.append(UserWarning("Cast '%s' value to int" % scopekey))
+                            self._dict[key] = value = ivalue
                         # check the value type...
                         if not isinstance(value, tuple(t for t in valuetype if isinstance(t, type))):
                             errors.append(TypeError("Type '%s' not in %s" % (type(value), str(valuetype)), scopekey))
@@ -128,6 +140,12 @@ class ConfigDict(object):
                     elif not isinstance(value, valuetype):
                         # check for simple dictionary type (unspecified content)
                         if valuetype is dict and isinstance(value, (dict, ConfigDict)):
+                            continue
+                        # handle float/int conversions
+                        if valuetype is int and isinstance(value, float):
+                            ivalue = int(value)
+                            if ivalue != value: warnings.append(UserWarning("Cast '%s' value to int" % scopekey))
+                            self._dict[key] = value = ivalue
                             continue
                         # check for literal string match with type
                         if valuetype == value:
@@ -140,7 +158,7 @@ class ConfigDict(object):
         for key in allkeys:
             unrecognised_keys.append(scope + key)
         # share the happy news
-        return errors, unrecognised_keys
+        return errors, warnings, unrecognised_keys
     
     
     def __getitem__(self, key):

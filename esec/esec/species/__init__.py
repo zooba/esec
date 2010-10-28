@@ -193,7 +193,7 @@ class Species(object):
         
         shortest = int(shortest)
         longest = int(longest)
-        longest_result = int(longest_result)
+        shortest_result = int(shortest_result)
         
         assert longest >= shortest, \
                "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)

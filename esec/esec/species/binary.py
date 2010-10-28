@@ -207,8 +207,13 @@ class BinarySpecies(Species):
     
     def _len(self, length, shortest, longest):
         '''Returns a randomly selected length for a new individual.'''
-        if length is not None: shortest = longest = length
         
+        if hasattr(length, 'get'):
+            shortest = length.get('min', 0)
+            longest = length.get('max', 0)
+            length = length.get('exact', 0)
+        
+        if length: shortest = longest = length
         shortest = int(shortest)
         longest = int(longest)
 

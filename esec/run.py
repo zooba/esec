@@ -376,15 +376,20 @@ def esec_batch(options):
     
     # Ensure the batch syntax is valid. Exit if errors and warn on
     # keys that aren't in the syntax.
-    errors, other_keys = batch_cfg.validate(batch_settings_syntax)
+    errors, warnings, other_keys = batch_cfg.validate(batch_settings_syntax)
     if errors:
         print >> sys.stderr, "Batch configuration settings are invalid:"
         print >> sys.stderr, '  ' + '\n  '.join(str(ex) for ex in errors)
         return
-    elif other_keys:
-        print >> sys.stderr, "Batch configuration contains unknown settings:"
-        print >> sys.stderr, '  ' + '\n  '.join('%s: %r' % (key, batch_cfg[key]) for key in other_keys)
-        print >> sys.stderr
+    else:
+        if warnings:
+            print >> sys.stderr, "Batch configuration warnings:"
+            print >> sys.stderr, '  ' + '\n  '.join(str(warning) for warning in warnings)
+            print >> sys.stderr
+        if other_keys:
+            print >> sys.stderr, "Batch configuration contains unknown settings:"
+            print >> sys.stderr, '  ' + '\n  '.join('%s: %r' % (key, batch_cfg[key]) for key in other_keys)
+            print >> sys.stderr
     
     if isinstance(batch_cfg.include_tags, str): batch_cfg.include_tags = batch_cfg.include_tags.split('+')
     if isinstance(batch_cfg.exclude_tags, str): batch_cfg.exclude_tags = batch_cfg.exclude_tags.split('+')

@@ -25,14 +25,21 @@ class Integer(Landscape):
     # This is universal for Integer problems
     syntax = {
         'bounds': {
-            'lower?': [tuple, list, int, long, float, str, None],
-            'upper?': [tuple, list, int, long, float, str, None],
+            'lower': [tuple, list, int, long, float, str, None],
+            'upper': [tuple, list, int, long, float, str, None],
         },
+        'lower_bounds?': [tuple, list, int, long, float, str, None],    # lower_bounds overrules bounds.lower
+        'upper_bounds?': [tuple, list, int, long, float, str, None],    # upper_bounds overrules bounds.upper
     }
     
     # Subclasses can set default to overlay their changes on to this
+    # Note that specifying defaults for lower_bounds or upper_bounds will
+    # overrule any settings for bounds.lower or bounds.upper.
     default = {
-        'bounds': { 'lower': 0, 'upper': 255 },
+        'bounds': {
+            'lower': 0,
+            'upper': 255,
+        },
         'size': { 'min': 10, 'max': 10 },
     }
     
@@ -45,27 +52,27 @@ class Integer(Landscape):
         # call parent cfg magic, validate/strict test syntax/defaults/cfg
         super(Integer, self).__init__(cfg, **other_cfg)
         
-        # landscape bounds ([lowest value per gene], [highest value per gene])
-        lbd = self.cfg.bounds.lower
-        if lbd is None: lbd = -maxsize - 1
+        # landscape bounds
+        lbd = self.cfg.lower_bounds or self.cfg.bounds.lower
+        if lbd is None: lbd = (-maxsize) - 1
         if isinstance(lbd, (int, long)): lbd = [lbd] * self.size.max
         elif isinstance(lbd, (float, str)): lbd = [int(lbd)] * self.size.max
         assert len(lbd) >= self.size.max, 'At least %d lower bound values are required' % self.size.max
         
-        ubd = self.cfg.bounds.upper
+        ubd = self.cfg.upper_bounds or self.cfg.bounds.upper
         if ubd is None: ubd = maxsize
         if isinstance(ubd, (int, long)): ubd = [ubd] * self.size.max
         elif isinstance(ubd, (float, str)): ubd = [int(ubd)] * self.size.max
         assert len(ubd) >= self.size.max, 'At least %d upper bound values are required' % self.size.max
         
-        self.bounds = (lbd, ubd)
-        '''The range limit on each gene.
+        self.lower_bounds = lbd
+        '''The inclusive lower range limit on each gene.
         
-        The first element of `bounds` is a list containing the inclusive
-        lower limit of each gene.
-        
-        The second element of `bounds` is a list containing the inclusive
-        upper limit of each gene.
+        Use `legal` on a genome to determine whether all genes are in the
+        legal range.
+        '''
+        self.upper_bounds = ubd
+        '''The inclusive upper range limit on each gene.
         
         Use `legal` on a genome to determine whether all genes are in the
         legal range.
@@ -78,10 +85,9 @@ class Integer(Landscape):
         if not (self.size.min <= len(indiv) <= self.size.max):
             return False
         
-        lbd, ubd = self.bounds
-        for lower, i, upper in zip(lbd, indiv, ubd):
+        for lower, i, upper in zip(self.lower_bounds, indiv, self.upper_bounds):
             if not (lower <= i <= upper):
-                return False #immediately - don't wait
+                return False
         return True
     
     def info(self, level):
@@ -93,7 +99,7 @@ class Integer(Landscape):
             result = ["Using %s landscape with [%d, %d) parameter(s)" % (self.lname, self.size.min, self.size.max)]
         if level > 0:
             result.append("with parameter bounds of: ")
-            result.extend(self._bounds_info(*self.bounds))
+            result.extend(self._bounds_info(self.lower_bounds, self.upper_bounds))
         
         result.extend(super(Integer, self).info(level)[1:])
         return result
@@ -150,7 +156,7 @@ class Nmax(Integer):
         its maximum value.'''
         if self.legal(indiv):
             fitness = 0
-            for expected, actual in zip(self.bounds[1], indiv):
+            for expected, actual in zip(self.upper_bounds, indiv):
                 tmp = expected - actual
                 fitness += tmp * tmp
             return -sqrt(fitness)
@@ -178,7 +184,7 @@ class Nmin(Integer):
         its maximum value.'''
         if self.legal(indiv):
             fitness = 0
-            for expected, actual in zip(self.bounds[0], indiv):
+            for expected, actual in zip(self.lower_bounds, indiv):
                 tmp = expected - actual
                 fitness += tmp * tmp
             return sqrt(fitness)
@@ -211,7 +217,7 @@ class Nmatch(Integer):
     def __init__(self, cfg=None, **other_cfg):
         super(Nmatch, self).__init__(cfg, **other_cfg)
         # specialised setup - target[i] in middle range for each indiv[i].
-        self.target = [(upper-lower)//2 for upper, lower in zip(*self.bounds)]
+        self.target = [(upper-lower)//2 for upper, lower in zip(self.lower_bounds, self.upper_bounds)]
     
     def _eval(self, indiv):
         '''Like the Nmax function with the optimum set to the range center.

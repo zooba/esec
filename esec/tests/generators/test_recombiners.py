@@ -1,9 +1,7 @@
 from . import *
-import random
 from itertools import izip as zip
+from esec.context import rand
 from esec.generators import recombiners, joiners
-
-rand = recombiners.rand = random
 
 make_pop = make_pop_max
 make_pop_variable = make_pop_variable_max
@@ -73,7 +71,14 @@ def test_recombiners_SingleDifferent_Values():
 def test_recombiners_SingleDifferent_Selection_All():
     population = make_pop_variable()
     
-    _gen = recombiners.SingleDifferent(_source=iter(population), two_children=True)
+    _gen = recombiners.Different(_source=iter(population), points=1, two_children=True)
+    offspring = list(_gen)
+    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
+    assert len(offspring) == len(population), "Did not select all individuals"
+    print "intersection = %s" % set(offspring).intersection(set(population))
+    assert len(set(offspring).intersection(set(population))) == 0, "Did not modify some individuals (INTERMITTENT)"
+    
+    _gen = recombiners.Different(_source=iter(population), points=2, two_children=True)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"

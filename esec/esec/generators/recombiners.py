@@ -231,7 +231,7 @@ def DoubleSame(_source,
                 per_pair_rate=per_pair_rate, per_indiv_rate=per_indiv_rate,
                 one_child=one_child, two_children=two_children)
 
-def Different(_source, 
+def Different(_source,          #pylint: disable=R0915
               points=1,
               per_pair_rate=None, per_indiv_rate=1.0,
               longest_result=None,
@@ -305,6 +305,7 @@ def Different(_source,
     
     do_all_pairs = (per_pair_rate >= 1.0)
     points = int(points)
+    longest_result = int(longest_result or 0)
     
     frand = rand.random
     shuffle = rand.shuffle

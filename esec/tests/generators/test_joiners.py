@@ -1,6 +1,7 @@
 from tests import *
 from esec.generators import joiners
 
+
 def test_joiners():
     print "Maximisation"
     population = make_pop_max()

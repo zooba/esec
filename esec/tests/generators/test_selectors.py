@@ -1,7 +1,7 @@
 from tests import *
 from itertools import izip as zip
-from esec.generators import selectors, joiners
 from esec.context import rand, notify
+from esec.generators import selectors, joiners
 
 def test_selectors_max():
     population = make_pop_max()
@@ -183,25 +183,25 @@ def check_selectors_FitnessProportional(population):
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     assert len(set(offspring)) == len(offspring), "Individuals are not all unique"
     fit = [i.fitness.simple for i in offspring]
-    print "fit[:20] = %d, fit[-20:] = %d" % (sum(fit[:20]), sum(fit[-20:]))
-    assert sum(fit[:20]) > sum(fit[-20:]), "Average fitness is not better in early selections (INTERMITTENT)"
+    print "fit[:50] = %d, fit[-50:] = %d" % (sum(fit[:50]), sum(fit[-50:]))
+    assert sum(fit[:50]) > sum(fit[-50:]), "Average fitness is not better in early selections (INTERMITTENT)"
     
 def check_selectors_RankProportional(population):
-    _gen = selectors.RankProportional(_source=iter(population), replacement=True)
+    _gen = selectors.RankProportional(_source=iter(population), expectation=2.0, replacement=True)
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     
-    _gen = selectors.RankProportional(_source=iter(population), replacement=False)
+    _gen = selectors.RankProportional(_source=iter(population), expectation=2.0, replacement=False)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individials"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     assert len(set(offspring)) == len(offspring), "Individuals are not all unique"
     fit = [i.fitness.simple for i in offspring]
-    print "fit[:20] = %d, fit[-20:] = %d" % (sum(fit[:20]), sum(fit[-20:]))
-    assert sum(fit[:20]) > sum(fit[-20:]), "Average fitness is not better in early selections (INTERMITTENT)"
+    print "fit[:50] = %d, fit[-50:] = %d" % (sum(fit[:50]), sum(fit[-50:]))
+    assert sum(fit[:50]) > sum(fit[-50:]), "Average fitness is not better in early selections (INTERMITTENT)"
     
 def check_selectors_BestOfTuple(population, best_population):
     _gen = joiners.DistinctRandomTuples(_source=([best_population, population, population], \

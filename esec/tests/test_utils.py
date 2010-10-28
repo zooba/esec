@@ -57,17 +57,17 @@ def test_ConfigDict_validate():
     s1 = {'a': int, 'b': float, 'c': str, 'd': float, 'y': int, 'z?': int, 'w?': '*' }
     #   syntax issues     ---->         type-> ^^^^^  ^^^         ^          ^   ^^^ 
     cfg1 = ConfigDict(d1)
-    errs, warns = cfg1.validate(s1)
-    assert len(errs) == 2 and len(warns) == 1
+    errs, warns, unknown = cfg1.validate(s1)
+    assert len(errs) == 2 and len(warns) == 0 and len(unknown) == 1
 
     # valid and nested, keyword sets
     d2 = {'a':'s', 'b': 123, 'n': {'n1': 's', 'n2': 12.34}, 'k1': 'OK',    'k2': 'BAD'}
     s2 = {'a':str, 'b': int, 'n': {'n1': str, 'n2': int},   'k1': ('OK',), 'k2': ('OK',)}
-    #   two issues ------>                          ^^^^^             bad keyword ^^^^^
+    #   two issues ------>                                            bad keyword ^^^^^
     # should show nested validation issue and set issue
     cfg2 = ConfigDict(d2)
-    errs, warns = cfg2.validate(s2)
-    assert len(errs) == 2 and len(warns) == 0
+    errs, warns, unknown = cfg2.validate(s2)
+    assert len(errs) == 1 and len(warns) == 1 and len(unknown) == 0
 
 
 def test_ConfigDict_overlay():

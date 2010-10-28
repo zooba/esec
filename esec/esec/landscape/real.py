@@ -45,21 +45,23 @@ class Real(Landscape):
     # This is universal for Real problems
     syntax = {
         'bounds': {
-            'lower?': [tuple, list, int, float, str, None],
-            'upper?': [tuple, list, int, float, str, None],
+            'lower': [tuple, list, int, float, str, None],
+            'upper': [tuple, list, int, float, str, None],
         },
+        'lower_bounds?': [tuple, list, int, float, str, None],    # lower_bounds overrules bounds.lower
+        'upper_bounds?': [tuple, list, int, float, str, None],    # upper_bounds overrules bounds.upper
     }
     
     # Subclasses can set default to overlay their changes on to this
+    # Note that specifying defaults for lower_bounds or upper_bounds will
+    # overrule any settings for bounds.lower or bounds.upper.
     default = {
-        'bounds': { 'lower': -1.0, 'upper': 1.0 },
+        'bounds': { 'lower': -1.0, 'upper': 1.0 }
     }
     
     
     # used by code testing to easily test each class using simple strings
-    test_key = (('size.exact', int),
-                ('bounds.lower', float),
-                ('bounds.upper', float),)
+    test_key = (('size.exact', int), ('bounds.lower', float), ('bounds.upper', float),)
     #n=params lbd ubd
     test_cfg = ('2 0.0 1.0',)
     
@@ -71,25 +73,25 @@ class Real(Landscape):
         # call super for overlaid syntax/defaults and validation
         super(Real, self).__init__(cfg, **other_cfg)
         
-        # landscape bounds ([lowest value per gene], [highest value per gene])
-        lbd = self.cfg.bounds.lower
+        # landscape bounds
+        lbd = self.cfg.lower_bounds or self.cfg.bounds.lower
         if lbd is None: lbd = '-inf'
         if isinstance(lbd, (int, float, str)): lbd = [float(lbd)] * self.size.max
         assert len(lbd) >= self.size.max, 'At least %d lower bound values are required' % self.size.max
         
-        ubd = self.cfg.bounds.upper
+        ubd = self.cfg.upper_bounds or self.cfg.bounds.upper
         if ubd is None: ubd = 'inf'
         if isinstance(ubd, (int, float, str)): ubd = [float(ubd)] * self.size.max
         assert len(ubd) >= self.size.max, 'At least %d upper bound values are required' % self.size.max
         
-        self.bounds = (lbd, ubd)
-        '''The range limit on each gene.
+        self.lower_bounds = lbd
+        '''The inclusive lower range limit on each gene.
         
-        The first element of `bounds` is a list containing the inclusive
-        lower limit of each gene.
-        
-        The second element of `bounds` is a list containing the inclusive
-        upper limit of each gene.
+        Use `legal` on a genome to determine whether all genes are in the
+        legal range.
+        '''
+        self.upper_bounds = ubd
+        '''The exclusive upper range limit on each gene.
         
         Use `legal` on a genome to determine whether all genes are in the
         legal range.
@@ -101,8 +103,7 @@ class Real(Landscape):
         if not (self.size.min <= len(indiv) <= self.size.max):
             return False
         
-        lbd, ubd = self.bounds
-        for lower, i, upper in zip(lbd, indiv, ubd):
+        for lower, i, upper in zip(self.lower_bounds, indiv, self.upper_bounds):
             if not (lower <= i <= upper):
                 return False
         return True
@@ -126,7 +127,7 @@ class Real(Landscape):
         if level > 0:
             # parameter bounds
             result.append("with parameter bounds of:")
-            result.extend(self._bounds_info(*self.bounds))
+            result.extend(self._bounds_info(self.lower_bounds, self.upper_bounds))
         
         result.extend(super(Real, self).info(level)[1:])
         
@@ -322,7 +323,7 @@ class Sphere(Real):
     lname = 'Sphere'
     maximise = False
     
-    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 }}
+    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 } }
     
     test_cfg = ('2 0.0 100.0',)
     
@@ -355,7 +356,7 @@ class Ellipsoid(Real):
     lname = 'Ellipsoid'
     maximise = False
     
-    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 }}
+    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 } }
     
     test_cfg = ('2 -5.12 5.12',)
     
@@ -384,7 +385,7 @@ class HyperEllipsoid(Real):
     lname = 'Hyper Ellipsoid'
     maximise = False
     
-    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 }}
+    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 } }
     
     test_cfg = ('2 -5.12 5.12',)
     
@@ -415,7 +416,7 @@ class Quadric(Real):
     lname = 'Quadric (Rotated Hyper-ellipsoid)'
     maximise = False
     
-    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -65.536, 'upper': 65.536 }}
+    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -65.536, 'upper': 65.536 } }
     
     test_cfg = ('2 -65.536 65.536',)
     
@@ -448,7 +449,7 @@ class NoisyQuartic(Real):
     lname = 'Noisy Quartic'
     maximise = False
     
-    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 }}
+    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -5.12, 'upper': 5.12 } }
     
     test_cfg = ('2 -5.12 5.12',)
     
@@ -484,7 +485,7 @@ class Easom(Real):
     '''
     lname = 'Easom'
     
-    default = { 'size': { 'exact': 2 }, 'bounds': { 'lower': -100.0, 'upper': 100.0 }}
+    default = { 'size': { 'exact': 2 }, 'bounds': { 'lower': -100.0, 'upper': 100.0 } }
     strict = { 'size.exact': 2 }
     
     test_cfg = ('2 -100 100',)
@@ -591,7 +592,7 @@ class Griewangk(Real):
     lname = 'Griewangk'
     maximise = False
     
-    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -600., 'upper': 600. }}
+    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -600., 'upper': 600. } }
     strict = { 'size.exact': '*' }
     
     test_cfg = ('2 -600 600',)
@@ -632,7 +633,7 @@ class Ackley(Real):
     lname = 'Ackley'
     maximise = False
     
-    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -30.0, 'upper': 30.0 }}
+    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -30.0, 'upper': 30.0 } }
     strict = { 'size.exact': '*' }
     
     test_cfg = ('2 -30.0 30.0',)
@@ -672,7 +673,7 @@ class Schwefel(Real):
     lname = 'Schwefel'
     maximise = False
     
-    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -512.0, 'upper': 511.0 }}
+    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': -512.0, 'upper': 511.0 } }
     strict = { 'size.exact': '*' }
     
     test_cfg = ('2 -512 512',)
@@ -705,7 +706,7 @@ class Michalewicz(Real):
     lname = 'Michalewicz'
     maximise = False
     
-    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': 0, 'upper': pi }}
+    default = { 'size': { 'min': 2, 'max': 2 }, 'bounds': { 'lower': 0, 'upper': pi } }
     strict = { 'size.exact': '*' }
     
     test_cfg = ('2 0.0 3.1416',)
@@ -748,7 +749,7 @@ class MultiPeak1(Real):
     '''
     lname = 'Multipeak1'
     
-    default = { 'size': { 'exact': 1 }, 'bounds': { 'lower': -0.0, 'upper': 1.0 }}
+    default = { 'size': { 'exact': 1 }, 'bounds': { 'lower': -0.0, 'upper': 1.0 } }
     strict = { 'size.exact': 1 }
     
     test_cfg = ('1 -0.0 1.0',)
@@ -830,7 +831,7 @@ class MultiPeak4(Real):
     '''
     lname = 'Multipeak4'
     
-    default = { 'size': { 'exact': 1 }, 'bounds': { 'lower': -0.0, 'upper': 1.0 }}
+    default = { 'size': { 'exact': 1 }, 'bounds': { 'lower': -0.0, 'upper': 1.0 } }
     strict = { 'size.exact': 1 }
     
     test_cfg = ('1 -0.0 1.0',)
@@ -859,7 +860,7 @@ class Booth(Real):
     lname = 'Booth'
     maximise = False
     
-    default = { 'size': { 'exact': 2 }, 'bounds': { 'lower': -10.0, 'upper': 10.0 }}
+    default = { 'size': { 'exact': 2 }, 'bounds': { 'lower': -10.0, 'upper': 10.0 } }
     strict = { 'size.exact': 2 }
     
     test_cfg = ('2 -10.0 10.0',)
@@ -928,12 +929,10 @@ class SixHumpCamelBack(Real):
     
     default = {
         'size': { 'exact': 2 },
-        'bounds': {
-            'lower': [-3.0, -2.0],
-            'upper': [ 3.0, 2.0],
-        }
+        'lower_bounds': [-3.0, -2.0],
+        'upper_bounds': [ 3.0, 2.0],
     }
-    strict = { 'size.exact': 2, 'bounds.lower': [-3.0, -2.0], 'bounds.upper': [3.0, 2.0] }
+    strict = { 'size.exact': 2, 'lower_bounds': [-3.0, -2.0], 'upper_bounds': [3.0, 2.0] }
     
     test_cfg = ('2',)
     
@@ -1017,7 +1016,7 @@ class FMS(Real):
     '''
     lname = 'Frequency Modulation Sounds (FMS)'
     maximise = False
-    default = { 'size': { 'exact': 6 }, 'bounds': { 'lower': -6.4, 'upper': 6.35 }}
+    default = { 'size': { 'exact': 6 }, 'bounds': { 'lower': -6.4, 'upper': 6.35 } }
     strict = { 'size.exact': 6, 'bounds.lower': -6.4, 'bounds.upper': 6.35 }
     
     test_cfg = ('6',)

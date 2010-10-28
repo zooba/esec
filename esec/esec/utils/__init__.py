@@ -87,11 +87,13 @@ def cfg_validate(cfg, syntax, caller='', warnings=True):
       - `ExceptionGroup`: One or more errors are found.
       - `UnexpectedKeyWarning`: One or more keys were not recognised.
     '''
-    errors, other_keys = cfg.validate(syntax)
+    errors, warns, other_keys = cfg.validate(syntax)
     if errors: raise ExceptionGroup(caller, errors)
-    if warnings and other_keys:
-        message = caller + " did not expect configuration keys: " + ', '.join(other_keys)
-        warn(message, UnexpectedKeyWarning, stacklevel=2)
+    if warnings:
+        for message in warns: warn(message, stacklevel=2)
+        if other_keys:
+            message = caller + " did not expect configuration keys: " + ', '.join(other_keys)
+            warn(message, UnexpectedKeyWarning, stacklevel=2)
 
 def cfg_strict_test(cfg, strict):
     '''Test the cfg for any violations of strict conditions

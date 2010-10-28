@@ -8,7 +8,11 @@ from esec.utils import ConfigDict
 class GEIndividual(IntegerIndividual):
     '''An `Individual` for GE genomes.
     '''
-    def __init__(self, genes, parent, bounds=None, grammar=None, defines=None, wrap_count=10, statistic=None):
+    def __init__(self, genes, parent,
+                 lower_bounds=None, upper_bounds=None,
+                 grammar=None, defines=None,
+                 wrap_count=10,
+                 statistic=None):
         '''Initialises a new `GEIndividual`. Instances are generally
         created using the initialisation methods provided by
         `GESpecies`.
@@ -23,15 +27,23 @@ class GEIndividual(IntegerIndividual):
             Either the `GEIndividual` that was used to generate the
             new individual, or an instance of `GESpecies`.
             
-            If a `GEIndividual` is provided, the values for `bounds`,
-            `grammar`, `defines` and `wrap_count` are taken from
-            that.
+            If a `GEIndividual` is provided, it's values for
+            `lower_bounds`, `upper_bounds`, `grammar`, `defines` and
+            `wrap_count` are used instead of the parameters provided.
           
-          bounds : tuple ``(lower bound, upper bound)``
-            The lower and upper limits on values that may be included
-            in the genome. It is used to allow mutation operations to
-            reintroduce values that are missing from the current
-            genome and to maintain valid genomes.
+          lower_bounds : list(int)
+            The inclusive lower limit on genome values. Each element
+            applies to the gene at the matching index.
+            
+            These values are used in mutation operations and for value
+            validation.
+          
+          upper_bounds : list(int)
+            The inclusive upper limit on genome values. Each element
+            applies to the gene at the matching index.
+            
+            These values are used in mutation operations and for value
+            validation.
           
           grammar : `Grammar` or dict
             The BNF grammar used to map integer genomes to Python
@@ -82,7 +94,9 @@ class GEIndividual(IntegerIndividual):
         elif not isinstance(self.defines, dict):
             self.defines = { }
         
-        super(GEIndividual, self).__init__(genes, parent, bounds, statistic)
+        super(GEIndividual, self).__init__(genes, parent=parent, 
+                                           lower_bounds=lower_bounds, upper_bounds=upper_bounds,
+                                           statistic=statistic)
     
     @property
     def Eval(self): #pylint: disable=C0103
@@ -206,13 +220,13 @@ class GESpecies(IntegerSpecies):
         '''
         lowest = int(lowest)
         highest = int(highest)
-        longest = int(longest)
         wrap_count = int(wrap_count)
         
-        for indiv in self.init_random(length, shortest, longest, lowest, highest, None):
-            yield GEIndividual(indiv.genome,            #pylint: disable=W0212
+        for indiv in self.init_random(length, shortest, longest, lowest, highest):
+            yield GEIndividual(indiv.genome,            #pyli nt: disable=W0212
                                parent=self,
-                               bounds=([lowest] * longest, [highest] * longest),
+                               lower_bounds=indiv.lower_bounds,
+                               upper_bounds=indiv.upper_bounds,
                                grammar=grammar,
                                defines=defines,
                                wrap_count=wrap_count)

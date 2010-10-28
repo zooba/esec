@@ -22,18 +22,13 @@ def _suitable_individual():
     assert hasattr(lscape, 'size'), "Landscapes used with predefined pipelines require a size attribute"
     
     if lscape.ltype == 'BVP':
-        params = { 'shortest': lscape.size.min, 'longest': lscape.size.max }
-        return context['random_binary'](**params)
+        return context['random_binary'](length=lscape.size)
     
     elif lscape.ltype == 'IVP':
-        params = { 'shortest': lscape.size.min, 'longest': lscape.size.max,
-                   'lowest': lscape.bounds[0], 'highest': lscape.bounds[1] }
-        return context['random_int'](**params)
+        return context['random_int'](length=lscape.size, lowest=lscape.lower_bounds, highest=lscape.upper_bounds)
     
     elif lscape.ltype == 'RVP':
-        params = { 'shortest': lscape.size.min, 'longest': lscape.size.max,
-                   'lowest': lscape.bounds[0], 'highest': lscape.bounds[1] }
-        return context['random_real'](**params)
+        return context['random_real'](length=lscape.size, lowest=lscape.lower_bounds, highest=lscape.upper_bounds)
     
     elif lscape.ltype == 'TGP':
         params = { 'terminals': lscape.terminals, 'deepest': lscape.size.get('init', 10) }
@@ -49,9 +44,8 @@ def _suitable_individual():
         return context[key](**params)
     
     elif lscape.ltype == 'GE':
-        params = { 'grammar': lscape.rules, 'defines': getattr(lscape, 'defines', None),
-                   'shortest': lscape.size.min, 'longest': lscape.size.max }
-        return context['random_ge'](**params)
+        return context['random_ge'](grammar=lscape.rules, defines=getattr(lscape, 'defines', None),
+                                    length=lscape.size)
     
     else:
         raise ValueError(lscape.ltype + " is not recognised.")
@@ -197,7 +191,7 @@ END generation
 #-----------------------------------------------------------------------
 
 NKC_GA_DEF = r'''
-FROM random_binary(length=config.landscape.size.exact) SELECT (size) population
+FROM random_binary(length=config.landscape.size) SELECT (size) population
 JOIN population, population INTO pairs USING random_tuples
 EVAL pairs USING config.landscape
 EVAL population USING assign(source=pairs)

@@ -28,12 +28,12 @@ def check_bvp(cls):
         param = [randrange(2) for _ in xrange(bvp.size.min)]
         # test list of random binary values
         fitness = bvp.eval(param)
-        assert isinstance(fitness, (int, long, float, Fitness, EmptyFitness)), "Result was not fitness value"
+        assert isinstance(fitness, Fitness), "Result was not fitness value"
         # create a test individual (random binary list)
         param = [randrange(2) for _ in xrange(bvp.size.max)]
         # test list of random binary values
         fitness = bvp.eval(param)
-        assert isinstance(fitness, (int, long, float, Fitness, EmptyFitness)), "Result was not fitness value"
+        assert isinstance(fitness, Fitness), "Result was not fitness value"
     # test print_info works
     print '\n'.join(bvp.info(5))
     #assert False

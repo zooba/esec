@@ -65,7 +65,8 @@ population using a simple generational model::
 
 The `Experiment` class is used to run single experiments in |esec|. Multiple
 experiments are conducted by instantiating and executing multiple `Experiment`
-instances.
+instances. (Multiple experiments may only be run simultaneously if they are on
+separate threads; thread-local storage is used for storing some global objects.)
 
 .. packagetree:: esec
    :style: UML
