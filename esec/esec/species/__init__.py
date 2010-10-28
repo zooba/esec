@@ -14,6 +14,7 @@ A species determines the type and range of gene values contained in
    :style: UML
 '''
 
+from esec.context import notify, rand
 from esec.utils import merge_cls_dicts, cfg_validate, ConfigDict
 
 class Species(object):
@@ -124,8 +125,8 @@ class Species(object):
         assert longest >= shortest, \
                "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
         
-        frand = rand.random     #pylint: disable=E0602
-        irand = rand.randrange  #pylint: disable=E0602
+        frand = rand.random
+        irand = rand.randrange
         
         do_all_indiv = (per_indiv_rate >= 1.0)
         
@@ -141,7 +142,7 @@ class Species(object):
                     yield type(indiv)(indiv.genome[:cut] + insert + indiv.genome[cut:], indiv, statistic=stats)
                 else:
                     value = {'i': indiv, 'longest_result': longest_result}
-                    notify('mutate_insert', 'aborted', value)   #pylint: disable=E0602
+                    notify('mutate_insert', 'aborted', value)
                     yield indiv
             else:
                 yield indiv
@@ -198,8 +199,8 @@ class Species(object):
         assert longest >= shortest, \
                "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
         
-        frand = rand.random     #pylint: disable=E0602
-        irand = rand.randrange  #pylint: disable=E0602
+        frand = rand.random
+        irand = rand.randrange
         
         do_all_indiv = (per_indiv_rate >= 1.0)
         

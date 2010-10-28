@@ -11,8 +11,8 @@ def _print(pop):
         print i.phenome
 
 def _make_pop(gen, **kwargs):
-    pop = list(islice(gen(**kwargs), 10))
-    assert len(pop) == 10, "length was not 10"
+    pop = list(islice(gen(**kwargs), 100))
+    assert len(pop) == 100, "length was not 100"
     print
     print ', '.join('%s=%s' % i for i in kwargs.iteritems())
     print '\n'.join(i.phenome_string for i in pop)
