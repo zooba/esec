@@ -180,6 +180,11 @@ class UnmatchedBracketError(ESDLSyntaxErrorBase):
     code = "E1013"
     default_message = "Matching '%s' not found"
 
+class ExpectedCommaError(ESDLSyntaxErrorBase):
+    '''Returned when a comma separator is not found.'''
+    code = "E1014"
+    default_message = "Expected comma separator"
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Errors/warnings used by Verifier
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

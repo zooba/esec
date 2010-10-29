@@ -61,7 +61,7 @@ class UnknownNode(NodeBase):
         :Note: 
             ``BEGIN``, ``REPEAT`` and ``END`` commands are not parsed by
             this method.'''
-        assert tokens, "Tokens expected"
+        assert tokens, "tokens must be provided"
         if not 0 <= first_token < len(tokens): return first_token, None
         
         first = _get_token(tokens, first_token)
@@ -269,6 +269,7 @@ class FunctionNode(NodeBase):
     @classmethod
     def parse(cls, tokens, first_token, **other_args):
         '''Reads a `FunctionNode` from `tokens`.'''
+        assert tokens, "tokens must be provided"
         token_i = first_token
         
         token = _get_token(tokens, token_i)
@@ -287,6 +288,11 @@ class FunctionNode(NodeBase):
     
     @classmethod
     def parse_arguments(cls, func_name, tokens, first_token, **other_args):
+        '''Reads arguments for the given function.
+        
+        ``tokens[first_token]`` must be the opening parenthesis, otherwise
+        this method assumes that the function has no parameters.'''
+        assert tokens, "tokens must be provided"
         token_i = first_token
         token = _get_token(tokens, token_i)
         func_args = {}
@@ -324,7 +330,11 @@ class FunctionNode(NodeBase):
     
     @classmethod
     def parse_list(cls, tokens, first_token):
-        '''Reads a `FunctionNode` with name ``'_list'`` from `tokens`'''
+        '''Reads a `FunctionNode` with name ``'_list'`` from `tokens`.
+        
+        ``tokens[first_token]`` should be the opening parenthesis or bracket.
+        '''
+        assert tokens, "tokens must be provided"
         token_i = first_token
         func_args = []
         
@@ -391,6 +401,7 @@ class ValueNode(NodeBase):
     @classmethod
     def parse(cls, tokens, first_token):
         '''Reads a `ValueNode` from `tokens`.'''
+        assert tokens, "tokens must be provided"
         token_i = first_token
         token = _get_token(tokens, token_i)
         
@@ -423,6 +434,7 @@ class VariableNode(NameNode):
     @classmethod
     def parse(cls, tokens, first_token):
         '''Reads a `VariableNode` from `tokens`.'''
+        assert tokens, "tokens must be provided"
         token_i = first_token
         token = _get_token(tokens, token_i)
         
@@ -443,6 +455,7 @@ class BacktickNode(TextNode):
     @classmethod
     def parse(cls, tokens, first_token):
         '''Reads a `BacktickNode` from `tokens`.'''
+        assert tokens, "tokens must be provided"
         token_i = first_token
         token = _get_token(tokens, token_i)
         
@@ -450,7 +463,7 @@ class BacktickNode(TextNode):
         if token.tag != 'backtick': raise error.InvalidSyntaxError(token)
         
         token_i += 1
-        return token_i, VariableNode(token.value, [token])
+        return token_i, BacktickNode(token.value, [token])
 
 class GroupNode(NodeBase):
     '''Represents a group. Groups may be specified with a size.'''
@@ -461,19 +474,23 @@ class GroupNode(NodeBase):
         super(GroupNode, self).__init__(tokens)
         
         assert isinstance(group, NodeBase), "group must be an AST node (" + repr(type(group)) + ")"
-        assert not size or isinstance(size, NodeBase), "size must be an AST node"
+        assert not size or isinstance(size, NodeBase), "size must be an AST node (" + repr(type(size)) + ")"
         
         if group.tag not in ('function', 'variable'):
             raise error.ExpectedGroupError(min(group.tokens))
         
         self.tag = 'group'
-        if group.tag == 'function': self.tag = 'generator'
+        if group.tag == 'function':
+            if group.name.startswith(('_op_', '_uop_', '_assign')):
+                raise error.ExpectedGroupError(min(group.tokens))
+            self.tag = 'generator'
         self.group = group
         self.size = size
     
     @classmethod
     def parse(cls, tokens, first_token):
         '''Reads a `GroupNode` from `tokens`.'''
+        assert tokens, "tokens must be provided"
         token_i = first_token
         
         token = _get_token(tokens, token_i)
@@ -515,6 +532,7 @@ class FromNode(NodeBase):
     @classmethod
     def parse(cls, tokens, first_token):
         '''Reads a `FromNode` from `tokens`.'''
+        assert tokens, "tokens must be provided"
         token_i = first_token
         token = _get_token(tokens, token_i)
         if not token: raise error.InvalidSyntaxError(tokens[-1])
@@ -524,10 +542,13 @@ class FromNode(NodeBase):
         token_i += 1
         token = _get_token(tokens, token_i)
         while token and token.tag != 'SELECT':
-            if token.tag == ',': token_i += 1
             token_i, group = GroupNode.parse(tokens, token_i)
             source_list.append(group)
             token = _get_token(tokens, token_i)
+            if not token or token.tag != ',': break
+            token_i += 1
+            token = _get_token(tokens, token_i)
+        
         if not token: raise error.ExpectedSelectError(tokens[-1])
         if token.tag != 'SELECT': raise error.ExpectedSelectError(token)
         if not source_list: raise error.ExpectedGroupError(token)
@@ -537,23 +558,30 @@ class FromNode(NodeBase):
         token_i += 1
         token = _get_token(tokens, token_i)
         while token and token.tag != 'USING':
-            if token.tag == ',': token_i += 1
             token_i, group = GroupNode.parse(tokens, token_i)
             dest_list.append(group)
+            token = _get_token(tokens, token_i)
+            if not token or token.tag != ',': break
+            token_i += 1
             token = _get_token(tokens, token_i)
         
         if not token:
             if not dest_list: raise error.ExpectedGroupError(tokens[-1])
             return token_i, FromNode(source_list, dest_list, using, tokens[first_token:token_i])
+        if token.tag != 'USING': raise error.ExpectedUsingError(token)
         
         if not dest_list: raise error.ExpectedGroupError(token)
         
         token_i += 1
         token = _get_token(tokens, token_i)
+        
+        if not token: raise error.ExpectedFilterError(tokens[-1])
         while token:
             token_i, using = FunctionNode.parse(tokens, token_i, _source=using)
             token = _get_token(tokens, token_i)
-            if token and token.tag == ',': token_i += 1
+            if not token: break
+            if token.tag != ',': raise error.ExpectedCommaError(token)
+            token_i += 1
             token = _get_token(tokens, token_i)
         
         return token_i, FromNode(source_list, dest_list, using, tokens[first_token:token_i])
@@ -601,6 +629,7 @@ class JoinNode(NodeBase):
     @classmethod
     def parse(cls, tokens, first_token):
         '''Reads a `JoinNode` from `tokens`.'''
+        assert tokens, "tokens must be provided"
         token_i = first_token
         token = _get_token(tokens, token_i)
         if not token: raise error.InvalidSyntaxError(tokens[-1])
@@ -610,9 +639,11 @@ class JoinNode(NodeBase):
         token_i += 1
         token = _get_token(tokens, token_i)
         while token and token.tag != 'INTO':
-            if token.tag == ',': token_i += 1
             token_i, group = GroupNode.parse(tokens, token_i)
             source_list.append(group)
+            token = _get_token(tokens, token_i)
+            if not token or token.tag != ',': break
+            token_i += 1
             token = _get_token(tokens, token_i)
         if not token: raise error.ExpectedSelectError(tokens[-1])
         if token.tag != 'INTO': raise error.ExpectedIntoError(token)
@@ -623,9 +654,11 @@ class JoinNode(NodeBase):
         token_i += 1
         token = _get_token(tokens, token_i)
         while token and token.tag != 'USING':
-            if token.tag == ',': token_i += 1
             token_i, group = GroupNode.parse(tokens, token_i)
             dest_list.append(group)
+            token = _get_token(tokens, token_i)
+            if not token or token.tag != ',': break
+            token_i += 1
             token = _get_token(tokens, token_i)
         
         if not token:
@@ -640,10 +673,13 @@ class JoinNode(NodeBase):
         
         token_i += 1
         token = _get_token(tokens, token_i)
+        if not token: raise error.ExpectedFilterError(tokens[-1])
         while token:
             token_i, using = FunctionNode.parse(tokens, token_i, _source=using)
             token = _get_token(tokens, token_i)
-            if token and token.tag == ',': token_i += 1
+            if not token: break
+            if token.tag != ',': raise error.ExpectedCommaError(token)
+            token_i += 1
             token = _get_token(tokens, token_i)
         
         return token_i, JoinNode(source_list, dest_list, using, tokens[first_token:token_i])
@@ -674,6 +710,7 @@ class EvalNode(NodeBase):
     @classmethod
     def parse(cls, tokens, first_token):
         '''Reads an `EvalNode` from `tokens`.'''
+        assert tokens, "tokens must be provided"
         token_i = first_token
         token = _get_token(tokens, token_i)
         if not token: raise error.InvalidSyntaxError(tokens[-1])
@@ -683,9 +720,11 @@ class EvalNode(NodeBase):
         token_i += 1
         token = _get_token(tokens, token_i)
         while token and token.tag != 'USING':
-            if token.tag == ',': token_i += 1
             token_i, group = GroupNode.parse(tokens, token_i)
             source_list.append(group)
+            token = _get_token(tokens, token_i)
+            if not token or token.tag != ',': break
+            token_i += 1
             token = _get_token(tokens, token_i)
         
         if not token:
@@ -701,10 +740,15 @@ class EvalNode(NodeBase):
         token_i += 1
         token = _get_token(tokens, token_i)
         while token:
-            if token.tag == ',': token_i += 1
             token_i, func = FunctionNode.parse(tokens, token_i)
             using_list.append(func)
             token = _get_token(tokens, token_i)
+            if not token or token.tag != ',': break
+            token_i += 1
+            token = _get_token(tokens, token_i)
+        
+        if token: raise error.ExpectedCommaError(token)
+        if not using_list: raise error.ExpectedEvaluatorError(tokens[-1])
         
         return token_i, EvalNode(source_list, using_list, tokens[first_token:token_i])
     
@@ -736,6 +780,7 @@ class YieldNode(NodeBase):
     @classmethod
     def parse(cls, tokens, first_token):
         '''Reads a `YieldNode` from `tokens`.'''
+        assert tokens, "tokens must be provided"
         token_i = first_token
         token = _get_token(tokens, token_i)
         if not token: raise error.InvalidSyntaxError(tokens[-1])
@@ -745,12 +790,15 @@ class YieldNode(NodeBase):
         token_i += 1
         token = _get_token(tokens, token_i)
         while token:
-            if token.tag == ',': token_i += 1
             token_i, group = GroupNode.parse(tokens, token_i)
             source_list.append(group)
             token = _get_token(tokens, token_i)
+            if not token or token.tag != ',': break
+            token_i += 1
+            token = _get_token(tokens, token_i)
         
         if not source_list: raise error.ExpectedGroupError(tokens[-1])
+        if token: raise error.ExpectedCommaError(token)
         return token_i, YieldNode(source_list, tokens[first_token:token_i])
     
     def __str__(self):
@@ -787,6 +835,7 @@ class RepeatNode(BlockNode):
     @classmethod
     def parse(cls, tokens, first_token):
         '''Reads a `RepeatNode` from `tokens`.'''
+        assert tokens, "tokens must be provided"
         token_i = first_token
         token = _get_token(tokens, token_i)
         if not token: raise error.InvalidSyntaxError(tokens[-1])

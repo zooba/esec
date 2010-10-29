@@ -59,8 +59,9 @@ class Token(object):    #pylint: disable=R0903
 def _tokenise(source):  #pylint: disable=R0912,R0915
     '''Returns a sequence of tokens from a single string.'''
     
-    assert source, "source must be provided"
-    assert isinstance(source, str), "source must be a string"
+    if not source or not isinstance(source, str):
+        yield Token('eos', '\n', 1, 1)
+        raise StopIteration
     
     mode = ''
     word = ''
@@ -79,9 +80,15 @@ def _tokenise(source):  #pylint: disable=R0912,R0915
                 mode = 'number'
             elif char.isalpha() or char == '_':
                 mode = 'name'
-            elif char in '()[]{}.,+-*%^=':
+            elif char in '()[]{},+-*%^=':
                 yield Token(char, char, line, i-i_start)
                 i += 1
+            elif char == '.':
+                if i+1 < len(source) and source[i+1].isdigit():
+                    mode = 'number'
+                else:
+                    yield Token(char, char, line, i-i_start)
+                    i += 1
             elif char in ' \t\v':
                 i += 1
             elif char in '#;':
