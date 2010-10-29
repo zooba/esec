@@ -1,8 +1,8 @@
-'''.. title: ESEC Command-line Interface
+'''.. title: esec Command-line Interface
 .. include:: epydoc_include.txt
 
 ===========================
-ESEC Command-line Interface
+esec Command-line Interface
 ===========================
 
 This script provides an efficient command line interface to run single or
@@ -607,7 +607,7 @@ def main():
     '''
     # Banner
     print HR,
-    print ' ESEC: EcoSystem Evolutionary Computation'
+    print ' esec: EcoSystem Evolutionary Computation'
     print ' Copyright (c) Clinton Woodward and Steve Dower 2007-2010'
     print HR
     

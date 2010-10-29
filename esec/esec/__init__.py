@@ -1,4 +1,4 @@
-'''.. title:: ESEC - An EcoSystem Evolutionary Computation Framework
+'''.. title:: esec - An EcoSystem Evolutionary Computation Framework
 
 .. include:: epydoc_include.txt
 
