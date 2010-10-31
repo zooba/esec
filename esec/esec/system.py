@@ -24,8 +24,6 @@ class System(object):
             'definition': str,
             # The object to report to
             '_monitor?': MonitorBase,
-            # The type (constructor) to use for building group objects.
-            '_group': '*',
             # The default evaluator (must have a method eval(self, individual))
             '_evaluator': '*',
         },
@@ -35,8 +33,6 @@ class System(object):
     
     default = {
         'system': {
-            '_group': list,
-            
             'select_all':           selectors.All,
             'repeated':             selectors.Repeat,
             'best_only':            selectors.BestOnly,
@@ -47,7 +43,7 @@ class System(object):
             'truncate_worst':       selectors.Worst,
             'unique':               selectors.Unique,
             'best_of_tuple':        selectors.BestOfTuple,
-
+            
             'tournament':           selectors.Tournament,
             'binary_tournament':    selectors.BinaryTournament,
             'uniform_random':       selectors.UniformRandom,
@@ -66,6 +62,7 @@ class System(object):
             'crossover_one_different':  OnIndividual('crossover_one_different', recombiners.SingleDifferent),
             'crossover_two':            OnIndividual('crossover_one', recombiners.DoubleSame),
             'crossover_two_different':  OnIndividual('crossover_one_different', recombiners.DoubleDifferent),
+            'crossover_segmented':      OnIndividual('crossover_segmented', recombiners.Segmented),
             'crossover_tuple':          OnIndividual('crossover_tuple', recombiners.PerGeneTuple),
             
             'OnIndividual':             OnIndividual,  # for in-definition specifications

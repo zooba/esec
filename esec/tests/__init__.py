@@ -35,8 +35,8 @@ def make_best_pop_max():
     _gen = test_species_max.init_high(length=10, highest=1000)
     return list(islice(_gen, 100))
 
-def make_pop_variable_max():
-    _gen = test_species_max.init_count(shortest=1, longest=100)
+def make_pop_variable_max(shortest=1):
+    _gen = test_species_max.init_count(shortest=shortest, longest=100)
     return list(islice(_gen, 100))
 
 def make_pop_min():
@@ -47,7 +47,7 @@ def make_best_pop_min():
     _gen = test_species_min.init_low(length=10, highest=1000)
     return list(islice(_gen, 100))
 
-def make_pop_variable_min():
-    _gen = test_species_min.init_count(shortest=1, longest=100)
+def make_pop_variable_min(shortest=1):
+    _gen = test_species_min.init_count(shortest=shortest, longest=100)
     return list(islice(_gen, 100))
 

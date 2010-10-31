@@ -41,7 +41,7 @@ def test_recombiners_SingleSame_Selection_None():
     assert len(set(offspring).difference(set(population))) == 0, "Did not modify any individuals"
 
 def test_recombiners_SingleSame_Selection_Half():
-    population = make_pop_variable()
+    population = make_pop_variable(shortest=4)
     
     modify_count = 0
     for _ in xrange(100):
@@ -53,7 +53,7 @@ def test_recombiners_SingleSame_Selection_Half():
     assert 0.4 <= modify_rate <= 0.6, "Did not modify approximately 50% of individuals"
 
 def test_recombiners_SingleDifferent_Values():
-    population = make_pop_variable()
+    population = make_pop_variable(shortest=4)
     
     _gen = recombiners.SingleDifferent(_source=iter(population), two_children=True)
     child1, child2 = next(_gen), next(_gen)
@@ -69,24 +69,24 @@ def test_recombiners_SingleDifferent_Values():
     assert child1_set.issubset(source_set) and child2_set.issubset(source_set), "Genes were invented"
 
 def test_recombiners_SingleDifferent_Selection_All():
-    population = make_pop_variable()
+    population = make_pop_variable(shortest=4)
     
     _gen = recombiners.Different(_source=iter(population), points=1, two_children=True)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
     print "intersection = %s" % set(offspring).intersection(set(population))
-    assert len(set(offspring).intersection(set(population))) == 0, "Did not modify some individuals (INTERMITTENT)"
+    assert len(set(offspring).intersection(set(population))) == 0, "Did not modify some individuals"
     
     _gen = recombiners.Different(_source=iter(population), points=2, two_children=True)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
     print "intersection = %s" % set(offspring).intersection(set(population))
-    assert len(set(offspring).intersection(set(population))) == 0, "Did not modify some individuals (INTERMITTENT)"
+    assert len(set(offspring).intersection(set(population))) == 0, "Did not modify some individuals"
 
 def test_recombiners_SingleDifferent_Selection_None():
-    population = make_pop_variable()
+    population = make_pop_variable(shortest=4)
     
     _gen = recombiners.SingleDifferent(_source=iter(population), per_pair_rate=0.0, two_children=True)
     offspring = list(_gen)
@@ -96,7 +96,7 @@ def test_recombiners_SingleDifferent_Selection_None():
     assert len(set(offspring).difference(set(population))) == 0, "Modified some individuals"
 
 def test_recombiners_SingleDifferent_Selection_Half():
-    population = make_pop_variable()
+    population = make_pop_variable(shortest=4)
     
     modify_count = 0
     for _ in xrange(100):
@@ -106,6 +106,38 @@ def test_recombiners_SingleDifferent_Selection_Half():
         modify_count += len(set(offspring).difference(set(population)))
     modify_rate = float(modify_count) / (100.0 * len(population))
     assert 0.4 <= modify_rate <= 0.6, "Did not modify approximately 50% of individuals"
+
+def test_recombiners_Segmented_None():
+    population = make_pop()
+    _gen = recombiners.Segmented(_source=iter(population), per_pair_rate=0.0, two_children=True)
+    offspring = list(_gen)
+    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
+    assert len(offspring) == len(population), "Did not select all individuals"
+    print "difference = %s" % set(offspring).difference(set(population))
+    assert len(set(offspring).difference(set(population))) == 0, "Modified some individuals"
+
+def test_recombiners_Segmented_NoSegments():
+    population = make_pop()
+    _gen = recombiners.Segmented(_source=iter(population), per_pair_rate=1.0, switch_rate=0.0, two_children=True)
+    offspring = list(_gen)
+    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
+    assert len(offspring) == len(population), "Did not select all individuals"
+    print "difference = %s" % set(offspring).difference(set(population))
+    assert len(set(offspring).difference(set(population))) == 0, "Modified some individuals"
+
+def test_recombiners_Segmented_Normal():
+    population = make_pop()
+    _gen = recombiners.Segmented(_source=iter(population), per_pair_rate=1.0, switch_rate=0.9, two_children=True)
+    offspring = list(_gen)
+    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
+    assert len(offspring) == len(population), "Did not select all individuals"
+    print "intersection = %s" % set(offspring).intersection(set(population))
+    assert len(set(offspring).intersection(set(population))) == 0, "Did not modify some individuals"
+    
+    for indiv in offspring:
+        distinct_genes = set(indiv.genome)
+        if len(distinct_genes) != 2: print indiv.genome
+        assert len(distinct_genes) == 2, "Did not cross individuals"
 
 def test_recombiners_PerGeneTuple_None():
     population = make_pop()

@@ -374,6 +374,105 @@ def DoubleDifferent(_source,
                      one_child=one_child, two_children=two_children)
 
 
+def Segmented(_source,
+            per_pair_rate=None, per_indiv_rate=1.0, switch_rate=0.1,
+            one_child=False, two_children=None):
+    '''Performs segmented crossover by exchanging random segments between
+    two individuals. The first segment has `switch_rate` probability of
+    being exchanged, while subsequent segments alternate between exchanging
+    and non-exchanging.
+    
+    Returns a sequence of crossed individuals based on the individuals
+    in `_source`.
+    
+    If `one_child` is ``True`` (or `two_children` is ``False``), the number
+    of individuals returned is half the number of individuals in `_source`,
+    rounded towards zero.
+    
+    If `one_child` is ``False`` (or `two_children` is ``True``), the number
+    of individuals returned is the largest even number less than or equal
+    to the number of individuals in `_source`.
+    
+    .. include:: epydoc_include.txt
+    
+    :Parameters:
+      _source : iterable(`Individual`)
+        A sequence of individuals. Individuals are taken two at a time
+        from this sequence, recombined to produce two new individuals,
+        and yielded separately.
+      
+      per_pair_rate : |prob|
+        The probability of any particular pair of individuals being
+        recombined. If two individuals are not recombined, they are
+        returned unmodified. If this is ``None``, the value of
+        `per_indiv_rate` is used.
+      
+      per_indiv_rate : |prob|
+        A synonym for `per_pair_rate`.
+      
+      switch_rate : |prob|
+        The probability of the current segment ending. Exchanged segments
+        are always followed by non-exchanged segments.
+        
+        This is also the probability of the first segment being exchanged.
+        It is reset for each pair of individuals.
+      
+      one_child : bool
+        If ``True``, only one child is returned from each crossover
+        operation.
+        
+        If `two_children` is specified, its value is used instead of this.
+      
+      two_children : bool
+        If ``True``, both children are returned from each crossover
+        operation. If ``False``, only one is.
+        
+        If ``None``, the value of `one_child` is used instead (with the
+        opposite meaning to `two_children`).
+    '''
+    if per_pair_rate is None: per_pair_rate = per_indiv_rate
+    if two_children is not None: one_child = not two_children
+    if per_pair_rate <= 0.0 or not (0.0 < switch_rate < 1.0):
+        if one_child:
+            skip = True
+            for indiv in _source:
+                if not skip: yield indiv
+                skip = not skip
+        else:
+            for indiv in _source:
+                yield indiv
+        raise StopIteration
+    
+    do_all_pairs = (per_pair_rate >= 1.0)
+    
+    frand = rand.random
+    
+    for i1, i2 in _pairs(_source):
+        if do_all_pairs or frand() < per_pair_rate:
+            i1_genome, i2_genome = i1.genome, i2.genome
+            i1_len, i2_len = len(i1_genome), len(i2_genome)
+            
+            new_genes1 = list(i1_genome)
+            new_genes2 = list(i2_genome)
+            exchanging = (frand() < switch_rate)
+            
+            for i in xrange(i1_len if i1_len < i2_len else i2_len):
+                if exchanging:
+                    new_genes1[i] = i2_genome[i]
+                    new_genes2[i] = i1_genome[i]
+                if frand() < switch_rate:
+                    exchanging = not exchanging
+            
+            i1 = type(i1)(new_genes1, i1, statistic={ 'recombined': 1 })
+            i2 = type(i2)(new_genes2, i2, statistic={ 'recombined': 1 })
+        
+        if one_child:
+            yield i1 if frand() < 0.5 else i2
+        else:
+            yield i1
+            yield i2
+
+
 def PerGeneTuple(_source, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=None):
     '''Performs per-gene crossover by selecting one gene from each
     individual in the tuples provided in `_source`.
