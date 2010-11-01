@@ -20,8 +20,9 @@ problem.
 
 from esec.fitness import Fitness, EmptyFitness
 from esec.context import notify
+from esec.utils.exceptions import EvaluatorError
 from itertools import izip as zip   #pylint: disable=W0622
-import itertools
+from itertools import chain
 
 class Individual(object):
     '''Represents a single member of the population with some type
@@ -142,8 +143,15 @@ class Individual(object):
             # `statistic` is intended for counting events that only matter if they remain
             # in the population.
             if not self._eval: self._eval = self._eval_default
-            self.fitness = self._eval.eval(self)
-            notify('individual', 'statistic', 'local_evals+global_evals')
+            try:
+                self.fitness = self._eval.eval(self)
+                notify('individual', 'statistic', 'local_evals+global_evals')
+            except KeyboardInterrupt:
+                raise
+            except:
+                import sys, traceback
+                ex = sys.exc_info()
+                raise EvaluatorError(ex[0], ex[1], ''.join(traceback.format_exception(*ex)))
         return self._fitness
     
     @fitness.setter
@@ -343,7 +351,7 @@ class OnIndividual(object):
         first = next(_source)
         target = getattr(first, self.target, self.default)
         assert target, "Method %s does not exist on %s" % (self.target , type(first))
-        return target(_source=itertools.chain((first,), _source), *params, **named)
+        return target(_source=chain((first,), _source), *params, **named)
     
     def __repr__(self):
         if self.default:

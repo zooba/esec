@@ -55,7 +55,7 @@ bvp_tests = [
     ('BVP.Graph2r',     std_dialects, [{ 'landscape': { 'parameters': 20 } }, { 'landscape': { 'parameters': 50 } }]),
 ]
 
-std_dialects = ['GA', 'SSGA', 'binary_int_map']
+std_dialects = ['GA', 'SSGA'] + ['binary_int_map_%d' % i for i in xrange(3)]
 ivp_tests = [
     ('IVP.Nsum',        std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
     ('IVP.Nmax',        std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
@@ -64,7 +64,9 @@ ivp_tests = [
     ('IVP.Robbins',     std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
 ]
 
-std_dialects = ['GA', 'SSGA', 'EP', 'ES', 'binary_real_map']
+std_dialects = ['GA', 'SSGA', 'EP', 'ES'] + \
+               ['binary_real_map_1_%d' % i for i in xrange(3)] + \
+               ['binary_real_map_2_%d' % i for i in xrange(3)]
 rvp_tests = [
     ('RVP.Linear',          std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
     ('RVP.Neutral',         std_dialects, [None, { 'landscape': { 'size': { 'min': 1, 'max': 10 } } }]),
@@ -120,10 +122,44 @@ TGP_BOOL_DEFS = [TGP_DEF_TEMPLATE % i for i in [('boolean', 'constants=False'), 
 TGP_INT_DEFS =  [TGP_DEF_TEMPLATE % i for i in [('integer', ''), ('integer', 'lowest_constant=0, highest_constant=255')]]
 TGP_REAL_DEFS = [TGP_DEF_TEMPLATE % i for i in [('real', ''), ('real', 'transcendentals=True'), ('real', 'lowest_constant=-1.0, highest_constant=1.0')]]
 
-REAL_MAP_DEF = r'''FROM random_real_binary(longest=config.landscape.size.max*10,shortest=config.landscape.size.min*10, \
-                        resolution=(config.landscape.upper_bounds[0]-config.landscape.lower_bounds[0]) / 10.0, \
-                        offset=config.landscape.lower_bounds[0], \
-                        bits_per_value=10) SELECT (size) population
+REAL_MAP_DEF = [
+# First defintion uses lowest and highest
+r'''FROM random_real_binary(length=config.landscape.size.max, \
+                          lowest=config.landscape.lower_bounds, \
+                          highest=config.landscape.upper_bounds, \
+                          bits_per_value=10, \
+                          encoding=encoding) SELECT (size) population
+
+YIELD population
+
+BEGIN generation
+    FROM population SELECT (size) offspring USING binary_tournament
+    FROM offspring  SELECT population       USING crossover_one(per_pair_rate=0.8), \
+                                                  mutate_bitflip(per_gene_rate=0.1)
+    YIELD population
+END generation
+''',
+# Second definition uses resolution and offset
+r'''FROM random_real_binary(length=config.landscape.size.max, \
+                          resolution=(config.landscape.upper_bounds[0]-config.landscape.lower_bounds[0]) / 10.0, \
+                          offset=config.landscape.lower_bounds[0], \
+                          bits_per_value=10, \
+                          encoding=encoding) SELECT (size) population
+
+YIELD population
+
+BEGIN generation
+    FROM population SELECT (size) offspring USING binary_tournament
+    FROM offspring  SELECT population       USING crossover_one(per_pair_rate=0.8), \
+                                                  mutate_bitflip(per_gene_rate=0.1)
+    YIELD population
+END generation
+'''
+]
+
+INT_MAP_DEF = r'''FROM random_int_binary(length=config.landscape.size.max, \
+                       bits_per_value=10, \
+                       encoding=encoding) SELECT (size) population
 
 YIELD population
 
@@ -135,32 +171,21 @@ BEGIN generation
 END generation
 '''
 
-INT_MAP_DEF = r'''FROM random_integer_binary(longest=config.landscape.size.max*10,shortest=config.landscape.size.min*10, \
-                        resolution=(config.landscape.upper_bounds[0]-config.landscape.lower_bounds[0]) / 10, \
-                        offset=config.landscape.lower_bounds[0], \
-                        bits_per_value=10) SELECT (size) population
-
-YIELD population
-
-BEGIN generation
-    FROM population SELECT (size) offspring USING binary_tournament
-    FROM offspring  SELECT population       USING crossover_one(per_pair_rate=0.8), \
-                                                  mutate_bitflip(per_gene_rate=0.1)
-    YIELD population
-END generation
-'''
-configs = {
-    'binary_real_map': {
-        'system': {
-            'definition': REAL_MAP_DEF
+configs = { }
+for i in xrange(3):
+    for j in xrange(2):
+        configs['binary_real_map_%d_%d' % (j+1, i)] = {
+            'system': {
+                'definition': REAL_MAP_DEF[j],
+                'encoding': i
+            }
         }
-    },
-    'binary_int_map': {
+    configs['binary_int_map_%d' % i] = {
         'system': {
-            'definition': INT_MAP_DEF
+            'definition': INT_MAP_DEF,
+            'encoding': i
         }
     }
-}
 
 for i, d in enumerate(TGP_BOOL_DEFS): configs['TGP_BOOL_%d' % i] = { 'system': { 'definition': d } }
 for i, d in enumerate(TGP_INT_DEFS):  configs['TGP_INT_%d'  % i] = { 'system': { 'definition': d } }

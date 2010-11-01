@@ -9,6 +9,15 @@ class UnexpectedKeyWarning(Warning):
     '''
     pass
 
+class EvaluatorError(Exception):
+    '''Raised when an exception occurs within a fitness evaluation.
+    
+    Because evaluations typically take place within a property getter, some
+    exceptions (specifically ``AttributeError``) are treated as a missing
+    ``fitness`` property. To avoid this situation, a new error is thrown that
+    contains the original.
+    '''
+    pass
 
 class ExceptionGroup(Exception):
     '''Raised when a group of exceptions have been caught, allowing all errors

@@ -2,9 +2,10 @@
 for fully customisable breeding systems.
 '''
 
-from esec.utils import ConfigDict, cfg_validate, merge_cls_dicts
 import sys, random, traceback
 from warnings import warn
+from esec.utils import ConfigDict, cfg_validate, merge_cls_dicts
+from esec.utils.exceptions import EvaluatorError
 
 from esec.compiler import Compiler
 from esec.monitors import MonitorBase
@@ -201,8 +202,11 @@ class System(object):
             raise
         except:
             ex = sys.exc_info()
-            ex_type, ex_value = ex[0], ex[1]
-            ex_trace = ''.join(traceback.format_exception(*ex))
+            if ex[0] is EvaluatorError:
+                ex_type, ex_value, ex_trace = ex[1].args
+            else:
+                ex_type, ex_value = ex[0], ex[1]
+                ex_trace = ''.join(traceback.format_exception(*ex))
             self.monitor.on_exception(self, ex_type, ex_value, ex_trace)
             self.monitor.on_post_reset(self)
             self.monitor.on_run_end(self)
