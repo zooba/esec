@@ -121,10 +121,7 @@ class Individual(object):
         If `name` is not found on either `self` or ``self.species``, an AttributeError
         is raised. (This matches the standard behaviour for an unknown attribute.)
         '''
-        # Handle and re-raise AttributeError to ensure it comes from Individual and not the species
-        attr = getattr(self.species, name, None)
-        if not attr: raise AttributeError("'%s' object has no attribute '%s'" % (type(self).__name__, name))
-        else: return attr
+        return getattr(self.species, name)
     
     # Pylint doesn't understand properties correctly
     #pylint: disable=E0102,E0202,E1101,C0111
