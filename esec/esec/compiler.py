@@ -31,6 +31,8 @@ class Compiler(object):
         '''A list of blocks in the order they were specified.'''
         self.uninit = None
         '''A list of uninitialised variables that need to be provided externally.'''
+        self.filters = None
+        '''A list of filters required by the system.'''
         self.code = None
         '''Compiled Python code implementing `source_code`.'''
     
@@ -50,5 +52,6 @@ class Compiler(object):
         self.uninit = ast.uninitialised
         
         self.blocks = [block.name for block in sorted(ast.blocks.itervalues(), key=lambda i: i.index)]
+        self.filters = ast.filters
         
         self.code = '\n'.join(EsecEmitter(ast).emit_to_list())

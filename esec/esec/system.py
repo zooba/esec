@@ -66,15 +66,9 @@ class System(object):
             'crossover_segmented':      OnIndividual('crossover_segmented', recombiners.Segmented),
             'crossover_tuple':          OnIndividual('crossover_tuple', recombiners.PerGeneTuple),
             
-            'OnIndividual':             OnIndividual,  # for in-definition specifications
-            'mutate_random':            OnIndividual('mutate_random'),
-            'mutate_bitflip':           OnIndividual('mutate_bitflip'),
-            'mutate_inversion':         OnIndividual('mutate_inversion'),
-            'mutate_gap_inversion':     OnIndividual('mutate_gap_inversion'),
-            'mutate_delta':             OnIndividual('mutate_delta'),
-            'mutate_gaussian':          OnIndividual('mutate_gaussian'),
-            'mutate_insert':            OnIndividual('mutate_insert'),
-            'mutate_delete':            OnIndividual('mutate_delete'),
+            # All other filters are assumed to be OnIndividual
+            # and are added to the configuration implicitly.
+            
             
             '_default_join':            joiners.Tuples, # key is hard-coded in compiler.py
             'full_combine':             joiners.All,
@@ -132,6 +126,9 @@ class System(object):
         for var in compiler.uninit:
             if var not in context:
                 warn("Variable '%s' is not initialised." % var)
+        for func in compiler.filters:
+            if func not in context:
+                context[func] = OnIndividual(func)
         
         self._code = compile(self._code_string, 'ESDL Definition', 'exec')
         
@@ -174,6 +171,9 @@ class System(object):
         if level > 2:
             result.append('>> ESDL cfg instance:')
             result.extend(self.cfg.list())
+        if level > 4:
+            result.append('>> System context:')
+            result.extend(ConfigDict(self._context).list())
         return result
     
     def seed_offset(self, offset):

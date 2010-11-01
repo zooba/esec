@@ -27,11 +27,13 @@ class Verifier(object):
         
         errors.extend(cls._ast_recurse(ast, cls._calculate_variables_in_out))
         
-        errors.extend(cls._ast_recurse(ast, cls._merge_variables))
+        errors.extend(cls._ast_recurse(ast, cls._check_privates))
         errors.extend(cls._verify_namespace(ast))
         
         errors.extend(cls._calculate_globals(ast))
         errors.extend(cls._calculate_constants(ast))
+        
+        errors.extend(cls._calculate_filters(ast))
         
         errors.extend(cls._verify_initialiser(ast))
         
@@ -133,9 +135,8 @@ class Verifier(object):
         return []
     
     @classmethod
-    def _merge_variables(cls, block):
-        '''Combine groups and variables into a single dictionary for
-        each block.'''
+    def _check_privates(cls, block):
+        '''Identify variables that may conflict with private names.'''
         
         warn_private = { }
         
@@ -171,6 +172,28 @@ class Verifier(object):
                 if var in constants: del constants[var]
         
         return []
+    
+    @classmethod
+    def _calculate_filters(cls, ast):
+        '''Determines all the filters used in the system.'''
+        ast.filters = filters = list(cls._calculate_filters_recurse(ast.init_block))
+        for block in ast.blocks.itervalues():
+            filters.extend(cls._calculate_filters_recurse(block))
+        
+        return []
+    
+    @classmethod
+    def _calculate_filters_recurse(cls, block):
+        '''Determines all the filters used in a block.'''
+        for node in block.children:
+            if node.tag == 'from':
+                using = node.using
+                while using and using.tag == 'function' and using.name != '_iter':
+                    yield using.name
+                    using = using.arguments.get('_source', None)
+            elif node.tag in ('repeat', 'block'):
+                for name in cls._calculate_filters_recurse(node):
+                    yield name
     
     @classmethod
     def _verify_initialiser(cls, ast):

@@ -22,6 +22,7 @@ class AST(object):
         self.source_lines = []
         self._errors = []
         self.uninitialised = []
+        self.filters = []
     
     @property
     def errors(self):
