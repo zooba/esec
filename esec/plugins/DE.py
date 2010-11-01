@@ -32,11 +32,11 @@ def mutate_DE(_source, scale):
     for joined_individual in _source:
         base, parameter1, parameter2 = joined_individual[:]
         yield type(base)([_combine(b, p1, p2, l, h) for \
-            b, p1, p2, l, h in zip(base, parameter1, parameter2, *base.bounds)], base)
+            b, p1, p2, l, h in zip(base, parameter1, parameter2, base.lower_bounds, base.upper_bounds)], base)
 
 DE_DEF = r'''
 FROM random_real(length=config.landscape.size.exact, \
-                 lowest=config.landscape.bounds[0],highest=config.landscape.bounds[1]) \
+                 lowest=config.landscape.lower_bounds,highest=config.landscape.upper_bounds) \
         SELECT (size) population
 YIELD population
 
