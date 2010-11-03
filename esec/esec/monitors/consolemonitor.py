@@ -115,7 +115,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         ' ': [ ' ', ' ', None ],
         ':': [ ':', ':', None ],
         # end code [batch results]
-        'status':[' end status ', '%12s', '_status'],
+        'status':['  end status  ', '%14s', '_status'],
         # elapsed CPU time
         'time': [' elapsed time  ', "%4d:%02d'%02d.%03d ", '_time'],
         'time_delta': [ ' delta time    ', "%4d:%02d'%02d.%03d ", '_time_delta'],
@@ -177,6 +177,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             'stable?': [int, None],
             'fitness?': '*',
             'unique?': [int, None],
+            'evaluations?': [int, None],
         },
         'formats?' : dict,
     }
@@ -237,6 +238,12 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         Terminate when the number of unique individuals (based on
         phenome) in the primary population reaches or falls below
         this.
+      
+      limits.evaluations : (int > 0 [optional])
+        Terminate when the number of evaluations is greater than
+        this. The experiment will not terminate until the end of the
+        current block, which may result in the actual number of
+        evaluations being higher.
       
       formats : (dictionary)
         A dictionary of extra formats to include with those in `format`.
@@ -337,8 +344,9 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         
         # - Delete any limits that are set to None
         if self.limits:
-            none_limits = [k for k in self.limits if self.limits[k] is None]
-            for k in none_limits: del self.limits[k]
+            none_limits = [key for key, value in self.limits.iteritems() if value is None]
+            for key in none_limits:
+                del self.limits[key]
         
         self.primary = self.cfg.primary
         
@@ -548,21 +556,23 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         if sender == 'Experiment':
             if name == 'System':
                 # `value` contains a System
-                print >> self.config_out, 'System Information:'
-                print >> self.config_out, '\n'.join(value.info(level=self.verbose))
-                print >> self.config_out
-                self.config_out.flush()
+                info = value.info(level=self.verbose)
+                if info:
+                    print >> self.config_out, '\n'.join(info)
+                    print >> self.config_out
+                    self.config_out.flush()
             elif name == 'Landscape':
                 # `value` contains a Landscape
-                print >> self.config_out, 'Landscape Infomation:'
-                print >> self.config_out, '  ' + '\n  '.join(value.info(level=self.verbose))
-                print >> self.config_out
-                self.config_out.flush()
+                info = value.info(level=self.verbose)
+                if info:
+                    print >> self.config_out, '\n'.join(info)
+                    print >> self.config_out
+                    self.config_out.flush()
             elif name == 'Configuration':
                 # `value` contains a ConfigDict
                 assert isinstance(value, ConfigDict)
                 if self.verbose > 3:
-                    print >> self.config_out, 'Configuration Information:'
+                    print >> self.config_out, '>> Full Configuration:'
                     print >> self.config_out, '\n'.join(value.list())
                     print >> self.config_out
                 self.config_out.flush()
@@ -582,6 +592,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             if name == 'Statistics':
                 # `value` contains the _stats dictionary
                 print >> self.summary_out
+                print >> self.summary_out, ">> Statistics"
                 if not value: value = self._stats
                 print >> self.summary_out, '\n'.join(sorted(ConfigDict(value).lines()))
         
@@ -730,18 +741,21 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         
         if self.stop_now:
             self.end_code = 'EXCEPTION'
-        elif 'generations' in self.limits and 'generations' in self._stats and \
-             self._stats['generations'] >= self.limits.generations:
+        elif ('generations' in self.limits and 'generations' in self._stats and
+              self._stats['generations'] >= self.limits.generations):
             self.end_code = 'GEN_LIMIT'
-        elif 'fitness' in self.limits and 'global_max' in self._stats and \
-             self._stats['global_max'].fitness >= self.limits.fitness:
+        elif ('fitness' in self.limits and 'global_max' in self._stats and
+              self._stats['global_max'].fitness >= self.limits.fitness):
             self.end_code = 'FIT_LIMIT'
-        elif 'stable' in self.limits and 'stable_count' in self._stats and \
-             self._stats['stable_count'] >= self.limits.stable:
+        elif ('stable' in self.limits and 'stable_count' in self._stats and
+              self._stats['stable_count'] >= self.limits.stable):
             self.end_code = 'STABLE_LIMIT'
-        elif 'unique' in self.limits and 'local_unique' in self._stats and \
-             self._stats['local_unique'] <= self.limits.unique:
+        elif ('unique' in self.limits and 'local_unique' in self._stats and
+              self._stats['local_unique'] <= self.limits.unique):
             self.end_code = 'UNIQUE_LIMIT'
+        elif ('evaluations' in self.limits and 'global_evals' in self._stats and
+              self._stats['global_evals'] >= self.limits.evaluations):
+            self.end_code = 'EVAL_LIMIT'
         
         return bool(self.end_code)
     

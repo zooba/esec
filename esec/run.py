@@ -84,7 +84,7 @@ default = {
     'random_seed': 12345,
     'monitor': {
         'class': ConsoleMonitor,
-        'limits': { 'generations': 10 },
+#        'limits': { },
     },
     'landscape': { 'random_seed': 12345 },
     'verbose': 0
@@ -248,7 +248,8 @@ def esec_run(options):
     # Display all the built-in configuration names
     if cfg.verbose >= 5:
         print HR
-        print '## Config defaults:', configs
+        print '>> Configuration Names:'
+        print '\n'.join('%s=%s' % item for item in configs.iteritems())
     
     # Use settings to override configuration parameters
     settings = settings_split(options.settings)
@@ -257,9 +258,13 @@ def esec_run(options):
         if cfg.verbose >= 4:
             print 'Overriding: "%s" with "%s"' % (key, value)
     
-    # Specify monitor verbosity (if it hasn't been yet)
+    # Specify monitor verbosity (if it hasn't been set yet)
     if 'verbose' not in cfg.monitor:
         cfg.monitor['verbose'] = cfg.verbose or 0
+    
+    # Set short limit (if it hasn't been set yet)
+    if 'limits' not in cfg.monitor:
+        cfg.monitor['limits'] = { 'generations': 10 }
     
     # Start the experiment
     try:

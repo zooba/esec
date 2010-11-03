@@ -159,9 +159,9 @@ class System(object):
           level : int |ge| 0
             The verbosity level.
         '''
-        result = ['>> System']
+        result = []
         if level > 0:
-            result.append('>> Definition:')
+            result.append('>> System Definition:')
             result.append(self.definition.strip(' \t').strip('\n'))
             result.append('')
         if level > 3:
@@ -169,7 +169,7 @@ class System(object):
             result.append(self._code_string)
             result.append('')
         if level > 2:
-            result.append('>> ESDL cfg instance:')
+            result.append('>> Experiment Configuration:')
             result.extend(self.cfg.list())
         if level > 4:
             result.append('>> System context:')
