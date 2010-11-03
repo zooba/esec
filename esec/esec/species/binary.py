@@ -22,7 +22,7 @@ class BinarySpecies(Species):
     '''Provides individuals with fixed- or variable-length genomes of
     binary values. Each gene has the value ``0`` or ``1``.
     '''
-    name = 'binary'
+    name = 'Binary'
     
     def __init__(self, cfg, eval_default):
         super(BinarySpecies, self).__init__(cfg, eval_default)

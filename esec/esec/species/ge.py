@@ -169,7 +169,7 @@ class GESpecies(IntegerSpecies):
     ``lowest`` and ``highest`` values (inclusive).
     '''
     
-    name = 'ge'
+    name = 'GE'
     
     def __init__(self, cfg, eval_default):
         super(GESpecies, self).__init__(cfg, eval_default)

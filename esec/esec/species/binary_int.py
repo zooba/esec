@@ -93,6 +93,9 @@ class BinaryIntegerSpecies(BinarySpecies):
     binary values that map transparently to int values. Each gene has
     the value ``0`` or ``1``.
     '''
+    
+    name = 'Integer (Binary)'
+    
     def __init__(self, cfg, eval_default):
         super(BinaryIntegerSpecies, self).__init__(cfg, eval_default)
         # Make some names public within the execution context

@@ -85,7 +85,7 @@ class RealSpecies(Species):
     between the provided ``lowest`` and ``highest`` values (inclusive).
     '''
     
-    name = 'real'
+    name = 'Real'
     
     def __init__(self, cfg, eval_default):
         super(RealSpecies, self).__init__(cfg, eval_default)

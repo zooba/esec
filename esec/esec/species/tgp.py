@@ -226,7 +226,7 @@ class TgpSpecies(Species):
     (TGP) programs. The first gene is always the main program, with every
     other gene representing an automatically-defined function (ADF).
     '''
-    name = 'tgp'
+    name = 'TGP'
     
     def __init__(self, cfg, eval_default):
         super(TgpSpecies, self).__init__(cfg, eval_default)

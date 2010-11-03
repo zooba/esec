@@ -74,7 +74,7 @@ class IntegerSpecies(Species):
     ``lowest`` and ``highest`` values (inclusive).
     '''
     
-    name = 'integer'
+    name = 'Integer'
     
     def __init__(self, cfg, eval_default):
         super(IntegerSpecies, self).__init__(cfg, eval_default)

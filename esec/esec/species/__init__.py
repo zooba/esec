@@ -21,7 +21,20 @@ class Species(object):
     '''Abstract base class for species descriptors.
     '''
     
-    name = 'species'
+    _include_automatically = True
+    '''Indicates whether the class should be included in the set
+    of available species. If ``True``, the species is instantiated
+    for every system and the contents of `public_context` is merged
+    into the system context.
+    
+    This only applies to classes deriving from `Species` *and*
+    included in `esec.species`. Other species classes are never
+    included automatically.
+    '''
+    
+    name = 'N/A'
+    '''The display name of the species class.
+    '''
     
     def __init__(self, cfg, eval_default):
         '''Initialises a new `Species` instance.
@@ -247,8 +260,9 @@ def _do_import():
             mod = __import__(modname, globals(), fromlist=[])
             for cls in (getattr(mod, s) for s in dir(mod)):
                 if cls is not Species and type(cls) is type and issubclass(cls, Species):
-                    SPECIES.append(cls)
-                    globals()[cls.__name__] = cls
+                    if getattr(cls, '_include_automatically', True):
+                        SPECIES.append(cls)
+                        globals()[cls.__name__] = cls
 
 _do_import()
 

@@ -106,6 +106,9 @@ class BinaryRealSpecies(BinarySpecies):
     binary values that map transparently to real values. Each gene has
     the value ``0`` or ``1``.
     '''
+
+    name = 'Real (Binary)'
+    
     def __init__(self, cfg, eval_default):
         super(BinaryRealSpecies, self).__init__(cfg, eval_default)
         # Make some names public within the execution context
