@@ -116,14 +116,16 @@ class IntegerSpecies(Species):
         assert longest >= shortest, \
             "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
         
+        if not lower_bounds: lower_bounds = lowest
+        if not upper_bounds: upper_bounds = highest
+        
         lowest = self._convert_bounds(lowest, longest)
         highest = self._convert_bounds(highest, longest)
+        lower_bounds = self._convert_bounds(lower_bounds, longest)
+        upper_bounds = self._convert_bounds(upper_bounds, longest)
         
         assert all(h >= l for h, l in zip(highest, lowest)), \
             "Values of highest (%s) must be greater than or equal to those in lowest (%s)" % (highest, lowest)
-        
-        if not lower_bounds: lower_bounds = lowest
-        if not upper_bounds: upper_bounds = highest
         
         if shortest >= longest:
             while True:
