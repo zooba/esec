@@ -24,6 +24,7 @@ def _pairs(source):
 
 def Uniform(_source,
             per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5,
+            discrete=False,
             one_child=False, two_children=None):
     '''Performs uniform crossover by selecting genes at random from
     one of two individuals.
@@ -59,6 +60,11 @@ def Uniform(_source,
       per_gene_rate : |prob|
         The probability of any particular pair of genes being swapped.
       
+      discrete : bool
+        If ``True``, uses discrete recombination, where source genes
+        may be copied rather than exchanged, resulting in the same
+        value appearing in both offspring.
+      
       one_child : bool
         If ``True``, only one child is returned from each crossover
         operation.
@@ -86,6 +92,7 @@ def Uniform(_source,
         raise StopIteration
     
     do_all_pairs = (per_pair_rate >= 1.0)
+    do_all_genes = (per_gene_rate >= 1.0)
     
     frand = rand.random
     
@@ -97,9 +104,13 @@ def Uniform(_source,
             new_genes1 = list(i1_genome)
             new_genes2 = list(i2_genome)
             for i in xrange(i1_len if i1_len < i2_len else i2_len):
-                if frand() < per_gene_rate:
-                    new_genes1[i] = i2_genome[i]
-                    new_genes2[i] = i1_genome[i]
+                if do_all_genes or frand() < per_gene_rate:
+                    if discrete:
+                        new_genes1[i] = i1_genome[i] if frand() < 0.5 else i2_genome[i]
+                        new_genes2[i] = i1_genome[i] if frand() < 0.5 else i2_genome[i]
+                    else:
+                        new_genes1[i] = i2_genome[i]
+                        new_genes2[i] = i1_genome[i]
             
             i1 = type(i1)(new_genes1, i1, statistic={ 'recombined': 1 })
             i2 = type(i2)(new_genes2, i2, statistic={ 'recombined': 1 })
@@ -109,6 +120,19 @@ def Uniform(_source,
         else:
             yield i1
             yield i2
+
+def Discrete(_source,
+             per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=1.0,
+             one_child=False, two_children=None):
+    '''A specialisation of `Uniform` for discrete crossover.
+    
+    Note that `Discrete` has a different default value for `per_gene_rate`
+    to `Uniform`.
+    '''
+    return Uniform(_source=_source,
+                   per_pair_rate=per_pair_rate, per_indiv_rate=per_indiv_rate, per_gene_rate=per_gene_rate,
+                   discrete=True,
+                   one_child=one_child, two_children=two_children)
 
 def Same(_source,
          points=1,

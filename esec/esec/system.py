@@ -59,6 +59,7 @@ class System(object):
             'crossover':                OnIndividual('crossover', recombiners.Same),
             'crossover_different':      OnIndividual('crossover_different', recombiners.Different),
             'crossover_uniform':        OnIndividual('crossover_uniform', recombiners.Uniform),
+            'crossover_discrete':       OnIndividual('crossover_discrete', recombiners.Discrete),
             'crossover_one':            OnIndividual('crossover_one', recombiners.SingleSame),
             'crossover_one_different':  OnIndividual('crossover_one_different', recombiners.SingleDifferent),
             'crossover_two':            OnIndividual('crossover_one', recombiners.DoubleSame),

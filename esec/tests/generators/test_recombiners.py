@@ -6,6 +6,100 @@ from esec.generators import recombiners, joiners
 make_pop = make_pop_max
 make_pop_variable = make_pop_variable_max
 
+def test_recombiners_Uniform_Values():
+    population = make_pop()
+    
+    _gen = recombiners.Uniform(_source=iter(population), two_children=True)
+    child1, child2 = next(_gen), next(_gen)
+    print "len(child1) = %d, len(child2) = %d, len(population[0]) = %d" % (len(child1), len(child2), len(population[0]))
+    assert len(child1) == len(child2) == len(population[0]), "Individual's length was changed"
+    child1_set, child2_set = set(child1.genome), set(child2.genome)
+    print "len(set(child1)) = %d, len(set(child2)) = %d" % (len(child1_set), len(child2_set))
+    assert len(child1_set) == len(child2_set) == 2, "Number of distinct values is not 2"
+    print "set(child1) = %s" % child1_set
+    print "set(child2) = %s" % child2_set
+    assert child1_set == child2_set, "Distinct values are not matched"
+
+def test_recombiners_Uniform_Selection_All():
+    population = make_pop()
+    
+    _gen = recombiners.Uniform(_source=iter(population), two_children=True)
+    offspring = list(_gen)
+    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
+    assert len(offspring) == len(population), "Did not select all individuals"
+    print "intersection = %s" % set(offspring).intersection(set(population))
+    assert len(set(offspring).intersection(set(population))) == 0, "Did not modify some individuals"
+
+def test_recombiners_Uniform_Selection_None():
+    population = make_pop()
+    
+    _gen = recombiners.Uniform(_source=iter(population), per_pair_rate=0.0, two_children=True)
+    offspring = list(_gen)
+    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
+    assert len(offspring) == len(population), "Did not select all individuals"
+    print "difference = %s" % set(offspring).difference(set(population))
+    assert len(set(offspring).difference(set(population))) == 0, "Did not modify any individuals"
+
+def test_recombiners_Uniform_Selection_Half():
+    population = make_pop_variable(shortest=4)
+    
+    modify_count = 0
+    for _ in xrange(100):
+        _gen = recombiners.Uniform(_source=iter(population), per_pair_rate=0.5, two_children=True)
+        offspring = list(_gen)
+        assert len(offspring) == len(population), "Did not select all individuals"
+        modify_count += len(set(offspring).difference(set(population)))
+    modify_rate = float(modify_count) / (100.0 * len(population))
+    assert 0.4 <= modify_rate <= 0.6, "Did not modify approximately 50% of individuals"
+
+def test_recombiners_Discrete_Values():
+    population = make_pop()
+    
+    _gen = recombiners.Discrete(_source=iter(population), two_children=True)
+    children = list(_gen)
+    child1, child2 = children[0:2]
+    print "len(child1) = %d, len(child2) = %d, len(population[0]) = %d" % (len(child1), len(child2), len(population[0]))
+    assert len(child1) == len(child2) == len(population[0]), "Individual's length was changed"
+    print '\n'.join(str(set(child)) for child in children)
+    assert not all(len(set(child)) != 2 for child in children), "Number of distinct values is not 2"
+    child1_set, child2_set = set(child1.genome), set(child2.genome)
+    print "set(child1) = %s" % child1_set
+    print "set(child2) = %s" % child2_set
+    assert child1_set == child2_set, "Distinct values are not matched"
+
+def test_recombiners_Discrete_Selection_All():
+    population = make_pop()
+    
+    _gen = recombiners.Discrete(_source=iter(population), two_children=True)
+    offspring = list(_gen)
+    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
+    assert len(offspring) == len(population), "Did not select all individuals"
+    print "intersection = %s" % set(offspring).intersection(set(population))
+    assert len(set(offspring).intersection(set(population))) == 0, "Did not modify some individuals"
+
+def test_recombiners_Discrete_Selection_None():
+    population = make_pop()
+    
+    _gen = recombiners.Discrete(_source=iter(population), per_pair_rate=0.0, two_children=True)
+    offspring = list(_gen)
+    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
+    assert len(offspring) == len(population), "Did not select all individuals"
+    print "difference = %s" % set(offspring).difference(set(population))
+    assert len(set(offspring).difference(set(population))) == 0, "Did not modify any individuals"
+
+def test_recombiners_Discrete_Selection_Half():
+    population = make_pop_variable(shortest=4)
+    
+    modify_count = 0
+    for _ in xrange(100):
+        _gen = recombiners.Discrete(_source=iter(population), per_pair_rate=0.5, two_children=True)
+        offspring = list(_gen)
+        assert len(offspring) == len(population), "Did not select all individuals"
+        modify_count += len(set(offspring).difference(set(population)))
+    modify_rate = float(modify_count) / (100.0 * len(population))
+    assert 0.4 <= modify_rate <= 0.6, "Did not modify approximately 50% of individuals"
+
+
 def test_recombiners_SingleSame_Values():
     population = make_pop()
     
