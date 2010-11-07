@@ -82,11 +82,17 @@ class _born_iter(object):
         return (str(node.value),)
     
     @classmethod
-    def safe_variable(cls, name):
-        if '.' in name:
+    def safe_variable(cls, name, replace_dots=True):
+        if replace_dots and '.' in name:
             name = '_dotted_' + name.replace('.', '_')
         assert '[' not in name and ']' not in name, "No indexers allowed in variables"
         assert '(' not in name and ')' not in name, "No parentheses allowed in variables"
+        if name == 'lambda': name = '_lambda'
+        return name
+    
+    @classmethod
+    def safe_argument(cls, name):
+        if name == 'lambda': name = 'globals()["lambda"]'
         return name
     
     @classmethod
@@ -176,7 +182,7 @@ class _born_iter(object):
             yield '_on_yield("%s", %s)' % (source_name, source_name)
     
     def write_block(self, node):
-        variables_in = ', '.join(sorted(node.variables_in))
+        variables_in = ', '.join(sorted(self.safe_argument(n) for n in node.variables_in))
         variables_in_safe = ', '.join(sorted(self.safe_variable(n) for n in node.variables_in))
         variables_out = ', '.join(sorted(set(node.variables_out).intersection(self.ast.globals)))
         variables_out_safe = ', '.join(sorted(self.safe_variable(n) for n in set(node.variables_out).intersection(self.ast.globals)))
