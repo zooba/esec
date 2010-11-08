@@ -170,10 +170,13 @@ def tokenise(source):
     '''
     if not source: raise ValueError("source must be provided.")
     
-    if isinstance(source, file): source = ''.join(source)
-    elif isinstance(source, list):
-        if source[0][-1] in '\r\n': source = ''.join(source)
-        else: source = '\n'.join(source)
+    if not isinstance(source, str) and hasattr(source, '__iter__'):
+        source = iter(source)
+        first_line = next(source)
+        if first_line[-1] in '\r\n':
+            source = first_line + ''.join(source)
+        else:
+            source = first_line + '\n' + '\n'.join(source)
     
     line = []
     continuation = False

@@ -4,7 +4,7 @@ import sys
 class EsecEmitter(object):
     INDENT = '    '
     
-    DEFINITIONS = '''from itertools import islice
+    DEFINITIONS_PY2 = '''from itertools import islice
 _lambda = globals().get('lambda', None)
 
 def _iter(*srcs):
@@ -28,6 +28,39 @@ class _born_iter(object):
     ``FROM-SELECT`` statement and handles calls to ``rest`` when the underlying
     sequence does not support it.
     '''
+    
+    DEFINITIONS_PY3 = '''from itertools import islice
+_lambda = globals().get('lambda', None)
+
+def _iter(*srcs):
+    for src in srcs:
+        for indiv in (getattr(src, '__iter__', None) or getattr(src, '__call__'))():
+            yield indiv
+
+class _born_iter(object):
+    def __init__(self, src): self.src = iter(src)
+    def rest(self): return [i.born() for i in getattr(self.src, 'rest', self.src.__iter__)()]
+    def __iter__(self): return self
+    def __next__(self): return next(self.src).born()'''
+    '''Definitions used in compiled systems.
+
+    The ``_iter`` method automatically calls ``__iter__`` or ``__call__`` depending
+    on the parameter type, allowing constructors and lists to be used interchangeably.
+    If multiple sequences are provided they are concatenated as required by
+    ``FROM-SELECT`` statements.
+
+    The ``_born_iter`` class calls the ``born`` method of individuals after a
+    ``FROM-SELECT`` statement and handles calls to ``rest`` when the underlying
+    sequence does not support it.
+    '''
+    
+    if sys.version.startswith('3'):
+        DEFINITIONS = DEFINITIONS_PY3
+        RANGE_COMMAND = 'range'
+    else:
+        DEFINITIONS = DEFINITIONS_PY2
+        RANGE_COMMAND = 'xrange'
+        
     
     FUNCTIONS = {
         '_assign': '%(destination)s = %(source)s',
@@ -69,7 +102,7 @@ class _born_iter(object):
                 del args['lambda']
             allargs = sorted(args.iteritems(), key=lambda i: i[0])
             arglist = ', '.join([value for key, value in allargs if key[0] == '#'] + \
-                                ['%s=%s' % item for item in allargs if key[0] != '#'])
+                                ['%s=%s' % (key, value) for key, value in allargs if key[0] != '#'])
             
             if node.name == '_list':
                 yield '[' + arglist + ']'
@@ -213,7 +246,7 @@ class _born_iter(object):
     def write_repeat(self, node):
         if node.children:
             count = ''.join(self.write(node.count))
-            yield 'for _ in xrange(' + count + '):'
+            yield 'for _ in %s(%s):' % (self.RANGE_COMMAND, count)
             for c in node.children:
                 for el in self.write(c):
                     yield '    ' + el
