@@ -26,7 +26,7 @@ def inttobin(n, count=24):
 def inttobinlist(n, count=24):
     '''Convert an integer number in a list with count places.
     '''
-    return [int((n >> y) & 1) for y in xrange(count-1, -1, -1)]
+    return [int((n >> y) & 1) for y in xrange(count - 1, -1, -1)]
 
 
 #==============================================================================
@@ -135,7 +135,7 @@ class RoyalRoad(Binary):
         self.size.min = self.size.max = self.size.exact = Q * C
     
     def _eval(self, indiv):
-        ''' f(x) = sum(blocks(x))*C
+        ''' f(x) = sum(blocks(x)) * C
         '''
         total = 0
         C = self.C
@@ -276,20 +276,20 @@ class Multimodal(Binary):
         self.size.min = self.size.max = self.size.exact = N
         # create the random peak[j] templates of length L
         irand = self.rand.randrange
-        self._peaks = [ [irand(2) for _ in xrange(N)] for _ in xrange(P) ]
+        self._peaks = [[irand(2) for _ in xrange(N)] for _ in xrange(P)]
     
     def _eval(self, indiv):
         '''Fitness is the number of genes in common with the nearest peak
         '''
-        tmp = 0
+        tmp = 0.0
         for j in xrange(self.P):
-            score = 0
+            score = 0.0
             for i in xrange(self.size.exact):
                 if indiv[i] == self._peaks[j][i]:
                     score += 1
             if score > tmp:
                 tmp = score
-        return (tmp*1.0 / self.size.exact) # 0 = no match, 1.0 = exact match.
+        return (tmp / self.size.exact) # 0 = no match, 1.0 = exact match.
     
     def info(self, level):
         '''Return default and add some more peak location info.
@@ -299,7 +299,7 @@ class Multimodal(Binary):
         result.append('  Peak locations (one per line, limit of 10 shown)')
         for j in xrange(self.P):
             p = self._peaks[j]
-            result.append('  '+' '.join([str(i) for i in p]))
+            result.append('  ' + ' '.join(str(i) for i in p))
             if j > 10:
                 result.append('  ...')
                 break
@@ -363,10 +363,10 @@ class CNF_SAT(Binary):
         self.size.min = self.size.max = self.size.exact = self.c_vars
         
         # create the random clauses of length K (c_len)
-        self.c_list = [ self._create_clause() for _ in xrange(self.n_clauses)]
+        self.c_list = [self._create_clause() for _ in xrange(self.n_clauses)]
         # initialise SAW weights if needed
         if self.use_saw:
-            self.w_list = [0]*self.n_clauses
+            self.w_list = [0] * self.n_clauses
             self.eval = self._eval_saw
         else:
             self.eval = self._eval
@@ -377,10 +377,10 @@ class CNF_SAT(Binary):
         A clause is filled by choosing K variables w/ replacement uniformly
         from the set of all N variables, negating with 50% probability.
         '''
-        clause = [0]*self.c_len
+        clause = [0] * self.c_len
         irand = self.rand.randrange
         for i in xrange(self.c_len):
-            clause[i] = irand(self.c_vars)+1 # 1 indexed
+            clause[i] = irand(self.c_vars) + 1 # 1 indexed
             if irand(2) == 0:
                 clause[i] = -clause[i]
         return clause
@@ -394,8 +394,8 @@ class CNF_SAT(Binary):
         c_list = self.c_list
         for j in xrange(self.n_clauses):
             for k in xrange(self.c_len):
-                if (((c_list[j][k] > 0) and indiv[c_list[j][k]-1]) or
-                    ((c_list[j][k] < 0) and (not indiv[-c_list[j][k]-1]))):
+                if (((c_list[j][k] > 0) and indiv[c_list[j][k] - 1]) or
+                    ((c_list[j][k] < 0) and (not indiv[-c_list[j][k] - 1]))):
                     satisfied += 1
                     break
         return (float(satisfied) / self.n_clauses) # 1.0 = expression satisfied
@@ -410,22 +410,22 @@ class CNF_SAT(Binary):
         w_list = self.w_list
         for j in xrange(self.n_clauses):
             for k in xrange(self.c_len):
-                if (((c_list[j][k] > 0) and indiv[c_list[j][k]-1]) or
-                    ((c_list[j][k] < 0) and (not indiv[-c_list[j][k]-1]))):
+                if (((c_list[j][k] > 0) and indiv[c_list[j][k] - 1]) or
+                    ((c_list[j][k] < 0) and (not indiv[-c_list[j][k] - 1]))):
                     total += w_list[j]
                     break
         return total
     
     def update_saw(self, best):
-        '''Update weights using w_i^1 = w-i + 1 + c_i(best).
+        '''Update weights using w_i^1 = w - i + 1 + c_i(best).
         '''
         c_list = self.c_list
         w_list = self.w_list
         for j in xrange(self.n_clauses):
             satisfied = 0 # False
             for k in xrange(self.c_len):
-                if (((c_list[j][k] > 0) and best[c_list[j][k]-1]) or
-                    ((c_list[j][k] < 0) and (not best[-c_list[j][k]-1]))):
+                if (((c_list[j][k] > 0) and best[c_list[j][k] - 1]) or
+                    ((c_list[j][k] < 0) and (not best[-c_list[j][k] - 1]))):
                     satisfied = 1 # True
                     break
             # Stepwise Adaptation of Weights - SAW
@@ -436,14 +436,11 @@ class CNF_SAT(Binary):
     def info(self, level):
         '''Return the basics, and also and idea of the SAT form.
         '''
-        #-pylint: disable=C0301
         result = super(CNF_SAT, self).info(level)
         result.append('  Clauses L=%d, Literals/clause K=%d, Variables N=%d' % (self.n_clauses, self.c_len, self.c_vars))
         result.append('  CNF Clauses (one per line, limit 10 shown)')
         for j in xrange(self.n_clauses):
-            c = self.c_list[j]
-            tmp = ['%4d ' % c[i] for i in xrange(self.c_len)]
-            result.append('  '+''.join(tmp))
+            result.append('  ' + ''.join('%4d ' % c for c in self.c_list[j]))
             if j > 10:
                 result.append('  ...')
                 break
@@ -489,13 +486,13 @@ class NK(Binary):
         shuffle = self.rand.shuffle
         
         # Create the BIG fitness matrix N x 2^(K+1) with random(0, 1)
-        F = self._F = [None]*n
-        f_cols = 2**(k+1)
+        F = self._F = [None] * n
+        f_cols = 2**(k + 1)
         for i in xrange(n):
-            F[i] = [ random() for _ in xrange(f_cols)]
+            F[i] = [random() for _ in xrange(f_cols)]
         
         # Create the epistasis matrix N x K with random index allocations
-        E = self._E = [None]*n
+        E = self._E = [None] * n
         for i in xrange(n):
             links = list(xrange(n)) # all possible links
             links.remove(i) # no epistasis link to self :)
@@ -514,7 +511,7 @@ class NK(Binary):
         for gene in xrange(self.size.exact): # do this for each gene
             fit_index = indiv[gene]
             for i in xrange(k):
-                multiplier = 2**(i+1)
+                multiplier = 2**(i + 1)
                 epi_index = E[gene][i]
                 fit_index += multiplier * indiv[epi_index]
             total += F[gene][fit_index]
@@ -562,20 +559,20 @@ class NKC(Binary):
         shuffle = self.rand.shuffle
         
         # Create the BIG fitness matrix N x 2^(K+C+1) with random (0, 1)
-        F = self._F = [None]*n
-        f_cols = 2**(k+c+1)
+        F = self._F = [None] * n
+        f_cols = 2**(k + c + 1)
         for i in xrange(n):
             F[i] = [random() for _ in xrange(f_cols)]
         
         # Create the epistasis matrix N x (K+C) with random index allocations
-        E = self._E = [None]*n
+        E = self._E = [None] * n
         for i in xrange(n):
             # Add the base K links to self first
-            links = list(j for j in xrange(n) if j != i) # no epistasis link to self :)
+            links = [j for j in xrange(n) if j != i] # no epistasis link to self :)
             shuffle(links)
             E[i] = links[:k]
             # Now add the C links, indexes continue past N
-            links = list(xrange(n, n*s))
+            links = list(xrange(n, n * s))
             shuffle(links)
             E[i].extend(links[:c]) # only what we need
     
@@ -720,7 +717,7 @@ class ECC(Binary):
         self.d = self.cfg.d
         # set the number of Binary genes that will be required
         # Note - only using simplified M/2 search space
-        self.size.min = self.size.max = self.size.exact = self.n * (self.M/2)
+        self.size.min = self.size.max = self.size.exact = self.n * self.M // 2
     
     def _eval(self, indiv):
         '''Evaluate ECC
@@ -753,12 +750,12 @@ class ECC(Binary):
         of each for the full M codeword set.
         '''
         n = self.n
-        mid = self.M/2
-        code = [None]*self.M
+        mid = self.M // 2
+        code = [None] * self.M
         for i in xrange(mid):
-            code[i] = indiv[(i*n):(i*n + n)]
+            code[i] = indiv[(i*n):(i*n+n)]
             # create the complementary code also
-            code[mid+i] = [ (-x+1) for x in code[i] ]
+            code[mid+i] = [(-x + 1) for x in code[i]]
         return code
     
     def legal(self, indiv):
@@ -823,14 +820,14 @@ class SUS(Binary):
         frand = self.rand.random
         irand = self.rand.randrange # end-point exclusive [1, 1000)
         if self.even:
-            halfMaxN = self.maxN/2.0
-            self._W = [ irand(1, halfMaxN+1)*2 for _ in xrange(self.size.exact) ]
+            halfMaxN = self.maxN / 2.0
+            self._W = [irand(1, halfMaxN + 1)*2 for _ in xrange(self.size.exact)]
             self._S = []
-            self._C = self.maxN * (self.size.exact/4.0) + 1 # an odd number
+            self._C = self.maxN * (self.size.exact / 4.0) + 1 # an odd number
         else:
-            self._W = [ irand(1, self.maxN+1) for _ in xrange(self.size.exact) ]
+            self._W = [irand(1, self.maxN + 1) for _ in xrange(self.size.exact)]
             # Create a random subset S of W and sum, calculate C
-            self._S  = [ wi for wi in self._W if frand() < 0.5]
+            self._S  = [wi for wi in self._W if frand() < 0.5]
             self._C = sum(self._S)
     
     def _eval(self, indiv):
@@ -920,7 +917,7 @@ class MAXCUT(Binary):
         W = self._W
         total = 0
         for i in xrange(N-1):
-            for j in xrange(i+1, N):
+            for j in xrange(i + 1, N):
                 if indiv[i] != indiv[j]: #only include spanning edges
                     total += W[i][j]
         return total
@@ -1030,7 +1027,7 @@ class MTTP(Binary):
         f(x) = \sum\limits_{i \in T-S} w_i
         '''
         # - Create the T-S set of penalty tasks
-        T_S = [t for t, x in zip(self._tasks, indiv) if x==0] # x[i]==0
+        T_S = [t for t, x in zip(self._tasks, indiv) if x == 0] # x[i]==0
         
         # Quick legal version?
         if self.legal(indiv):
@@ -1041,7 +1038,7 @@ class MTTP(Binary):
         #        + (sum of tasks wts that made it infeasible)
         #        + (offset penalty of all task wts)
         # - Get the subset of nominated tasks S
-        S = [ t for t, x in zip(self._tasks, indiv) if x==1 ] # x[i]==1
+        S = [t for t, x in zip(self._tasks, indiv) if x == 1] # x[i]==1
         # - Tasks have (length, deadline, wt)
         time = 0
         for t in S:
@@ -1067,7 +1064,7 @@ class MTTP(Binary):
         and return True if all okay. This is not the fitness...
         '''
         # Get the subset of nominated tasks
-        S = [ t for t, x in zip(self._tasks, indiv) if x ] # x[i]==1
+        S = [t for t, x in zip(self._tasks, indiv) if x] # x[i]==1
         # Tasks have (length, deadline, wt)
         time = 0
         for t in S:
@@ -1083,17 +1080,17 @@ class MTTP(Binary):
         # (l, d, w), lj=l(i%5), dj=di+24*m, wj=wi or (m+1)*wi
         result = self.mttp5i*n
         for j, t in enumerate(result):
-            j = j+1 # describe in 1 indexed tasks, so to match...
-            # l_j = l_(i%5) ... which it already is
+            j = j + 1 # describe in 1 indexed tasks, so to match...
+            # l_j = l_(i % 5) ... which it already is
             l = t[0]
-            #d_j = d_i + 24*m
+            #d_j = d_i + 24 * m
             m = j // 5
             d = t[1] + 24*m
-            # if j%5 == 3 or j%5 == 4: w_j = w_i else: (m+1)*w_i
-            if (j%5 == 3) or (j%5 == 4):
+            # if j % 5 == 3 or j % 5 == 4: w_j = w_i else: (m + 1) * w_i
+            if (j % 5 == 3) or (j % 5 == 4):
                 w = t[2]
             else:
-                w = (m+1) * t[2]
+                w = (m + 1) * t[2]
             # replace
             result[j-1] = (l, d, w)
         # all done
@@ -1156,7 +1153,7 @@ class Graph2c(Binary):
         part = ''
         for i in xrange(self.size.exact):
             part += ('%4d ' % self.payoff[i])
-            if not (i+1) % self.dimensions:
+            if not (i + 1) % self.dimensions:
                 result.append(part)
                 part = ''
         return result
@@ -1175,8 +1172,8 @@ class Graph2r(Binary):
     
     test_key = (('parameters', int),)
     test_cfg = ('6',)
-    test_legal = ([0]*36, [1]*36)
-    test_illegal = ([-1]*36, [2]*36)
+    test_legal = ([0] * 36, [1] * 36)
+    test_illegal = ([-1] * 36, [2] * 36)
     
     def __init__(self, cfg=None, **other_cfg):
         super(Graph2r, self).__init__(cfg, **other_cfg)
@@ -1187,7 +1184,7 @@ class Graph2r(Binary):
         if (self.dimensions % 2) == 1: self.dimensions += 1
         self.size.min = self.size.max = self.size.exact = self.dimensions * self.dimensions
         
-        self.payoff = ([-10]*self.dimensions + [10]*self.dimensions) * (self.dimensions // 2)
+        self.payoff = ([-10] * self.dimensions + [10] * self.dimensions) * (self.dimensions // 2)
     
     def _eval(self, indiv):
         '''NxN connectivity matrix. Odd numbered ROW constraints
@@ -1195,7 +1192,7 @@ class Graph2r(Binary):
         if self.legal(indiv):
             fitness = 0
             payoff = self.payoff
-            maxpt = self.size.exact-1
+            maxpt = self.size.exact - 1
             for i in xrange(self.size.exact):
                 if indiv[i] == 1:
                     fitness += payoff[i]
@@ -1215,7 +1212,7 @@ class Graph2r(Binary):
         part = ''
         for i in xrange(self.size.exact):
             part += ('%4d ' % self.payoff[i])
-            if not (i+1) % self.dimensions:
+            if not (i + 1) % self.dimensions:
                 result.append(part)
                 part = ''
         return result
