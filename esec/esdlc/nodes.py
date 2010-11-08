@@ -192,9 +192,9 @@ class FunctionNode(NodeBase):
         super(FunctionNode, self).__init__(tokens)
         
         assert isinstance(name, str), "name must be a string (" + repr(name) + ")"
-        self.name = name
+        self.name = name.lower()
         
-        self.arguments = dict(named_arguments)
+        self.arguments = dict((key.lower(), value) for key, value in named_arguments.iteritems())
         for i, value in enumerate(positional_arguments):
             self.arguments['#%d' % i] = value
         
@@ -367,7 +367,7 @@ class NameNode(NodeBase):
         '''Initialises a `NameNode`.'''
         super(NameNode, self).__init__(tokens)
         assert isinstance(name, str) and name, "name must be a string (" + repr(name) + ")"
-        self.name = name
+        self.name = name.lower()
     
     def __str__(self): return self.name
     def __repr__(self): return self.tag + ':' + str(self)

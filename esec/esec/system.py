@@ -101,7 +101,14 @@ class System(object):
             'notify': notify,
         }
         overrides = self.cfg.system.as_dict()
-        context.update(overrides)
+        for key, value in overrides.iteritems():
+            if isinstance(key, str):
+                key_lower = key.lower()
+                if key_lower in context:
+                    warn("Overriding variable/function '%s'" % key_lower)
+                context[key_lower] = value
+            else:
+                warn('System dictionary contains non-string key %r' % key)
         
         for cls in SPECIES:
             inst = context[cls.name] = cls(self.cfg, context['_evaluator'])

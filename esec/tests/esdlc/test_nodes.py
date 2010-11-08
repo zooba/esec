@@ -72,7 +72,8 @@ def test_VariableNode_parse():
         ("underscore_name", "underscore_name"),
         ("indexed[name]", "indexed"),   # [ operator is not handled by VariableNode
         ("_leading_underscore", "_leading_underscore"),
-        ("embedded123numbers", "embedded123numbers")
+        ("embedded123numbers", "embedded123numbers"),
+        ("MixedCaseName", "mixedcasename"),
         ]:
         yield check_Node_parse, source, VariableNode, VariableNode(expect, None)
     
@@ -103,6 +104,7 @@ def test_GroupNode_parse():
     
     for source, expect_group, expect_size in [
         ("population", _v("population"), None),
+        ("MixedCasePopulation", _v("mixedcasepopulation"), None),
         ("generator()", _f("generator"), None),
         ("generator(arg=value)", _f("generator", arg=_p("value")), None),
         ("1 population", _v("population"), _p("1.0")),

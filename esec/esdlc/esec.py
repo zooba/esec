@@ -5,6 +5,7 @@ class EsecEmitter(object):
     INDENT = '    '
     
     DEFINITIONS = '''from itertools import islice
+_lambda = globals().get('lambda', None)
 
 def _iter(*srcs):
     for src in srcs:
@@ -63,6 +64,9 @@ class _born_iter(object):
                 func_name = args['_source']
                 del args['_source']
             
+            if 'lambda' in args:
+                args['lambda_'] = args['lambda']
+                del args['lambda']
             allargs = sorted(args.iteritems(), key=lambda i: i[0])
             arglist = ', '.join([value for key, value in allargs if key[0] == '#'] + \
                                 ['%s=%s' % item for item in allargs if key[0] != '#'])
@@ -92,7 +96,7 @@ class _born_iter(object):
     
     @classmethod
     def safe_argument(cls, name):
-        if name == 'lambda': name = 'globals()["lambda"]'
+        if name == 'lambda': name = '_lambda'
         return name
     
     @classmethod
@@ -101,7 +105,7 @@ class _born_iter(object):
             name = name[:name.index('.')]
         assert '[' not in name and ']' not in name, "No indexers allowed in variables"
         assert '(' not in name and ')' not in name, "No parentheses allowed in variables"
-        return name
+        return cls.safe_variable(name, False)
     
     def write_variable(self, node):
         yield self.safe_variable(node.name)
@@ -184,7 +188,7 @@ class _born_iter(object):
     def write_block(self, node):
         variables_in = ', '.join(sorted(self.safe_argument(n) for n in node.variables_in))
         variables_in_safe = ', '.join(sorted(self.safe_variable(n) for n in node.variables_in))
-        variables_out = ', '.join(sorted(set(node.variables_out).intersection(self.ast.globals)))
+        variables_out = ', '.join(sorted(self.safe_argument(n) for n in set(node.variables_out).intersection(self.ast.globals)))
         variables_out_safe = ', '.join(sorted(self.safe_variable(n) for n in set(node.variables_out).intersection(self.ast.globals)))
         variables_out_base = ', '.join(sorted(self.base_variable(n) for n in set(node.variables_out).intersection(self.ast.globals)))
         yield 'def __block_%s(%s):' % (node.name, variables_in_safe)
