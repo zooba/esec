@@ -283,7 +283,7 @@ class Fitness(object):
     
     def __truediv__(self, other):
         if not isinstance(other, (int, float)): return NotImplemented
-        result = (expected_type(value * other) for expected_type, value in zip(self.types, self.values))
+        result = (expected_type(value / other) for expected_type, value in zip(self.types, self.values))
         return type(self)(tuple(result), True)
 
 class FitnessMaximise(Fitness):
