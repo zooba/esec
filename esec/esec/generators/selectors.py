@@ -7,7 +7,8 @@ which the selectors are executed.
 
 from itertools import repeat
 from warnings import warn
-from esec.generators import _key_fitness
+from esec.fitness import Fitness
+from esec.generators import _key_fitness, _key_birthday
 from esec.individual import JoinedIndividual
 from esec.context import rand
 
@@ -138,6 +139,66 @@ def WorstOnly(_source):
         criteria.
     '''
     return Worst(_source, True)
+
+def Youngest(_source, only=False):
+    '''Returns the individuals in decreasing birthdate order.
+    
+    :Parameters:
+      _source : iterable(`Individual`)
+        A sequence of individuals. Some or all individuals are
+        returned from this sequence, depending on the selection
+        criteria.
+      
+      only : bool
+        If ``True``, repeatedly returns only the youngest individual
+        in `_source`; otherwise, returns all individuals in `_source` in
+        order of decreasing birthdates.
+    '''
+    if only:
+        return repeat(max(_source, key=_key_birthday))
+    else:
+        return NoReplacementSelector(sorted(_source, key=_key_birthday, reverse=True), lambda s, _source: 0)
+
+def YoungestOnly(_source):
+    '''Repeatedly returns the individual with the latest birthday.
+    
+    :Parameters:
+      _source : iterable(`Individual`)
+        A sequence of individuals. Some or all individuals are
+        returned from this sequence, depending on the selection
+        criteria.
+    '''
+    return Youngest(_source, True)
+
+def Oldest(_source, only=False):
+    '''Returns the individuals in increasing birthdate order.
+    
+    :Parameters:
+      _source : iterable(`Individual`)
+        A sequence of individuals. Some or all individuals are
+        returned from this sequence, depending on the selection
+        criteria.
+      
+      only : bool
+        If ``True``, repeatedly returns only the oldest individual
+        in `_source`; otherwise, returns all individuals in `_source` in
+        order of increasing birthdates.
+    '''
+    if only:
+        return repeat(min(_source, key=_key_birthday))
+    else:
+        return NoReplacementSelector(sorted(_source, key=_key_birthday, reverse=False), lambda s, _source: 0)
+
+def OldestOnly(_source):
+    '''Repeatedly returns the individual with the earliest birthday.
+    
+    :Parameters:
+      _source : iterable(`Individual`)
+        A sequence of individuals. Some or all individuals are
+        returned from this sequence, depending on the selection
+        criteria.
+    '''
+    return Oldest(_source, True)
 
 
 def Tournament(_source, k=2, replacement=True, greediness=1.0):

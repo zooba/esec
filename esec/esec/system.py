@@ -42,6 +42,10 @@ class System(object):
             'worst':                selectors.Worst,
             'truncate_best':        selectors.Best,
             'truncate_worst':       selectors.Worst,
+            'youngest_only':        selectors.YoungestOnly,
+            'oldest_only':          selectors.OldestOnly,
+            'youngest':             selectors.Youngest,
+            'oldest':               selectors.Oldest,
             'unique':               selectors.Unique,
             'best_of_tuple':        selectors.BestOfTuple,
             
