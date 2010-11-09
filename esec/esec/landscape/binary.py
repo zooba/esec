@@ -437,7 +437,8 @@ class CNF_SAT(Binary):
         '''Return the basics, and also and idea of the SAT form.
         '''
         result = super(CNF_SAT, self).info(level)
-        result.append('  Clauses L=%d, Literals/clause K=%d, Variables N=%d' % (self.n_clauses, self.c_len, self.c_vars))
+        result.append('  Clauses L=%d, Literals/clause K=%d, Variables N=%d' % 
+                      (self.n_clauses, self.c_len, self.c_vars))
         result.append('  CNF Clauses (one per line, limit 10 shown)')
         for j in xrange(self.n_clauses):
             result.append('  ' + ''.join('%4d ' % c for c in self.c_list[j]))
