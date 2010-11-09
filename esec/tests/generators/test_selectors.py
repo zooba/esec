@@ -14,7 +14,9 @@ def test_selectors_max():
     yield check_selectors_UniformRandom, population
     yield check_selectors_UniformShuffle, population
     yield check_selectors_FitnessProportional, population
+    yield check_selectors_FitnessProportionalSUS, population
     yield check_selectors_RankProportional, population
+    yield check_selectors_RankProportionalSUS, population
     yield check_selectors_BestOfTuple, population, make_best_pop_max()
     
 def test_selectors_min():
@@ -28,7 +30,9 @@ def test_selectors_min():
     yield check_selectors_UniformRandom, population
     yield check_selectors_UniformShuffle, population
     yield check_selectors_FitnessProportional, population
+    yield check_selectors_FitnessProportionalSUS, population
     yield check_selectors_RankProportional, population
+    yield check_selectors_RankProportionalSUS, population
     yield check_selectors_BestOfTuple, population, make_best_pop_min()
     
 
@@ -186,6 +190,25 @@ def check_selectors_FitnessProportional(population):
     print "fit[:50] = %d, fit[-50:] = %d" % (sum(fit[:50]), sum(fit[-50:]))
     assert sum(fit[:50]) > sum(fit[-50:]), "Average fitness is not better in early selections (INTERMITTENT)"
     
+def check_selectors_FitnessProportionalSUS(population):
+    _gen = selectors.FitnessProportionalSUS(_source=iter(population), mu=20)
+    offspring = [next(_gen) for _ in xrange(20)]
+    print "len(offspring) = %d, expected = 20" % len(offspring)
+    assert len(offspring) == 20, "Did not select expected number of individuals"
+    assert all([i in population for i in offspring]), "Some individuals not in original population"
+    gaps = [abs(i2.fitness.simple - i1.fitness.simple) for i1, i2 in zip(offspring[::2], offspring[1::2])]
+    print ', '.join(str(i) for i in gaps)
+    assert gaps[0] < gaps[-1], "Gaps between selections do not increase"
+    
+    _gen = selectors.FitnessProportionalSUS(_source=iter(population))
+    offspring = [next(_gen) for _ in xrange(len(population))]
+    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
+    assert len(offspring) == len(population), "Did not select all individials"
+    assert all([i in population for i in offspring]), "Some individuals not in original population"
+    fit = [i.fitness.simple for i in offspring]
+    print "fit[:50] = %d, fit[-50:] = %d" % (sum(fit[:50]), sum(fit[-50:]))
+    assert sum(fit[:50]) > sum(fit[-50:]), "Average fitness is not better in early selections (INTERMITTENT)"
+    
 def check_selectors_RankProportional(population):
     _gen = selectors.RankProportional(_source=iter(population), expectation=2.0, replacement=True)
     offspring = [next(_gen) for _ in xrange(10)]
@@ -199,6 +222,25 @@ def check_selectors_RankProportional(population):
     assert len(offspring) == len(population), "Did not select all individials"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
     assert len(set(offspring)) == len(offspring), "Individuals are not all unique"
+    fit = [i.fitness.simple for i in offspring]
+    print "fit[:50] = %d, fit[-50:] = %d" % (sum(fit[:50]), sum(fit[-50:]))
+    assert sum(fit[:50]) > sum(fit[-50:]), "Average fitness is not better in early selections (INTERMITTENT)"
+    
+def check_selectors_RankProportionalSUS(population):
+    _gen = selectors.RankProportionalSUS(_source=iter(population), mu=20, expectation=2.0)
+    offspring = [next(_gen) for _ in xrange(20)]
+    print "len(offspring) = %d, expected = 20" % len(offspring)
+    assert len(offspring) == 20, "Did not select expected number of individuals"
+    assert all([i in population for i in offspring]), "Some individuals not in original population"
+    gaps = [abs(i2.fitness.simple - i1.fitness.simple) for i1, i2 in zip(offspring[::2], offspring[1::2])]
+    print ', '.join(str(i) for i in gaps)
+    assert gaps[0] < gaps[-1], "Gaps between selections do not increase"
+    
+    _gen = selectors.RankProportionalSUS(_source=iter(population), expectation=2.0)
+    offspring = [next(_gen) for _ in xrange(len(population))]
+    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
+    assert len(offspring) == len(population), "Did not select all individials"
+    assert all([i in population for i in offspring]), "Some individuals not in original population"
     fit = [i.fitness.simple for i in offspring]
     print "fit[:50] = %d, fit[-50:] = %d" % (sum(fit[:50]), sum(fit[-50:]))
     assert sum(fit[:50]) > sum(fit[-50:]), "Average fitness is not better in early selections (INTERMITTENT)"

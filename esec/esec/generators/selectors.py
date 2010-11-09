@@ -334,7 +334,9 @@ def UniformRandomWithoutReplacement(_source):
     '''
     return UniformRandom(_source, replacement=False)
 
-def FitnessProportional(_source, replacement=True, sus=False, mu=None):
+def FitnessProportional(_source, replacement=True,
+                        sus=False, mu=None,
+                        fitness_offset=None):
     '''Returns a sequence of individuals selected in proportion to their
     fitness. Only the most significant fitness value is used for determining
     proportion.
@@ -365,7 +367,55 @@ def FitnessProportional(_source, replacement=True, sus=False, mu=None):
         is used.
         If `sus` is ``False``, `mu` is ignored.
     '''
+    if sus:
+        return FitnessProportionalSUS(_source, mu, fitness_offset)
+    else:
+        return FitnessProportionalNormal(_source, replacement, fitness_offset)
+
+def _GetMinimumFitness(fitness1, fitness2):
+    '''Returns the minimum of two fitness values.
     
+    `fitness1` or `fitness2` may be an instance of `Fitness`, an object providing
+    a ``fitness`` attribute or a sequence containing either of these two objects.
+    '''
+    if fitness1 is None: return fitness2
+    
+    if isinstance(fitness1, Fitness): fitness1 = fitness1.simple
+    elif hasattr(fitness1, 'fitness'): fitness1 = fitness1.fitness.simple
+    elif hasattr(fitness1, '__iter__'): fitness1 = _GetMinimumFitness(next(iter(fitness1)), None)
+    
+    if fitness2 is None: return fitness1
+    
+    fitness2 = _GetMinimumFitness(fitness2, None)
+    
+    return fitness1 if fitness2 > fitness1 else fitness2
+
+
+def FitnessProportionalNormal(_source, replacement=True, fitness_offset=None):
+    '''Returns a sequence of individuals selected in proportion to their
+    fitness. Only the most significant fitness value is used for determining
+    proportion.
+    
+    :Parameters:
+      _source : iterable(`Individual`)
+        A sequence of individuals. Some or all individuals are
+        returned from this sequence, depending on the selection
+        criteria.
+      
+      replacement : bool
+        ``False`` to remove individuals from contention once they
+        have been returned. The generator terminates when no
+        individuals remain and the total number of individuals
+        is equal to the number in `_source`.
+        If ``True``, the generator will never terminate.
+      
+      fitness_offset : `Fitness`, `Individual` or iterable(`Individual`) [optional]
+        The offset to apply to fitness values. If an
+        iterable(`Individual`) is passed (for example, a group
+        from within an ESDL system), the first individual is
+        used. If omitted, the minimum fitness value in `_source`
+        is used.
+    '''
     group = sorted(_source, key=_key_fitness, reverse=True)
     irand = rand.randrange
     frand = rand.random
@@ -375,27 +425,16 @@ def FitnessProportional(_source, replacement=True, sus=False, mu=None):
         yield group[0]
         raise StopIteration
     
-    wheel = [(i.fitness.simple, i) for i in group]
-    
-    # if necessary, adjust all fitnesses to be positive
-    min_fitness = min([i[0] for i in wheel])
-    if min_fitness < 0:
-        wheel = [(i[0]-min_fitness, i[1]) for i in wheel]
-    total = sum(i[0] for i in wheel)
+    # adjust all fitnesses to be positive
+    min_fitness = _GetMinimumFitness(min(i.fitness.simple for i in group), fitness_offset)
     
     size = len(group)
-    mu = int(mu or size)
-    one_on_mu = 1.0 / mu
-    if sus:
-        sus_prob = frand() * one_on_mu - one_on_mu
+    wheel = [(i.fitness.simple - min_fitness, i) for i in group]
+    assert all(i[0] >= 0.0 for i in wheel), "Fitness scaling failed"
+    total = sum(i[0] for i in wheel)
     
     while wheel:
-        if sus:
-            sus_prob += one_on_mu
-            if sus_prob >= 1.0: sus_prob -= 1.0
-            prob = sus_prob * total
-        else:
-            prob = frand() * total
+        prob = frand() * total
         
         i = 0
         while i < size and prob > wheel[i][0]:
@@ -403,12 +442,11 @@ def FitnessProportional(_source, replacement=True, sus=False, mu=None):
             i += 1
         # Fall back on uniform selection if wheel fails
         if i >= size:
-            print i, size, sus_prob, prob, total
             warn('Fitness proportional selection wheel failed.')
             i = irand(size)
         
-        # WITH REPLACEMENT or SUS
-        if replacement or sus:
+        # WITH REPLACEMENT
+        if replacement:
             yield wheel[i][1]
         # WITHOUT REPLACEMENT
         else:
@@ -417,7 +455,7 @@ def FitnessProportional(_source, replacement=True, sus=False, mu=None):
             yield winner[1]
             size -= 1
 
-def FitnessProportionalSUS(_source, mu=None):
+def FitnessProportionalSUS(_source, mu=None, fitness_offset=None):
     '''Returns a sequence of individuals selected using fitness based
     Stochastic Universal Sampling (SUS).
     
@@ -430,8 +468,42 @@ def FitnessProportionalSUS(_source, mu=None):
       mu : int [optional]
         The number of selections being made. If not provided,
         the total number of individuals in `_source` is used.
+      
+      fitness_offset : `Fitness`, `Individual` or iterable(`Individual`) [optional]
+        The offset to apply to fitness values. If an
+        iterable(`Individual`) is passed (for example, a group
+        from within an ESDL system), the first individual is
+        used. If omitted, the minimum fitness value in `_source`
+        is used.
     '''
-    return FitnessProportional(_source, sus=True, mu=mu)
+    group = sorted(_source, key=_key_fitness, reverse=True)
+    frand = rand.random
+    
+    if not group: raise StopIteration
+    if len(group) == 1:
+        yield group[0]
+        raise StopIteration
+    
+    # adjust all fitnesses to be positive
+    min_fitness = _GetMinimumFitness(min(i.fitness.simple for i in group), fitness_offset)
+    
+    size = len(group)
+    wheel = [(i.fitness.simple - min_fitness, i) for i in group]
+    assert all(i[0] >= 0.0 for i in wheel), "Fitness scaling failed"
+    total = sum(i[0] for i in wheel)
+    
+    mu = int(mu or size)
+    prob_delta = total / mu
+    prob = frand() * prob_delta - prob_delta
+    i = 0
+    change_level = wheel[0][0]
+    while True:
+        prob += prob_delta
+        while prob > change_level:
+            i += 1
+            while i >= size: i -= size
+            change_level += wheel[i][0]
+        yield wheel[i][1]
 
 def RankProportional(_source, replacement=True,
                      expectation=1.1, neta=None,
@@ -481,27 +553,59 @@ def RankProportional(_source, replacement=True,
         is used.
         If `sus` is ``False``, `mu` is ignored.
     '''
+    if sus:
+        return RankProportionalSUS(_source, mu, expectation, neta, invert)
+    else:
+        return RankProportionalNormal(_source, replacement, expectation, neta, invert)
+
+def RankProportionalNormal(_source, replacement=True, expectation=1.1, neta=None, invert=False):
+    '''Returns a sequence of individuals selected in proportion to their
+    rank.
+    
+    .. include:: epydoc_include.txt
+    
+    :Parameters:
+      _source : iterable(`Individual`)
+        A sequence of individuals. Some or all individuals are
+        returned from this sequence, depending on the selection
+        criteria.
+      
+      replacement : bool
+        ``False`` to remove individuals from contention once they
+        have been returned. The generator terminates when no
+        individuals remain and the total number of individuals
+        is equal to the number in `_source`.
+        If ``True``, the generator will never terminate.
+      
+      expectation : float |isin| [1.0, 2.0]
+        The relative probability of selecting the highest ranked
+        individual. Defaults to 1.1.
+        If `neta` is provided, its value is used instead.
+      
+      neta : float
+        A synonym for `expectation`.
+      
+      invert : bool [optional]
+        ``False`` to give the highest probabilities to the most
+        fit individuals; otherwise, ``True`` to give the
+        highest probabilities to the least fit individuals.
+    '''
     group = sorted(_source, key=_key_fitness, reverse=not invert)
-    frand = rand.random
     irand = rand.randrange
+    frand = rand.random
+    
+    if not group: raise StopIteration
+    if len(group) == 1:
+        yield group[0]
+        raise StopIteration
     
     if neta is not None: expectation = neta
     size = len(group)
-    mu = int(mu or size)
-    one_on_mu = 1.0 / mu
     wheel = [(expectation - 2.0*(expectation-1.0)*(i-1.0)/(size-1.0), j) for i, j in enumerate(group)]
-    total = sum([i[0] for i in wheel])
-    
-    if sus:
-        sus_prob = frand() * one_on_mu - one_on_mu
+    total = sum(i[0] for i in wheel)
     
     while wheel:
-        if sus:
-            sus_prob += one_on_mu
-            if sus_prob > 1.0: sus_prob -= 1.0
-            prob = sus_prob * total
-        else:
-            prob = frand() * total
+        prob = frand() * total
         
         i = 0
         while i < size and prob > wheel[i][0]:
@@ -512,8 +616,8 @@ def RankProportional(_source, replacement=True,
             warn('Rank proportional selection wheel failed.')
             i = irand(size)
         
-        # WITH REPLACEMENT or SUS
-        if replacement or sus:
+        # WITH REPLACEMENT
+        if replacement:
             yield wheel[i][1]
         # WITHOUT REPLACEMENT
         else:
@@ -522,9 +626,11 @@ def RankProportional(_source, replacement=True,
             yield winner[1]
             size -= 1
 
-def RankProportionalSUS(_source, mu=None):
-    '''Returns a sequence of individuals selected using rank based
-    Stochastic Universal Sampling (SUS).
+def RankProportionalSUS(_source, mu=None, expectation=1.1, neta=None, invert=False):
+    '''Returns a sequence of individuals using rank-based Stochastic
+    Uniform Sampling (SUS).
+    
+    .. include:: epydoc_include.txt
     
     :Parameters:
       _source : iterable(`Individual`)
@@ -532,11 +638,50 @@ def RankProportionalSUS(_source, mu=None):
         returned from this sequence, depending on the selection
         criteria.
       
+      expectation : float |isin| [1.0, 2.0]
+        The relative probability of selecting the highest ranked
+        individual. Defaults to 1.1.
+        If `neta` is provided, its value is used instead.
+      
+      neta : float
+        A synonym for `expectation`.
+      
+      invert : bool [optional]
+        ``False`` to give the highest probabilities to the most
+        fit individuals; otherwise, ``True`` to give the
+        highest probabilities to the least fit individuals.
+      
       mu : int [optional]
-        The number of selections being made. If not provided,
-        the total number of individuals in `_source` is used.
+        The number of selections being made when using SUS. If
+        not provided, the total number of individuals in `_source`
+        is used.
     '''
-    return RankProportional(_source, sus=True, mu=mu)
+    group = sorted(_source, key=_key_fitness, reverse=not invert)
+    frand = rand.random
+    
+    if not group: raise StopIteration
+    if len(group) == 1:
+        yield group[0]
+        raise StopIteration
+    
+    if neta is not None: expectation = neta
+    size = len(group)
+    wheel = [(expectation - 2.0*(expectation-1.0)*(i-1.0)/(size-1.0), j) for i, j in enumerate(group)]
+    total = sum(i[0] for i in wheel)
+    
+    mu = int(mu or size)
+    prob_delta = total / mu
+    prob = frand() * prob_delta - prob_delta
+    i = 0
+    change_level = wheel[0][0]
+    while True:
+        prob += prob_delta
+        while prob > change_level:
+            i += 1
+            while i >= size: i -= size
+            change_level += wheel[i][0]
+        yield wheel[i][1]
+
 
 def Unique(_source):
     '''Returns a sequence of the unique individuals based on phenomes.
