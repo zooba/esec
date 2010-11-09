@@ -84,8 +84,7 @@ class Compiler(object):
         
         self._groups = None
         self.src_lines = None
-        self.reset = None
-        self.breed = None
+        self.code = None
     
     def compile(self):
         '''Compiles the source associated with this compiler object. The result
@@ -99,25 +98,16 @@ class Compiler(object):
         exec _BORN_ITER_DEF in self.context #pylint: disable=W0122
         
         self._groups = set()
+        self.blocks = [ ]
         self.src_lines = list(self._filter_source(self.source_code))
-        code_lines = list(self._transform(self.src_lines))
-        code_blocks = [ [] ]
-        for line in code_lines:
-            if line == None:
-                code_blocks.append([])
-            else:
-                code_blocks[-1].append(line)
+        transformed_lines = list(self._transform(self.src_lines))
         
-        if len(code_blocks) > 2:
-            raise ESDLSyntaxError('Code after generation definition.', ("ESDL", None, None, None))
-        elif len(code_blocks) == 2:
-            init_code = '\n'.join(('%s = _group()' % g for g in self._groups))
-            self.reset = init_code + '\n' + '\n'.join(code_blocks[0])
-            self.breed = '\n'.join(code_blocks[1])
-        else:
-            self.reset = None
-            self.breed = None
-            raise ESDLSyntaxError('No generation definition included.', ("ESDL", None, None, None))
+        code_lines = [ ]
+        code_lines.extend('%s = _group()' % g for g in self._groups)
+        code_lines.append('')
+        code_lines.extend(transformed_lines)
+        
+        self.code = '\n'.join(code_lines)
     
     @classmethod
     def _hide_nested(cls, src):
@@ -221,12 +211,12 @@ class Compiler(object):
             first_word = parts[0].upper()
             if first_word == 'BEGIN':
                 second_word = parts[2].partition(' ')[0].upper()
-                if second_word == 'GENERATION':
-                    yield None
-                    indent = ''
+                if second_word:
+                    yield indent + "def _block_" + second_word + "():"
+                    self.blocks.append(second_word)
+                    indent += ' ' * 4
                 else:
-                    raise ESDLSyntaxError('Unrecognised parameter to BEGIN: ' + second_word,
-                                          ("ESDL", line_no+1, None, source_line))
+                    raise ESDLSyntaxError('BEGIN requires a block name.', ("ESDL", line_no+1, None, source_line))
             
             
             elif first_word == 'END':

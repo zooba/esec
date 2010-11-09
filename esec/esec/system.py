@@ -115,14 +115,13 @@ class System(object):
         # Also expose context
         builtin['context'] = self._context
         
-        self._reset_code = compiler.reset
-        self._breed_code = compiler.breed
+        self._code_string = compiler.code
+        self.blocks = compiler.blocks
         
         self.monitor = self._context.get('_monitor', MonitorBase())
         self._context['_on_yield'] = lambda name, group: self.monitor.on_yield(self, name, group)
         
-        self._reset = compile(self._reset_code, 'ESDL Preamble', 'exec')
-        self._breed = compile(self._breed_code, 'ESDL Generation', 'exec')
+        self._code = compile(self._code_string, 'ESDL Definition', 'exec')
         
         self._in_step = False
         self._continue_step = False
@@ -157,11 +156,8 @@ class System(object):
             result.append(self.definition.strip(' \t').strip('\n'))
             result.append('')
         if level > 3:
-            result.append('>> Compiled Reset Code:')
-            result.append(self._reset_code)
-            result.append('')
-            result.append('>> Compiled Breed Code:')
-            result.append(self._breed_code)
+            result.append('>> Compiled Code:')
+            result.append(self._code_string)
             result.append('')
         if level > 2:
             result.append('>> ESDL cfg instance:')
@@ -187,7 +183,7 @@ class System(object):
             self.monitor.on_pre_reset(self)
             
             Individual.reset_birthday()
-            exec self._reset in self._context
+            exec self._code in self._context
             
             self.monitor.on_post_reset(self)
             
@@ -206,7 +202,7 @@ class System(object):
             self.monitor.on_run_end(self)
             return
     
-    def step(self):
+    def step(self, block="generation"):
         '''Executes one generation.
         '''
         # Allowed to use exec
@@ -226,7 +222,8 @@ class System(object):
             try:
                 self.monitor.on_pre_breed(self)
                 
-                exec self._breed in self._context
+                self.monitor.notify('System', 'Block', block)
+                exec ('_block_%s()' % block.upper()) in self._context
             
             except KeyboardInterrupt:
                 self.monitor.on_run_end(self)

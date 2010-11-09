@@ -21,6 +21,7 @@ class Experiment(object):
         'monitor': '*', # pre-initialised MonitorBase instance, class or dict
         'landscape': '*',
         'system': '*', # allow System to validate
+        'selector?': '*',
         'verbose': int,
     }
     '''The expected format of the configuration dictionary passed to `__init__`.
@@ -154,6 +155,10 @@ class Experiment(object):
         self.system = System(cfg, self.lscape)
         self.system.monitor = self.monitor
         
+        # -- Selector --
+        self.selector = cfg.selector or self.system.blocks
+        self.selector_iter = None
+        
         # -- Pass full configuration to monitor --
         self.monitor.notify('Experiment', 'System', self.system)
         self.monitor.notify('Experiment', 'Landscape', self.lscape)
@@ -173,6 +178,7 @@ class Experiment(object):
         '''Start the experiment.
         '''
         self.system.begin()
+        self.selector_iter = iter(self.selector)
     
     def step(self, ignore_monitor=False):
         '''Executes the next step in the experiment. If the monitor's
@@ -190,11 +196,17 @@ class Experiment(object):
             This value is unaffected by `ignore_monitor`.
         '''
         
+        try:
+            block = next(self.selector_iter)
+        except StopIteration:
+            self.selector_iter = iter(self.selector)
+            block = next(self.selector_iter)
+        
         if self.monitor.should_terminate(self.system):  #pylint: disable=E1103
-            if ignore_monitor: self.system.step()
+            if ignore_monitor: self.system.step(block)
             return False
         else:
-            self.system.step()
+            self.system.step(block)
             return True
     
     def close(self):

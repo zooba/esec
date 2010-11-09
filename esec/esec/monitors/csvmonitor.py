@@ -98,6 +98,8 @@ class CSVMonitor(ConsoleMonitor):
         # elapsed CPU time
         'time': ['Elapsed time (ms)', '%d', '_time'],
         'time_delta': [ 'Delta time (ms)', '%d', '_time_delta'],
+        # most recently executed block
+        'block': [ 'Block', '%s', '_last_block'],
     }
     '''The set of known column descriptors.
     
