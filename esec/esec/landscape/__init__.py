@@ -43,10 +43,10 @@ interchangeable.)
 - The processed ``cfg`` (if it passes validation) is assigned to
   ``self.cfg`` for later use.
 - A seeded random instance is stored in ``self.rand``. If
-  ``cfg.random_seed`` is not provided the seed is selected using the
-  experiment's random generator (`esec.context.rand`). This ensures the
-  landscape will be seeded consistently when using the same experiment
-  seed.
+  ``cfg.random_seed`` is not provided the seed is selected based on the
+  current time. To obtain consistent generation for landscapes, ensure
+  that ``cfg.random_seed`` is specified or use `esec.context.rand`
+  instead of ``self.rand``.
 - The ``cfg.invert`` and ``cfg.offset`` are stored in ``self.invert``
   and ``self.offset`` respectively.
 - The ``cfg.size`` dictionary is validated and stored in
@@ -123,6 +123,17 @@ class Landscape(object):
     strict = {} # eg. 'size.exact':2  <- NOT merged like syntax/default
     
     def __init__(self, cfg=None, **other_cfg):
+        '''Initialises the landscape.
+        
+        This method should be overridden to perform any once-off setup
+        that is required, such as generating a landscape map or sequence
+        of test cases.
+        
+        :Warn:
+            This initialiser is called *before* the system is
+            constructed. Importantly, the members of `esec.context` have
+            not been initialised and will raise exceptions if accessed.
+        '''
         self.syntax = merge_cls_dicts(self, 'syntax') # all in hierarchy
         self.cfg = ConfigDict(merge_cls_dicts(self, 'default'))
         
@@ -146,7 +157,8 @@ class Landscape(object):
         
         # random seed?
         if not isinstance(self.cfg.random_seed, int):
-            self.cfg.random_seed = cfg.random_seed = esec.context.rand.randint(0, maxint)
+            random.seed()
+            self.cfg.random_seed = cfg.random_seed = random.randint(0, maxint)
         self.rand = Random(self.cfg.random_seed)
         
         # inversion? offset?
