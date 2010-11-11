@@ -39,7 +39,7 @@ class AST(object):
         if include_uninitialised:
             return [e for e in self._errors if e.iswarning]
         else:
-            return [e for e in self._errors if e.iswarning and \
+            return [e for e in self._errors if e.iswarning and
                 e.code not in (
                     error.UninitialisedGlobalError.code,
                     error.UninitialisedConstantError.code,
@@ -61,8 +61,9 @@ class AST(object):
     def parse(cls, source_lines):
         '''Creates an `AST` instance from source code.
         
-        `source_lines` must be an iterable collection of lines of text, such
-        as a file object, or a single string with embedded newline characters.
+        `source_lines` must be an iterable collection of lines of text,
+        such as a file object, or a single string with embedded newline
+        characters.
         '''
         self = AST()
         
@@ -113,8 +114,6 @@ class AST(object):
                 else:
                     i = 0
                     while i < len(statement):
-                        #print
-                        #print ' '.join(str(s) for s in statement[i:])
                         i, node = UnknownNode.parse(statement, i)
                         if node: current_block.children.append(node)
             except error.ESDLSyntaxErrorBase as ex:

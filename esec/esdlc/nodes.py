@@ -34,11 +34,11 @@ class NodeBase(object):
         if self.tokens: self.tokens = sorted(self.tokens)
 
 class UnknownNode(NodeBase):
-    '''Represents an unidentified node. This normally indicates an error in the
-    ESDL source.
+    '''Represents an unidentified node. This normally indicates an error
+    in the ESDL source.
     
-    The `parse` method of this class is used to begin parsing unidentified
-    tokens.'''
+    The `parse` method of this class is used to begin parsing
+    unidentified tokens.'''
     tag = 'unknown'
     
     def __init__(self, text, tokens):
@@ -49,7 +49,7 @@ class UnknownNode(NodeBase):
     def __str__(self): return '<?> ' + str(self.text) + ' <?>'
     
     @classmethod
-    def parse(cls, tokens, first_token):    #pylint: disable=R0912, R0915
+    def parse(cls, tokens, first_token):    #pylint: disable=R0912,R0915
         '''Parses an unidentified sequence of tokens.
         
         `tokens` is a list of tokens, `first_token` is the index of the
@@ -80,7 +80,8 @@ class UnknownNode(NodeBase):
         elif first.tag == '`':
             return BacktickNode.parse(tokens, first_token)
         
-        # Assume to be mathematical expression, possibly including function calls
+        # Assume to be mathematical expression, possibly including
+        # function calls
         token_i = first_token
         stack = []
         expect = 'operand'
@@ -103,7 +104,6 @@ class UnknownNode(NodeBase):
                     stack.append('~')
                     stack.append(token)
                     token_i += 1
-                    #expect = 'operand'
                 elif token.tag == '(':  #recurse into parentheses
                     old_token_i = token_i
                     token_i, value = UnknownNode.parse(tokens, token_i + 1)
@@ -115,8 +115,6 @@ class UnknownNode(NodeBase):
                         if value: stack.pop()
                         token_i, func = FunctionNode.parse_list(tokens, old_token_i)
                         stack.append(func)
-                    #elif token and token.tag == ')':
-                    #    raise error.UnmatchedBracketError(tokens[-1], ')')
                     if value: expect = 'operator'
                 elif token.tag == '[':  #read list
                     token_i, func = FunctionNode.parse_list(tokens, token_i)
@@ -199,7 +197,9 @@ class FunctionNode(NodeBase):
             self.arguments['#%d' % i] = value
         
         def _add(dest, src):
-            '''Appends the passed items to an existing entry or creates a new entry.'''
+            '''Appends the passed items to an existing entry or creates
+            a new entry.
+            '''
             for key, value in src.iteritems():
                 if key in dest:
                     if isinstance(value, list): dest[key].extend(value)
@@ -209,8 +209,9 @@ class FunctionNode(NodeBase):
                     else: dest[key] = [value]
         
         def _diff(src1, src2):
-            '''Returns a dictionary containing items from `src1` that do not appear
-            in `src2`.'''
+            '''Returns a dictionary containing items from `src1` that do
+            not appear in `src2`.
+            '''
             return dict((key, value) for key, value in src1.iteritems() if key not in src2)
         
         self.variables_in = { }
@@ -244,8 +245,8 @@ class FunctionNode(NodeBase):
             return '%(source)s[%(key)s]' % self.arguments
         elif self.name == '_call':
             args = sorted((i for i in self.arguments.iteritems() if i[0] != '_source'), key=lambda i: i[0])
-            arglist = ['%s' % item[1] for item in args if item[0][0] == '#'] + \
-                      ['%s=%s' % item for item in args if item[0][0] != '#']
+            arglist = (['%s' % item[1] for item in args if item[0][0] == '#'] +
+                       ['%s=%s' % item for item in args if item[0][0] != '#'])
             arg_string = ','.join(arglist)
             return str(self.arguments['_source']) + '(' + arg_string + ')'
         elif self.name == '_list':
@@ -257,8 +258,8 @@ class FunctionNode(NodeBase):
             return '(%s%s)' % (self.name[5:], self.arguments['#0'])
         elif self.arguments:
             args = sorted(self.arguments.iteritems(), key=lambda i: i[0])
-            arglist = ['%s' % item[1] for item in args if item[0][0] == '#'] + \
-                      ['%s=%s' % item for item in args if item[0][0] != '#']
+            arglist = (['%s' % item[1] for item in args if item[0][0] == '#'] +
+                       ['%s=%s' % item for item in args if item[0][0] != '#'])
             arg_string = ','.join(arglist)
         else:
             arg_string = ''
@@ -290,8 +291,10 @@ class FunctionNode(NodeBase):
     def parse_arguments(cls, func_name, tokens, first_token, **other_args):
         '''Reads arguments for the given function.
         
-        ``tokens[first_token]`` must be the opening parenthesis, otherwise
-        this method assumes that the function has no parameters.'''
+        ``tokens[first_token]`` must be the opening parenthesis,
+        otherwise this method assumes that the function has no
+        parameters.
+        '''
         assert tokens, "tokens must be provided"
         token_i = first_token
         token = _get_token(tokens, token_i)
@@ -332,7 +335,8 @@ class FunctionNode(NodeBase):
     def parse_list(cls, tokens, first_token):
         '''Reads a `FunctionNode` with name ``'_list'`` from `tokens`.
         
-        ``tokens[first_token]`` should be the opening parenthesis or bracket.
+        ``tokens[first_token]`` should be the opening parenthesis or
+        bracket.
         '''
         assert tokens, "tokens must be provided"
         token_i = first_token
@@ -470,7 +474,9 @@ class GroupNode(NodeBase):
     tag = 'group'
     
     def __init__(self, group, size, tokens):
-        '''Initialises a group node. `group` should be a `VariableNode` or `FunctionNode`.'''
+        '''Initialises a group node. `group` should be a `VariableNode`
+        or `FunctionNode`.
+        '''
         super(GroupNode, self).__init__(tokens)
         
         assert isinstance(group, NodeBase), "group must be an AST node (" + repr(type(group)) + ")"

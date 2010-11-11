@@ -1,20 +1,23 @@
-'''Customised dictionary for nested configuration details and validation.
+'''Customised dictionary for nested configuration details and
+validation.
 
-The `ConfigDict` class includes the ability to overlay instances, recursively
-list keys and values, and be validated against a syntax dictionary.
+The `ConfigDict` class includes the ability to overlay instances,
+recursively list keys and values, and be validated against a syntax
+dictionary.
 
 This allows several nice features
 
-- specifying modular recombination of configuration through overlaying cfg
-  instances. eg.
-  new_cfg = basic_EA + pop_structure + landscape_cfg + ...
-- a class can specify its required syntax easily, and easily validate that an
-  argument cfg object is valid via a simple central (unified) model.
-- default values are empty strings str('')
+- specifying modular recombination of configuration through overlaying
+  configuration instances. eg. new_cfg = basic_EA + pop_structure + 
+  landscape_cfg + ...
+- a class can specify its required syntax easily, and easily validate
+  that an argument cfg object is valid via a simple central (unified)
+  model.
+- default values are ``None``
 - keys, and nested keys, can be accessed with attribute . notation.
 
-See also `utils.cfg_read()` and `utils.cfg_validate()` which act as useful
-in-application support functions.
+See also `utils.cfg_read()` and `utils.cfg_validate()` which act as
+useful in-application support functions.
 '''
 
 class ConfigDict(object):
@@ -26,7 +29,8 @@ class ConfigDict(object):
     - validate-against-dict test useful for checking if key and values
       are of valid name and type. See the `validate` method for details.
     - overlay support to build up larger configurations
-    - supports '+' to merge dictionaries or a supported string of keys/values.
+    - supports '+' to merge dictionaries or a supported string of
+      keys/values.
     - supports set/get by string name for nested items
     - iteration by keys/items
     - dict-list (and print) of all nested keys/values (dict style view)
@@ -35,11 +39,13 @@ class ConfigDict(object):
     '''
     
     def __init__(self, data=None):
-        '''Initialise, using optional dictionary, ConfigDict or string data for
-        key/value data.
+        '''Initialise, using optional dictionary, `ConfigDict` or string
+        data for key/value data.
         
-        String data is of the form ``key=value`` separated by ; and values are
-        evaluated to converted them into appropriate types. For example::
+        String data is of the form ``key=value`` separated by ``;`` and
+        values are evaluated to converted them into appropriate types.
+        
+        For example::
             
             data = "key1.subkey3='Fred'; key2.subkey5=False"
         
@@ -66,18 +72,21 @@ class ConfigDict(object):
     def validate(self, syntax, scope=''):   #pylint: disable=R0912,R0915
         '''Check internal keys/value type against provided syntax
         
-        - Uses a plain dictionary for syntax (supports nesting) for valid
-          'key': [valuetype|dict|(set)|[list]|string]
-        - All keys are strings. Missing keynames are considered errors unless
-        - Use '?' to indicate optional key eg. {'keyname?':str }
+        - Uses a plain dictionary for syntax (supports nesting) for
+          valid 'key': [valuetype|dict|(set)|[list]|string]
+        - All keys are strings. Missing keys are considered errors
+        - Use '?' to indicate optional key eg. ``{'keyname?':str }``
         - Validated valuetypes (str, int, float, bool}
         - Nested dict to contain nested syntax
-        - Tuples as string sets for keyword eg. ('LEFT','RIGHT')
-        - List for a set of valid value types or None (as a valid value)
+        - Tuples as string sets for keyword eg. ``('LEFT','RIGHT')``
+        - List for a set of valid value types or ``None`` (as a valid
+          value)
         - Valuetype '*' indicates any value accepted.
         - Unexpected keys are warnings.
         
-        Returns tuple of (Errors, unrecognised keys) lists with string message details.
+        Returns tuple of ``(errors, warnings, unrecognised keys)`` lists
+        with ``Exception`` instances, ``UserWarning`` instances or
+        key name strings respectively.
         '''
         errors = []
         warnings = []
@@ -107,7 +116,7 @@ class ConfigDict(object):
                 if valuetype != '*':
                     # check for nested keys and do recursion check
                     if isinstance(valuetype, dict) and value is not None:
-                        err, warns, other_keys = value.validate(valuetype, scopekey+'.')
+                        err, warns, other_keys = value.validate(valuetype, scopekey + '.')
                         errors.extend(err)
                         warnings.extend(warns)
                         unrecognised_keys.extend(other_keys)
@@ -162,41 +171,42 @@ class ConfigDict(object):
     
     
     def __getitem__(self, key):
-        '''Item get access. Default to None if not present.
-        '''
-        return self._dict.get(key, None) # don't want missing key exception
+        '''Item get access. Default to ``None`` if not present.'''
+        return self._dict.get(key, None)
 
     def get(self, key, default=None):
-        '''Item get access. Default to None if not present.
-        '''
+        '''Item get access. Default to ``default`` if not present.'''
         return self._dict.get(key, default)
     
     def __setitem__(self, key, value):
-        '''Item set access.
-        '''
+        '''Item set access.'''
         self._dict[key] = value
     
     def __delitem__(self, key):
-        '''Item del access.
-        '''
+        '''Item delete access.'''
         del self._dict[key]
     
     def __getattr__(self, key):
-        '''Attribute-based access. Get item, otherwise default to None.
+        '''Attribute-based access. Get item, otherwise default to
+        ``None``.
         '''
         return self._dict.get(key, None)
     
     def __setattr__(self, key, value):
-        '''Attribute-based set access.
-        '''
+        '''Attribute-based set access.'''
         self._dict[key] = value
     
     def overlay(self, other):
-        '''Overlay the other ConfigDict, dict or appropriate string of values
-        onto this instance. If ``other`` is a simple ``dict`` or string, try
-        to turn it into `ConfigDict` first.  Anything else raises a TypeError.
-        Handles nesting. Copies are made of nested ConfigDict value instances
-        (to avoid shared reference surprises!).
+        '''Overlay the other ConfigDict, dict or appropriate string of
+        values onto this instance. If ``other`` is a simple ``dict`` or
+        string, try to turn it into `ConfigDict` first.  Anything else
+        raises a ``TypeError``.
+        
+        Nested dictionaries are handled by creating new `ConfigDict`
+        instances.
+        
+        Copies are made of nested `ConfigDict` instances to avoid shared
+        reference issues.
         '''
         # silently ignore empty dictionary/None
         if not other:
@@ -226,29 +236,28 @@ class ConfigDict(object):
             result[key] = value
         return result
     
-    def __add__(self, other): # d3 = d1 + d2
-        '''Overlays `other` onto `self`, returning the result. `self` is not modified.
+    def __add__(self, other):
+        '''Overlays `other` onto `self`, returning the result.
+        `self` is not modified.
         '''
         result = ConfigDict(self)
         result.overlay(other)
         return result
     
-    def __iadd__(self, other): # d1 += d2
-        '''Overlays `other` onto `self`.
-        '''
+    def __iadd__(self, other):
+        '''Overlays `other` onto `self`.'''
         self.overlay(other)
         return self
     
     def __str__(self):
-        '''Compact single string of sorted key=value pairs
-        '''
+        '''Compact single string of sorted key=value pairs.'''
         bits = sorted('%s:%s' % (k, str(v)) for k, v in self._dict.items())
         return '{'+ ', '.join(bits) + '}'
     
     def __len__(self):
         return len(self._dict)
     
-    def __eq__(self, other): # ==
+    def __eq__(self, other):
         # quick exit tests
         if not isinstance(other, ConfigDict) or len(self) != len(other):
             return False
@@ -262,7 +271,7 @@ class ConfigDict(object):
         # fall through equal
         return True
     
-    def __ne__(self, other): # !=
+    def __ne__(self, other):
         return not (self == other)
     
     def list(self, indent_level=0):
@@ -272,13 +281,12 @@ class ConfigDict(object):
         
         :Parameters:
           indent_level : int |ge| 0
-            The initial indent level to display with. Each indent
-            level becomes four spaces at the beginning of each
-            line.
+            The initial indent level to display with. Each indent level
+            becomes four spaces at the beginning of each line.
         
         :Returns:
-            A list of strings, each element containing one line
-            of output.
+            A list of strings, each element containing one line of
+            output.
             
             Use ``'\\n'.join(o.list())`` to print to the console.
         
@@ -289,20 +297,21 @@ class ConfigDict(object):
             value = self._dict[key]
             if isinstance(value, ConfigDict):
                 result.append(indent + "    '" + key + "': ")
-                result.extend(value.list(indent_level+1))
+                result.extend(value.list(indent_level + 1))
             else:
                 if type(value) is str:
                     value = "'" + value + "'"
-                result.append(indent + "    '" + key + "': " + str(value) + ',')
+                result.append(indent + "    '%s': %s," % (key, value))
         if indent_level:
-            result.append(indent+'},')
+            result.append(indent + '},')
         else:
             result.append('}')
         return result
     
     def lines(self, prefix=''):
         '''Returns keys and values as a list of strings in a
-        ``long.name.key=value`` style (rather than dict style of `list`).
+        ``long.name.key=value`` style (rather than dict style of
+        `list`).
         
         :Parameters:
           prefix : str [optional]
@@ -311,8 +320,8 @@ class ConfigDict(object):
             recurses into a contained dictionary or `ConfigDict`.
         
         :Returns:
-            A list of strings, each element containing one line
-            of output.
+            A list of strings, each element containing one line of
+            output.
             
             Use ``'\\n'.join(o.lines())`` to print to the console.
         
@@ -321,7 +330,7 @@ class ConfigDict(object):
         for key in sorted(self._dict.keys()):
             value = self._dict[key]
             if isinstance(value, ConfigDict):
-                result.extend(value.lines(prefix+key+'.'))
+                result.extend(value.lines(prefix + key + '.'))
             else:
                 if type(value) is str:
                     value = "'" + value + "'"
@@ -330,12 +339,15 @@ class ConfigDict(object):
     
     
     def set_linear(self, keys, cfg_str):
-        '''Converts a string of values and maps them to keys of type
-        keys = (('name', str), ('size', int), ('flag', bool) )
-        cfg_str = "fred 10 True"
+        '''
+        Converts a string of values and maps them to keys of type::
+        
+            keys = (('name', str), ('size', int), ('flag', bool)
+            cfg_str = "fred 10 True"
+        
         '''
         bits = cfg_str.split(' ')
-        assert len(keys) >= len(bits), "More values than Keys!!"
+        assert len(keys) >= len(bits), "More values than keys!!"
         # set the corresponding key with the converted string value
         for i, value in enumerate(bits):
             if value != '.':
@@ -343,8 +355,7 @@ class ConfigDict(object):
                 self.set_by_name(keys[i][0], keys[i][1](value))
     
     def set_by_name(self, name, value):
-        '''Set a value using long.dot.name key
-        '''
+        '''Set a value using long.dot.name key.'''
         bits = name.split('.')
         target = self
         for key in bits[:-1]:
@@ -354,8 +365,7 @@ class ConfigDict(object):
         target[bits[-1]] = value
     
     def get_by_name(self, name):
-        '''Get a value using any long.dot.name key
-        '''
+        '''Get a value using any long.dot.name key.'''
         bits = name.split('.')
         value = self
         for bit in bits:
@@ -371,22 +381,22 @@ class ConfigDict(object):
         return item in self._dict
     
     def keys(self):
-        '''Provide the keys for typical dict style behaviour
-        '''
+        '''Provide the keys for typical dict style behaviour.'''
         return self._dict.keys()
     
     def items(self):
-        '''Provide a list of the items for typical dict style behaviour
+        '''Provide an item list for typical dict style behaviour.
         '''
         return self._dict.items()
     
     def iteritems(self):
-        '''Provide an iterator of the items for typical dict style behaviour
+        '''Provide an item iterator typical dict style behaviour.
         '''
         return self._dict.iteritems()
     
     def savetofile(self, filename, comment=None):
-        '''Save all details to text file. A list of comments can also be added
+        '''Save all details to text file. A list of comments can also be
+        added.
         '''
         target = open(filename, 'w')
         if comment:

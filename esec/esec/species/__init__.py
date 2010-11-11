@@ -4,11 +4,10 @@ A species determines the type and range of gene values contained in
 `Individual` instances belonging to it.
 
 :Note:
-    Some species provide a derived version of `Individual` and
-    include checks to ensure that the derived version is always
-    used. Apart from initialisation generators, all operations
-    should use ``type(individual)`` when constructing new
-    individuals.
+    Some species provide a derived version of `Individual` and include
+    checks to ensure that the derived version is always used. Apart from
+    initialisation generators, all operations should use
+    ``type(parent)`` when constructing new individuals.
 
 .. packagetree:: esec.species
    :style: UML
@@ -22,14 +21,14 @@ class Species(object):
     '''
     
     _include_automatically = True
-    '''Indicates whether the class should be included in the set
-    of available species. If ``True``, the species is instantiated
-    for every system and the contents of `public_context` is merged
-    into the system context.
+    '''Indicates whether the class should be included in the set of
+    available species. If ``True``, the species is instantiated for
+    every system and the contents of `public_context` is merged into the
+    system context.
     
-    This only applies to classes deriving from `Species` *and*
-    included in `esec.species`. Other species classes are never
-    included automatically.
+    This only applies to classes deriving from `Species` *and* included
+    in `esec.species`. Other species classes are never included
+    automatically.
     '''
     
     name = 'N/A'
@@ -41,15 +40,14 @@ class Species(object):
         
         :Parameters:
           cfg : dict, `ConfigDict`
-            The set of configuration options applying to this
-            species. No syntax is provided by the `Species`
-            base class, but derived classes may require certain
-            parameters.
+            The set of configuration options applying to this species.
+            No syntax is provided by the `Species` base class, but
+            derived classes may require certain parameters.
           
           eval_default : evaluator
-            The default evaluator for `Individual` instances of
-            this species. Evaluators provide a method `eval`
-            taking a single individual as a parameter.
+            The default evaluator for `Individual` instances of this
+            species. Evaluators provide a method `eval` taking a single
+            individual as a parameter.
         '''
         # Merge syntax and default details
         self.syntax = merge_cls_dicts(self, 'syntax')
@@ -69,49 +67,53 @@ class Species(object):
         
         # Set some default properties to imitiate Individual
         self.species = self
-        '''Provided to make `Species` and `Individual` trivially compatible.
+        '''Provided to make `Species` and `Individual` trivially
+        compatible.
         
         :see: Individual.species
         '''
         self._eval = eval_default
-        '''Provided to make `Species` and `Individual` trivially compatible.
+        '''Provided to make `Species` and `Individual` trivially
+        compatible.
         
         :see: Individual._eval
         '''
         self.statistic = { }
-        '''Provided to make `Species` and `Individual` trivially compatible.
+        '''Provided to make `Species` and `Individual` trivially
+        compatible.
         
         :see: Individual.statistic
         '''
     
     #pylint: disable=R0201
     def mutate_insert(self, _source, per_indiv_rate=0.1, length=None, shortest=1, longest=10, longest_result=20):
-        '''Mutates a group of individuals by inserting random gene sequences.
+        '''Mutates a group of individuals by inserting random gene
+        sequences.
         
-        Gene sequences are created by using the ``init_random`` method provided by
-        the derived species type. This ``init_random`` method must include a
-        parameter named ``template`` which receives an individual to obtain bounds
-        and values from.
+        Gene sequences are created by using the ``init_random`` method
+        provided by the derived species type. This ``init_random``
+        method must include a parameter named ``template`` which
+        receives an individual to obtain bounds and values from.
         
-        This method should be overridden for species that don't support random
-        insertion directly into the genome.
+        This method should be overridden for species that don't support
+        random insertion directly into the genome.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
           _source : iterable(`Individual`)
-            A sequence of individuals. Individuals are taken one at a time
-            from this sequence and either returned unaltered or cloned and
-            mutated.
+            A sequence of individuals. Individuals are taken one at a
+            time from this sequence and either returned unaltered or
+            cloned and mutated.
           
           per_indiv_rate : |prob|
-            The probability of any individual being mutated. If an individual
-            is not mutated, it is returned unmodified.
+            The probability of any individual being mutated. If an
+            individual is not mutated, it is returned unmodified.
           
           length : int > 0 [optional]
             The number of genes to insert at each mutation. If left
-            unspecified, a random number between `shortest` and `longest`
-            (inclusive) is used to determine the length.
+            unspecified, a random number between `shortest` and
+            `longest` (inclusive) is used to determine the length.
           
           shortest : int > 0
             The smallest number of genes that may be inserted at any
@@ -124,7 +126,7 @@ class Species(object):
           longest_result : int > 0
             The longest new genome that may be created. The length of
             the inserted segment is deliberately selected to avoid
-            creating programs longer than this. If there is no way to
+            creating genomes longer than this. If there is no way to
             avoid creating a longer genome, the original individual
             is returned and an ``'aborted'`` notification is sent to
             the monitor from ``'mutate_insert'``.
@@ -154,7 +156,7 @@ class Species(object):
                     stats = { 'mutated': 1, 'inserted_genes': len(insert) }
                     yield type(indiv)(indiv.genome[:cut] + insert + indiv.genome[cut:], indiv, statistic=stats)
                 else:
-                    value = {'i': indiv, 'longest_result': longest_result}
+                    value = { 'i': indiv, 'longest_result': longest_result }
                     notify('mutate_insert', 'aborted', value)
                     yield indiv
             else:
@@ -162,31 +164,32 @@ class Species(object):
     
     #pylint: disable=R0201
     def mutate_delete(self, _source, per_indiv_rate=0.1, length=None, shortest=1, longest=10, shortest_result=1):
-        '''Mutates a group of individuals by deleting random gene sequences.
+        '''Mutates a group of individuals by deleting random gene
+        sequences.
         
-        The number of genes to delete is selected randomly. If this value is the same as
-        the number of genes in the individual, all but the first `shortest_result` genes
-        are deleted.
+        The number of genes to delete is selected randomly. If this
+        value is the same as the number of genes in the individual, all
+        but the first `shortest_result` genes are deleted.
         
-        This method should be overridden for species that don't support random
-        deletion directly from the ``genome`` property.
+        This method should be overridden for species that don't support
+        random deletion directly from the ``genome`` property.
         
         .. include:: epydoc_include.txt
         
         :Parameters:
           _source : iterable(`Individual`)
-            A sequence of individuals. Individuals are taken one at a time
-            from this sequence and either returned unaltered or cloned and
-            mutated.
+            A sequence of individuals. Individuals are taken one at a
+            time from this sequence and either returned unaltered or
+            cloned and mutated.
           
           per_indiv_rate : |prob|
-            The probability of any individual being mutated. If an individual
-            is not mutated, it is returned unmodified.
+            The probability of any individual being mutated. If an
+            individual is not mutated, it is returned unmodified.
           
           length : int > 0 [optional]
             The number of genes to delete at each mutation. If left
-            unspecified, a random number between `shortest` and `longest`
-            (inclusive) is used to determine the length.
+            unspecified, a random number between `shortest` and
+            `longest` (inclusive) is used to determine the length.
           
           shortest : int > 0
             The smallest number of genes that may be deleted at any
@@ -199,7 +202,7 @@ class Species(object):
           shortest_result : int > 0
             The shortest new genome that may be created. The length
             of the deleted segment is deliberately selected to avoid
-            creating programs shorter than this. If the original
+            creating genomes shorter than this. If the original
             individual is this length or shorter, it is returned
             unmodified.
         '''
@@ -247,10 +250,12 @@ SPECIES = []
 '''An automatically generated list of the available species types.'''
 
 def _do_import():
-    '''Automatically populates SPECIES with all the modules in this folder.
+    '''Automatically populates SPECIES with all the modules in this
+    folder.
     
     :Note:
-        Written as a function to prevent local variables from being imported.
+        Written as a function to prevent local variables from being
+        imported.
     '''
     import os
     
@@ -274,7 +279,8 @@ def include(*species):
       species : `Species` subclass type
         A list of types representing the new species.
     '''
-    assert all(type(s) is type for s in species), "species.include() requires a species type (class), not an instance"
-    assert all(issubclass(s, Species) for s in species), "New species type must derive from Species class"
+    assert all(type(s) is type for s in species), \
+           "species.include() requires a species type (class), not an instance"
+    assert all(issubclass(s, Species) for s in species), \
+           "New species type must derive from Species class"
     SPECIES.extend(species)
-    

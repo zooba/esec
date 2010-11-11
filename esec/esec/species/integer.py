@@ -391,9 +391,9 @@ class IntegerSpecies(Species):
                     if do_all_gene or frand() < per_gene_rate:
                         step_size_sum += step_size
                         new_gene = gene + (step_size if frand() < positive_rate else -step_size)
-                        new_genes[i] = low  if new_gene < low  else \
-                                       high if new_gene > high else \
-                                       new_gene
+                        new_genes[i] = (low  if new_gene < low  else
+                                        high if new_gene > high else
+                                        new_gene)
                 
                 yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1, 'step_sum': step_size_sum })
             else:
@@ -463,9 +463,9 @@ class IntegerSpecies(Species):
                         step = int(gauss(0, sigma))
                         step_size_sum += step
                         new_gene = gene + step
-                        new_genes[i] = low  if new_gene < low  else \
-                                       high if new_gene > high else \
-                                       new_gene
+                        new_genes[i] = (low  if new_gene < low  else
+                                        high if new_gene > high else
+                                        new_gene)
                 
                 yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1, 'step_sum': step_size_sum })
             else:

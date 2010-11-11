@@ -21,10 +21,10 @@ config = {
     },
     'monitor': {
         'limits': { 'generations': 10 },
-        'report': 'brief_header+gen+evals+local_header+local_min+local_ave+local_max+' + \
-                  'time+time_delta+time_precise+time_delta_precise+' + \
+        'report': 'brief_header+gen+evals+local_header+local_min+local_ave+local_max+' +
+                  'time+time_delta+time_precise+time_delta_precise+' +
                   'local_best_phenome',
-        'summary': 'gen+best_fit+evals+status+time+time_precise+' + \
+        'summary': 'gen+best_fit+evals+status+time+time_precise+' +
                    'best_genome+best_length+best_phenome',
         'exception_summary': 'gen+best_fit+evals+status+time+time_precise'
     },
@@ -64,9 +64,9 @@ ivp_tests = [
     ('IVP.Robbins',     std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
 ]
 
-std_dialects = ['GA', 'SSGA', 'EP', 'ES'] + \
-               ['binary_real_map_1_%d' % i for i in xrange(3)] + \
-               ['binary_real_map_2_%d' % i for i in xrange(3)]
+std_dialects = (['GA', 'SSGA', 'EP', 'ES'] +
+                ['binary_real_map_1_%d' % i for i in xrange(3)] +
+                ['binary_real_map_2_%d' % i for i in xrange(3)])
 rvp_tests = [
     ('RVP.Linear',          std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
     ('RVP.Neutral',         std_dialects, [None, { 'landscape': { 'size': { 'min': 1, 'max': 10 } } }]),

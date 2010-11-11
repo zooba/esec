@@ -3,13 +3,12 @@
 
 '''Grammatical Evolution (GE) problem landscapes.
 
-The `GE` base class inherits from `esec.landscape.Landscape` for some nice
-assistive magic. See there for details if you wish to write your own new functions.
+The `GE` base class inherits from `esec.landscape.Landscape` for some
+nice assistive magic. See there for details if you wish to write your
+own new functions.
 
 .. classtree:: esec.landscape.ge.GE
    :dir: right
-
-
 '''
 
 from esec.landscape import Landscape
@@ -22,10 +21,10 @@ class GE(Landscape):
     
     # this is universal - should not be changed by subclasses
     syntax = {
-        'terminals': int,                       # must be set by the landscape
+        'terminals': int,                       # set by the landscape
         
-        'size_penalty_square_factor': float,    # penalty factors to apply
-        'size_penalty_linear_factor': float,    # to large programs
+        'size_penalty_square_factor': float,    # penalty factors to
+        'size_penalty_linear_factor': float,    # hurt large programs
     }
     
     # subclasses should set default to overlay their changes on to this
@@ -52,18 +51,18 @@ class GE(Landscape):
     def _size_penalty(self, indiv):
         '''Calculate the penalty value based on the size of the program.
         
-        Returns d**2 * size_penalty_square_factor + d * size_penalty_linear_factor
-        where d is the number of values in the genome, regardless of how many are used.
+        Returns d**2 * size_penalty_square_factor + d *
+        size_penalty_linear_factor where d is the number of values in
+        the genome, regardless of how many are used.
         
-        This function is provided as a helper to landscape implementations. It is
-        not called automatically.
+        This function is provided as a helper to landscape
+        implementations. It is not called automatically.
         '''
         i = len(indiv)
         return i*i*self.size_penalty_square_factor + i*self.size_penalty_linear_factor
     
     def legal(self, indiv):
-        '''Check to see if an individual is legal.
-        '''
+        '''Check to see if an individual is legal.'''
         return indiv.Eval is not None
 
 
@@ -87,7 +86,9 @@ class Multiplexer(GE):
         'UnaryOp': [ '" not "' ],
         'BinaryOp': [ '" and "', '" or "', '" ^ "' ],
     }
-    '''A set of rules producing complex programs suitable for this landscape.'''
+    '''A set of rules producing complex programs suitable for this
+    landscape.
+    '''
     
     simple_rules = {
         '*': [ '"def Eval(T,V): return " Expr' ],
@@ -96,7 +97,9 @@ class Multiplexer(GE):
         'UnaryOp': [ '"not "' ],
         'BinaryOp': [ '" and "', '" or "', '" ^ "' ],
     }
-    '''A set of rules producing simple programs suitable for this landscape.'''
+    '''A set of rules producing simple programs suitable for this
+    landscape.
+    '''
     
     rules = simple_rules
     '''The default set of rules recommended for this landscape.'''
@@ -114,7 +117,9 @@ class Multiplexer(GE):
         self.terminals = self.cfg.terminals = self.bits + self.inputs
         
         def _eval(inputs):
-            '''Returns the value of the input selected by `inputs```[:bits]``.'''
+            '''Returns the value of the input selected by
+            `inputs```[:bits]``.
+            '''
             addr = 0
             for i in xrange(self.bits): addr = (addr + addr) | inputs[i]
             return inputs[addr + self.bits]
@@ -168,7 +173,9 @@ def exp(x): return F(math.exp(x) if abs(x) <= 709.0 else 0)
 def log(x): return F(0 if not x else math.log(abs(x)))
 F1 = F(1.0)
 '''
-    '''The required set of defines for this landscape when using `rules`.'''
+    '''The required set of defines for this landscape when using
+    `rules`.
+    '''
     
     rules = {
         '*': [ '"def Eval(uX): X=F(uX); " Return' ],

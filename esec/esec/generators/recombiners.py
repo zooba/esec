@@ -17,7 +17,8 @@ def _pairs(source):
     '''Returns pairs of values from `source`.
     
     Equivalent to ``zip(source[::2], source[1::2])`` but doesn't
-    require `source` to be a list.'''
+    require `source` to be a list.
+    '''
     while True:
         yield next(source), next(source)
 
@@ -32,13 +33,13 @@ def Uniform(_source,
     Returns a sequence of crossed individuals based on the individuals
     in `_source`.
     
-    If `one_child` is ``True`` (or `two_children` is ``False``), the number
-    of individuals returned is half the number of individuals in `_source`,
-    rounded towards zero.
+    If `one_child` is ``True`` (or `two_children` is ``False``), the
+    number of individuals returned is half the number of individuals in
+    `_source`, rounded towards zero.
     
-    If `one_child` is ``False`` (or `two_children` is ``True``), the number
-    of individuals returned is the largest even number less than or equal
-    to the number of individuals in `_source`.
+    If `one_child` is ``False`` (or `two_children` is ``True``), the
+    number of individuals returned is the largest even number less than
+    or equal to the number of individuals in `_source`.
     
     .. include:: epydoc_include.txt
     
@@ -69,7 +70,8 @@ def Uniform(_source,
         If ``True``, only one child is returned from each crossover
         operation.
         
-        If `two_children` is specified, its value is used instead of this.
+        If `two_children` is specified, its value is used instead of
+        this.
       
       two_children : bool
         If ``True``, both children are returned from each crossover
@@ -126,8 +128,8 @@ def Discrete(_source,
              one_child=False, two_children=None):
     '''A specialisation of `Uniform` for discrete crossover.
     
-    Note that `Discrete` has a different default value for `per_gene_rate`
-    to `Uniform`.
+    Note that `Discrete` has a different default value for
+    `per_gene_rate` to `Uniform`.
     '''
     return Uniform(_source=_source,
                    per_pair_rate=per_pair_rate, per_indiv_rate=per_indiv_rate, per_gene_rate=per_gene_rate,
@@ -145,13 +147,13 @@ def Same(_source,
     Returns a sequence of crossed individuals based on the individuals
     in `_source`.
     
-    If `one_child` is ``True`` (or `two_children` is ``False``), the number
-    of individuals returned is half the number of individuals in `_source`,
-    rounded towards zero.
+    If `one_child` is ``True`` (or `two_children` is ``False``), the
+    number of individuals returned is half the number of individuals in
+    `_source`, rounded towards zero.
     
-    If `one_child` is ``False`` (or `two_children` is ``True``), the number
-    of individuals returned is the largest even number less than or equal
-    to the number of individuals in `_source`.
+    If `one_child` is ``False`` (or `two_children` is ``True``), the
+    number of individuals returned is the largest even number less than
+    or equal to the number of individuals in `_source`.
     
     .. include:: epydoc_include.txt
     
@@ -180,7 +182,8 @@ def Same(_source,
         If ``True``, only one child is returned from each crossover
         operation.
         
-        If `two_children` is specified, its value is used instead of this.
+        If `two_children` is specified, its value is used instead of
+        this.
       
       two_children : bool
         If ``True``, both children are returned from each crossover
@@ -268,13 +271,13 @@ def Different(_source,          #pylint: disable=R0915
     Returns a sequence of crossed individuals based on the individuals
     in `_source`.
     
-    If `one_child` is ``True`` (or `two_children` is ``False``), the number
-    of individuals returned is half the number of individuals in `_source`,
-    rounded towards zero.
+    If `one_child` is ``True`` (or `two_children` is ``False``), the
+    number of individuals returned is half the number of individuals in
+    `_source`, rounded towards zero.
     
-    If `one_child` is ``False`` (or `two_children` is ``True``), the number
-    of individuals returned is the largest even number less than or equal
-    to the number of individuals in `_source`.
+    If `one_child` is ``False`` (or `two_children` is ``True``), the
+    number of individuals returned is the largest even number less than
+    or equal to the number of individuals in `_source`.
     
     .. include:: epydoc_include.txt
     
@@ -305,7 +308,8 @@ def Different(_source,          #pylint: disable=R0915
         If ``True``, only one child is returned from each crossover
         operation.
         
-        If `two_children` is specified, its value is used instead of this.
+        If `two_children` is specified, its value is used instead of
+        this.
       
       two_children : bool
         If ``True``, both children are returned from each crossover
@@ -401,21 +405,21 @@ def DoubleDifferent(_source,
 def Segmented(_source,
             per_pair_rate=None, per_indiv_rate=1.0, switch_rate=0.1,
             one_child=False, two_children=None):
-    '''Performs segmented crossover by exchanging random segments between
-    two individuals. The first segment has `switch_rate` probability of
-    being exchanged, while subsequent segments alternate between exchanging
-    and non-exchanging.
+    '''Performs segmented crossover by exchanging random segments
+    between two individuals. The first segment has `switch_rate`
+    probability of being exchanged, while subsequent segments alternate
+    between exchanging and non-exchanging.
     
     Returns a sequence of crossed individuals based on the individuals
     in `_source`.
     
-    If `one_child` is ``True`` (or `two_children` is ``False``), the number
-    of individuals returned is half the number of individuals in `_source`,
-    rounded towards zero.
+    If `one_child` is ``True`` (or `two_children` is ``False``), the
+    number of individuals returned is half the number of individuals in
+    `_source`, rounded towards zero.
     
-    If `one_child` is ``False`` (or `two_children` is ``True``), the number
-    of individuals returned is the largest even number less than or equal
-    to the number of individuals in `_source`.
+    If `one_child` is ``False`` (or `two_children` is ``True``), the
+    number of individuals returned is the largest even number less than
+    or equal to the number of individuals in `_source`.
     
     .. include:: epydoc_include.txt
     
@@ -435,17 +439,18 @@ def Segmented(_source,
         A synonym for `per_pair_rate`.
       
       switch_rate : |prob|
-        The probability of the current segment ending. Exchanged segments
-        are always followed by non-exchanged segments.
+        The probability of the current segment ending. Exchanged
+        segments are always followed by non-exchanged segments.
         
-        This is also the probability of the first segment being exchanged.
-        It is reset for each pair of individuals.
+        This is also the probability of the first segment being
+        exchanged. It is reset for each pair of individuals.
       
       one_child : bool
         If ``True``, only one child is returned from each crossover
         operation.
         
-        If `two_children` is specified, its value is used instead of this.
+        If `two_children` is specified, its value is used instead of
+        this.
       
       two_children : bool
         If ``True``, both children are returned from each crossover
@@ -502,8 +507,8 @@ def PerGeneTuple(_source, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=
     individual in the tuples provided in `_source`.
     
     Returns a sequence of crossed individuals based on the individuals
-    in `_source`. The resulting sequence will contain as many individuals
-    as `_source`.
+    in `_source`. The resulting sequence will contain as many
+    individuals as `_source`.
     
     .. include:: epydoc_include.txt
     
@@ -547,8 +552,8 @@ def PerGeneTuple(_source, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=
         if do_all_indiv or frand() < per_indiv_rate:
             new_genes = [ ]
             # Iterate through tuples of the genes at each point in the
-            # genomes, filling with None if an individual is shorter than
-            # the rest.
+            # genomes, filling with None if an individual is shorter
+            # than the rest.
             for genes in map(lambda *args: args, *(i.genome for i in indiv)):
                 genes = [i for i in genes if i is not None]
                 len_genes = len(genes)

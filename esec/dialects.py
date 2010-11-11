@@ -1,6 +1,8 @@
-'''A set of predefined pipelines that may be easily accessed using ``run.py``.
+'''A set of predefined systems that may be easily accessed using
+``run.py``.
 
-These pipelines may also be taken as examples to be used with configuration files.
+These systems may also be taken as examples to be used with
+configuration files.
 '''
 
 from itertools import izip as zip
@@ -8,18 +10,20 @@ from esec.context import context, config
 
 ########################################################################
 def _suitable_individual():
-    '''Used by generic pipelines to create individuals suitable for the current
-    landscape. In ESPDL it is accessible as ``suitable_individuals``.
+    '''Used by generic systems to create individuals suitable for the
+    current landscape. In ESDL it is accessible as
+    ``suitable_individuals``.
     
     :Note:
-        This is designed to be used by pipelines defined using `_make_config` and
-        specified on the command line to ``run.py``. It deliberately takes no
-        parameters to prevent abuse. To create more complex or specific
-        individuals, write a new system definition.
+        This is designed to be used by systems defined using
+        `_make_config` and specified on the command line to ``run.py``.
+        It deliberately takes no parameters to prevent abuse. To create
+        more complex or specific individuals, write a new system
+        definition.
     '''
-    # Pipeline context is available through `context`
+    # System context is available through `context`
     lscape = config.landscape
-    assert hasattr(lscape, 'size'), "Landscapes used with predefined pipelines require a size attribute"
+    assert hasattr(lscape, 'size'), "Landscapes used with predefined systems require a size attribute"
     
     if lscape.ltype == 'BVP':
         return context['random_binary'](length=lscape.size)
@@ -74,7 +78,8 @@ END generation
 '''
 '''A simple unspecified (UN) evolutionary algorithm default
 
-- As suggested by the unified model of De Jong as a baseline \cite{De2006}
+- As suggested by the unified model of De Jong as a baseline
+  \cite{De2006}
 - Generation based, non-overlapping
 - No species operations specified.
 '''

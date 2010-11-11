@@ -3,8 +3,8 @@
 
 '''Binary valued problem landscapes.
 
-The `Binary` base class inherits from `Landscape` for parameter validation and
-support. See `landscape` for details.
+The `Binary` base class inherits from `Landscape` for parameter
+validation and support. See `landscape` for details.
 
 Most of these binary landscapes are problem generators.
 
@@ -17,7 +17,7 @@ from itertools import izip as zip   #pylint: disable=W0622
 from esec.landscape import Landscape
 from esec.individual import JoinedIndividual
 
-#==============================================================================
+#=======================================================================
 def inttobin(n, count=24):
     '''Convert an integer number in a string with count places.
     '''
@@ -29,7 +29,7 @@ def inttobinlist(n, count=24):
     return [int((n >> y) & 1) for y in xrange(count - 1, -1, -1)]
 
 
-#==============================================================================
+#=======================================================================
 class Binary(Landscape):
     '''Abstract binary (Boolean) string fitness landscape
     '''
@@ -48,8 +48,7 @@ class Binary(Landscape):
         return all(p in (0, 1) for p in indiv)
     
     def info(self, level):
-        '''Return landscape info for any Binary landscape
-        '''
+        '''Return landscape info for any Binary landscape.'''
         result = super(Binary, self).info(level)
         if self.size.exact:
             result[0] += " with %d parameter(s)" % self.size.exact
@@ -58,11 +57,11 @@ class Binary(Landscape):
         
         return result
 
-#==============================================================================
+#=======================================================================
 
 class OneMax(Binary):
-    '''Simple binary maximisation problem. A classic binary GA domain also
-    known as "bit counting" or simply "max".
+    '''Simple binary maximisation problem. A classic binary GA domain
+    also known as "bit counting" or simply "max".
         
         f(x) = sum(x)
     
@@ -87,22 +86,24 @@ class OneMax(Binary):
         return sum(indiv)
 
 
-#==============================================================================
+#=======================================================================
 class RoyalRoad(Binary):
-    '''A discrete non-deceptive unimodal problem space. Essentially, maximise
-    the number Q of complete "blocks" of size C each. The typical form is
-    minimisation, so that the output becomes zero as all blocks are found.
+    '''A discrete non-deceptive unimodal problem space. Essentially,
+    maximise the number Q of complete "blocks" of size C each. The
+    typical form is minimisation, so that the output becomes zero as all
+    blocks are found.
     
-    In principle designed to allow GA's using building-block's (BB) to find the
-    solution more easily than hill-climbing algorithms, as single steps are
-    rewarded less than larger BB size changes. See \cite{Mitchell1992}.
+    In principle designed to allow GA's using building-block's (BB) to
+    find the solution more easily than hill-climbing algorithms, as
+    single steps are rewarded less than larger BB size changes. See
+    \cite{Mitchell1992}.
         
         Maximisation:  f(x) = sum(blocks(x))*C
         Minimisation:  f(x) = C*N - sum(blocks(x))*C
     
-    This is a very simple non-overlapping model. If you are serious about
-    investigating building blocks, you will want a better version of this
-    evaluator that supports overlapping schema (hierarchical).
+    This is a very simple non-overlapping model. If you are serious
+    about investigating building blocks, you will want a better version
+    of this evaluator that supports overlapping schema (hierarchical).
     
     If C=3, and Q=4, N=3*4=12, and the following examples apply::
         
@@ -135,8 +136,7 @@ class RoyalRoad(Binary):
         self.size.min = self.size.max = self.size.exact = Q * C
     
     def _eval(self, indiv):
-        ''' f(x) = sum(blocks(x)) * C
-        '''
+        '''f(x) = sum(blocks(x)) * C'''
         total = 0
         C = self.C
         for i in xrange(0, self.size.exact, C):
@@ -147,18 +147,19 @@ class RoyalRoad(Binary):
     
 
 
-#==============================================================================
+#=======================================================================
 class GoldbergD3B(Binary):
     '''Goldberg's Deceptive 3-bit Function
     
-    A deliberately deceptive function for analysis of binary GAs. Also known as
-    Goldberg's order-3 minimal deceptive problem.  A binary genome must be
-    composed of N * 3 segments, and each segment is mapped m() to a value.
+    A deliberately deceptive function for analysis of binary GAs. Also
+    known as Goldberg's order-3 minimal deceptive problem.  A binary
+    genome must be composed of N * 3 segments, and each segment is
+    mapped m() to a value.
         
         f(x) = sum(m(x)),
     
-    where the mapping function m() is either a maximisation or minimisation set.
-    The maximum f(x) = 8*N and minimum f(x) = 0.
+    where the mapping function m() is either a maximisation or
+    minimisation set. The maximum f(x) = 8*N and minimum f(x) = 0.
     
     Qualities: maximisation, unconstrained
     '''
@@ -183,8 +184,7 @@ class GoldbergD3B(Binary):
         self.size.max = self.size.exact
     
     def _eval(self, indiv):
-        '''Map each segment of 3-bits and sum for the result
-        '''
+        '''Map each segment of 3-bits and sum for the result.'''
         total = 0
         for i in xrange(0, self.size.exact, 3):
             xi = indiv[i:i+3] # get each block of 3 bits
@@ -192,21 +192,21 @@ class GoldbergD3B(Binary):
         return total
     
 
-#==============================================================================
+#=======================================================================
 class WhitleyD4B(Binary):
     '''Whitley's Deceptive 4-bit Function
     
-    Like Goldberg's Deceptive 3-bit function in form and motivation, this
-    deliberately deceptive function has been used to analyse binary GAs. This
-    version is extended to 4-bits and is considered harder.
+    Like Goldberg's Deceptive 3-bit function in form and motivation,
+    this deliberately deceptive function has been used to analyse binary
+    GAs. This version is extended to 4-bits and is considered harder.
     
-    A binary genome must be composed of N * 4 segments, and each segment is
-    mapped m() to a value.
+    A binary genome must be composed of N * 4 segments, and each segment
+    is mapped m() to a value.
         
         f(x) = sum(m(x)),
     
-    where the mapping function m() is either a maximisation or minimisation set.
-    The maximum f(x) = 30*N and minimum f(x) = 0.
+    where the mapping function m() is either a maximisation or
+    minimisation set. The maximum f(x) = 30*N and minimum f(x) = 0.
     
     Qualities: maximisation, unconstrained
     '''
@@ -234,8 +234,7 @@ class WhitleyD4B(Binary):
         self.limit = self.size.exact * 30.0
     
     def _eval(self, indiv):
-        '''Map each segment of 4-bits and sum for the result
-        '''
+        '''Map each segment of 4-bits and sum for the result.'''
         total = 0
         for i in xrange(0, self.size.exact, 4):
             xi = indiv[i:i+4] # get each block of 4 bits
@@ -243,18 +242,21 @@ class WhitleyD4B(Binary):
         return total
     
 
-#==============================================================================
+#=======================================================================
 class Multimodal(Binary):
     '''N-dimensional random binary multimodal landscape
     
     See http://www.cs.uwyo.edu/~wspears/multi.html
-    - Random generator of binary multimodal problems
-    - Creates a set of n random L-bit strings, each representing a fitness peak
-    - Fitness is the number of matching bits to each peak normalised (0, 1)
     
-    This also seems to be equivalent to P-PEAKS as described by DeJong et al
-    1997. Values of P=100 and N=100 give a medium/high level of epistasis
-    (Alba and Troya, 2000).
+    - Random generator of binary multimodal problems
+    - Creates a set of n random L-bit strings, each representing a
+      fitness peak
+    - Fitness is the number of matching bits to each peak normalised
+      (0, 1)
+    
+    This also seems to be equivalent to P-PEAKS as described by De Jong
+    et al (1997). Values of P=100 and N=100 give a medium/high level of
+    epistasis (Alba and Troya, 2000).
     
     Qualities: maximisation, multimodal, non-separable, normalised.
     '''
@@ -279,7 +281,8 @@ class Multimodal(Binary):
         self._peaks = [[irand(2) for _ in xrange(N)] for _ in xrange(P)]
     
     def _eval(self, indiv):
-        '''Fitness is the number of genes in common with the nearest peak
+        '''Fitness is the number of genes in common with the nearest
+        peak.
         '''
         tmp = 0.0
         for j in xrange(self.P):
@@ -292,8 +295,7 @@ class Multimodal(Binary):
         return (tmp / self.size.exact) # 0 = no match, 1.0 = exact match.
     
     def info(self, level):
-        '''Return default and add some more peak location info.
-        '''
+        '''Return default and add some more peak location info.'''
         result = super(Multimodal, self).info(level)
         result.append('  %d Peaks of %d binary values' % (self.P, self.size.exact))
         result.append('  Peak locations (one per line, limit of 10 shown)')
@@ -306,22 +308,27 @@ class Multimodal(Binary):
         return result
 
 
-#==============================================================================
+#=======================================================================
 class CNF_SAT(Binary):
     '''N-dimensional random CNF Epistasis Generator
     
     See http://www.cs.uwyo.edu/~wspears/epist.html
+    
     - Creates Boolean expression in CNF - SAT Epistasis Generator
     - A "random L-SAT generator" with L literals per clause
     - Code-up of D. Mitchell, B. Selman and H. Levesque (1992)
     
-    - CNF = Conjunctive Normal Form
-    - SAT = SATisfiability of a Boolean expression
+    CNF
+        Conjunctive Normal Form
+    
+    SAT
+        SATisfiability of a Boolean expression
     
     " ... This can be used as a generator of epistatic problems - the
     greater the number of clauses the greater the epistasis."
     
     See http://en.wikipedia.org/wiki/Conjunctive_normal_form
+    
     - ... "Is there some assignment of T and F that results in T?"
     - A "clause" is an OR'd together list of literals (variables)
     - A "conjunction" is a AND'd set of clauses (the CNF)
@@ -329,9 +336,8 @@ class CNF_SAT(Binary):
     Difficult when "the number of clauses is about 4.3 times that number
     of variables" as the "50% satisfiability point".
     
-    Also supports the stepwise adaptation of weights (SAW) as suggested by
-    Eiben and van der Hauw.
-    
+    Also supports the stepwise adaptation of weights (SAW) as suggested
+    by Eiben and van der Hauw.
     '''
     lname = 'CNF-SAT'
     size_equals_parameters = False
@@ -374,8 +380,9 @@ class CNF_SAT(Binary):
     def _create_clause(self):
         '''Create a single random clause.
         
-        A clause is filled by choosing K variables w/ replacement uniformly
-        from the set of all N variables, negating with 50% probability.
+        A clause is filled by choosing K variables w/ replacement
+        uniformly from the set of all N variables, negating with 50%
+        probability.
         '''
         clause = [0] * self.c_len
         irand = self.rand.randrange
@@ -388,7 +395,7 @@ class CNF_SAT(Binary):
     def _eval(self, indiv):
         '''Evaluate CNF Boolean Expressions.
         
-        Fitness values are between 0.0 and 1.0 if the expression is ok.
+        Fitness values are between 0.0 and 1.0 if the expression is OK.
         '''
         satisfied = 0
         c_list = self.c_list
@@ -398,7 +405,7 @@ class CNF_SAT(Binary):
                     ((c_list[j][k] < 0) and (not indiv[-c_list[j][k] - 1]))):
                     satisfied += 1
                     break
-        return (float(satisfied) / self.n_clauses) # 1.0 = expression satisfied
+        return (float(satisfied) / self.n_clauses) # 1.0 = satisfied
     
     def _eval_saw(self, indiv):
         '''Evaluate CNF Boolean Expressions using SAW weights
@@ -417,8 +424,7 @@ class CNF_SAT(Binary):
         return total
     
     def update_saw(self, best):
-        '''Update weights using w_i^1 = w - i + 1 + c_i(best).
-        '''
+        '''Update weights using w_i^1 = w - i + 1 + c_i(best).'''
         c_list = self.c_list
         w_list = self.w_list
         for j in xrange(self.n_clauses):
@@ -434,8 +440,7 @@ class CNF_SAT(Binary):
     
     
     def info(self, level):
-        '''Return the basics, and also and idea of the SAT form.
-        '''
+        '''Return the basics, and also and idea of the SAT form.'''
         result = super(CNF_SAT, self).info(level)
         result.append('  Clauses L=%d, Literals/clause K=%d, Variables N=%d' % 
                       (self.n_clauses, self.c_len, self.c_vars))
@@ -447,7 +452,7 @@ class CNF_SAT(Binary):
                 break
         return result
 
-#==============================================================================
+#=======================================================================
 class NK(Binary):
     '''NK Landscape Problem Generator
     
@@ -502,8 +507,7 @@ class NK(Binary):
     
     
     def _eval(self, indiv):
-        '''Evaluate Binary NK landscape.
-        '''
+        '''Evaluate Binary NK landscape.'''
         E = self._E
         F = self._F
         k = self.K
@@ -520,7 +524,7 @@ class NK(Binary):
         return total / self.size.exact
 
 
-#==============================================================================
+#=======================================================================
 class NKC(Binary):
     '''NKC Landscape Problem Generator
     
@@ -529,8 +533,8 @@ class NKC(Binary):
     
     - Create fitness matrix F = N x (2^{K+C+1}) of random (0, 1)
     - Create epistasis matrix E = N x (K+C) with epistasis connections
-    - Fitness is sum of gene contribution, where gene contribution is its
-      value + contribution of k other values
+    - Fitness is sum of gene contribution, where gene contribution is
+      its value + contribution of k other values
     
     Qualities: maximisation, normalised
     '''
@@ -569,7 +573,7 @@ class NKC(Binary):
         E = self._E = [None] * n
         for i in xrange(n):
             # Add the base K links to self first
-            links = [j for j in xrange(n) if j != i] # no epistasis link to self :)
+            links = [j for j in xrange(n) if j != i] # no epistasis link to self
             shuffle(links)
             E[i] = links[:k]
             # Now add the C links, indexes continue past N
@@ -581,15 +585,15 @@ class NKC(Binary):
     def _eval(self, indiv):
         '''Evaluate Binary NKC landscape.
         
-        This expects that indiv contains a `JoinedIndividual` with ``group``
-        genomes. The first genome is the one evaluated; the others are needed
-        for the C evaluations.
+        This expects that indiv contains a `JoinedIndividual` with
+        ``group`` genomes. The first genome is the one evaluated; the
+        others are needed for the C evaluations.
         
-        Fitness is assigned to the joined individual and also directly to the
-        first individual.
+        Fitness is assigned to the joined individual and also directly
+        to the first individual.
         '''
-        assert isinstance(indiv, JoinedIndividual), "indiv (%s) should be JoinedIndividual." % \
-                                                    (type(indiv) if indiv else "None")
+        assert isinstance(indiv, JoinedIndividual), \
+               "indiv (%s) should be JoinedIndividual." % (type(indiv) if indiv else "None")
         assert len(indiv) == self.group
         E = self._E
         F = self._F
@@ -616,26 +620,28 @@ class NKC(Binary):
         return total / self.size.exact
 
 
-#==============================================================================
+#=======================================================================
 class MMDP6(Binary):
     '''Massively Multimodal Deceptive Problem (6-bit)
     
-    Specifically created to be both deceptive and massively multimodal. The
-    deceptive notion is similar to the 3-bit and 4-bit deceptive problems,
-    however this problem uses 6-bit binary substring and uses the unitation
-    value (number of 1's) mapped to a fitness payoff value. The fitness
-    payoff function is bipolar in that there is a maximum payoff at both 0
-    unitation=0, and at unitation=6, with a deceptive payoff in the middle.
+    Specifically created to be both deceptive and massively multimodal.
+    The deceptive notion is similar to the 3-bit and 4-bit deceptive
+    problems, however this problem uses 6-bit binary substring and uses
+    the unitation value (number of 1's) mapped to a fitness payoff
+    value. The fitness payoff function is bipolar in that there is a
+    maximum payoff at both unitation=0, and at unitation=6, with a
+    deceptive payoff in the middle.
         
         f(S) = sum(payoff(unitation(s_i)))
     
     where S is the set of 6-bit substrings s_i that make up the solution
     vector x. For any substring of length k there are 2^k global optima,
-    however for this version of k=6 there are 22^k local sub-optimum values
-    (which certainly fulfills the criteria of "massively" deceptive.
+    however for this version of k=6 there are 22^k local sub-optimum
+    values (which certainly fulfills the criteria of "massively"
+    deceptive).
     
-    The parameter k controls the degree of modality, however in this case it is
-    fixed to 6.
+    The parameter k controls the degree of modality, however in this
+    case it is fixed to 6.
     
     See Goldberg et al 1992
     
@@ -661,8 +667,7 @@ class MMDP6(Binary):
         self.size.min = self.size.max = self.size.exact = 6 * self.subs
     
     def _eval(self, indiv):
-        '''Evaluate MMDP 6 bit.
-        '''
+        '''Evaluate MMDP 6 bit.'''
         total = 0
         payoff = self.payoff
         
@@ -672,7 +677,7 @@ class MMDP6(Binary):
         return total
 
 
-#==============================================================================
+#=======================================================================
 class ECC(Binary):
     '''Error Correcting Code Design Problem
     
@@ -684,8 +689,8 @@ class ECC(Binary):
     - d = the minimum Hamming distance between any pair of code words
     
     Goal: find the largest d possible for a given n and M
-    Simplify problem by doing M/2 search and create complement for full M eg.
-    complement(101) = 010 since its a known quality of good codes.
+    Simplify problem by doing M/2 search and create complement for full
+    M eg. complement(101) = 010 since its a known quality of good codes.
     
     See http://tracer.lcc.uma.es/problems/ecc/ecc.html
     
@@ -721,8 +726,7 @@ class ECC(Binary):
         self.size.min = self.size.max = self.size.exact = self.n * self.M // 2
     
     def _eval(self, indiv):
-        '''Evaluate ECC
-        '''
+        '''Evaluate ECC.'''
         #f(x) = \frac{1}{\sum\limit_{i=1}^M \sum\limit_{j=i, j\neq i}^M d_{ij}^-2  }
         if self.legal(indiv):
             # Sum the distance to other codewords. NOTE: two equal codewords
@@ -742,13 +746,12 @@ class ECC(Binary):
             return 0.0001 # penalty factor
     
     def _HammDist(self, v1, v2):
-        '''The count of difference components in two vectors (codes).
-        '''
+        '''The count of difference components in two vectors (codes).'''
         return sum((1 if i1 != i2 else 0) for i1, i2 in zip(v1, v2))
     
     def _splitgenome(self, indiv):
-        '''Split genes into M/2 codewords of length n and creates a complement
-        of each for the full M codeword set.
+        '''Split genes into M/2 codewords of length n and creates a
+        complement of each for the full M codeword set.
         '''
         n = self.n
         mid = self.M // 2
@@ -760,8 +763,9 @@ class ECC(Binary):
         return code
     
     def legal(self, indiv):
-        '''Must check that all codeword pairs have the minimum separation
-        distance d. If d is high, it's a highly constricted space.
+        '''Must check that all codeword pairs have the minimum
+        separation distance d. If d is high, it's a highly constricted
+        space.
         '''
         dist = self._HammDist
         min_dist = self.d
@@ -776,7 +780,7 @@ class ECC(Binary):
         return True
 
 
-#==============================================================================
+#=======================================================================
 class SUS(Binary):
     '''Subset Sum Problem Generator
     
@@ -784,13 +788,14 @@ class SUS(Binary):
     or Khuri (1994) for a nice description.
     
     This version uses only positive integers:
+    
     - N is the number of integers in the full set W
     - S is the subset of W, indicated by a Binary string
     - W is randomly created by drawing from the range [1, 1000)
     - C is created from the sum of a random selection of W elements
     
-    If x is a Boolean vector used to indicate the subset then P(x) is the sum
-    of W weights selected by the vector x
+    If x is a Boolean vector used to indicate the subset then P(x) is
+    the sum of W weights selected by the vector x
         
         f(x) = C-P(x) if C-P(x) >= 0 else fitness = P(x)
     
@@ -832,8 +837,7 @@ class SUS(Binary):
             self._C = sum(self._S)
     
     def _eval(self, indiv):
-        '''Evaluate subset sum.
-        '''
+        '''Evaluate subset sum.'''
         # Create an integer subset from the binary selection x (indiv)
         # and sum() to give P(x)
         P_x = sum(wi for wi, xi in zip(self._W, indiv) if xi == 1)
@@ -854,20 +858,21 @@ class SUS(Binary):
         result.append('  C=%d of %d values' % (self._C, len(self._S)))
         return result
 
-#==============================================================================
+#=======================================================================
 class MAXCUT(Binary):
     '''MAXCUT Maximum Cut of a Graph
     
     MAXCUT = maximum cut problem.
+    
     - Consider a graph G =(V, E) for a weighted undirected graph.
     - Partition the set of vertices V into two "disjoint" sets V1 and V2
     - Maximise the sum of the weights from edges E that span V1 and V2
     
     NP-Complete problem.
     
-    Satisfiability problem (SAT) can be polynomially transformed into it.
-    Random cases of N vertices and connection prob P between vertices i
-    and j.
+    Satisfiability problem (SAT) can be polynomially transformed into
+    it. Random cases of N vertices and connection prob P between
+    vertices i and j.
     Random weights [0, 1] when allocated.
     
     Qualities:
@@ -911,8 +916,9 @@ class MAXCUT(Binary):
         ##self._find_best()
     
     def _eval(self, indiv):
-        '''Evaluate MAXCUT. Sum the weights of edges that span both subgraphs.
-        If indiv[i] = 0 represents V_0 and indiv[i] = 1 is V_1.
+        '''Evaluate MAXCUT. Sum the weights of edges that span both
+        subgraphs. If indiv[i] = 0 represents V_0 and indiv[i] = 1 is
+        V_1.
         '''
         N = self.size.exact
         W = self._W
@@ -941,7 +947,10 @@ class MAXCUT(Binary):
     
     def _find_best(self): #pragma: no cover
         '''Iteratively find the best maxcut for the current random graph
-        Note: This takes TIME! (~3-5mins). Only call if you *really* want to.
+        
+        :Note:
+            This takes TIME! (~3-5mins). Only call if you *really* want
+            to.
         '''
         min_i = 0
         max_i = 2**self.size.exact
@@ -960,7 +969,7 @@ class MAXCUT(Binary):
         print 'Best of %f at %d' % (bsf, bsf_i)
 
 
-#==============================================================================
+#=======================================================================
 class MTTP(Binary):
     '''Minimum Tardy Task Problem (MTTP)
     
@@ -975,7 +984,8 @@ class MTTP(Binary):
     
     - A selected task must be complete by deadline or penalty applies
     - Tasks are ordered by increasing deadline (gives feasible order)
-    - Tasks must be scheduled to start after previous allocated task length
+    - Tasks must be scheduled to start after previous allocated task
+      length
     
     Qualities: minimisation
     '''
@@ -1062,7 +1072,7 @@ class MTTP(Binary):
         '''Checks if all tasks selected can be done within deadlines.
         
         Add up the length of each selected task, check its deadline
-        and return True if all okay. This is not the fitness...
+        and return True if all okay. (This is not the fitness.)
         '''
         # Get the subset of nominated tasks
         S = [t for t, x in zip(self._tasks, indiv) if x] # x[i]==1
@@ -1076,7 +1086,7 @@ class MTTP(Binary):
         return True
     
     def _make_mttp5i(self, n):
-        '''Create a multiple n*mttp5i set of tasks. Optimum will be n*2
+        '''Create a multiple n*mttp5i set of tasks. Optimum will be n*2.
         '''
         # (l, d, w), lj=l(i%5), dj=di+24*m, wj=wi or (m+1)*wi
         result = self.mttp5i*n
@@ -1097,7 +1107,7 @@ class MTTP(Binary):
         # all done
         return result
 
-#==============================================================================
+#=======================================================================
 class Graph2c(Binary):
     '''NxN connectivity matrices with odd numbered COLUMN constraints.
     
@@ -1147,8 +1157,7 @@ class Graph2c(Binary):
             return -(self.dimensions**3) # constraint violation
     
     def info(self, level):
-        '''Return payoff matrix table
-        '''
+        '''Return payoff matrix table.'''
         result = super(Graph2c, self).info(level) # show the normal info first
         result.append(' Associated payoff matrix is:')
         part = ''
@@ -1159,7 +1168,7 @@ class Graph2c(Binary):
                 part = ''
         return result
 
-#==============================================================================
+#=======================================================================
 class Graph2r(Binary):
     '''NxN connectivity matrices with odd numbered ROW constraints
     
@@ -1206,8 +1215,7 @@ class Graph2r(Binary):
             return -(self.dimensions**3) # constraint violation
     
     def info(self, level):
-        '''Return payoff matrix table
-        '''
+        '''Return payoff matrix table.'''
         result = super(Graph2r, self).info(level) # get the normal info first
         result.append(' Associated payoff matrix is:')
         part = ''

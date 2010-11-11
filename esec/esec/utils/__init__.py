@@ -3,6 +3,7 @@
 Support functions for the |esec| framework.
 '''
 import sys, copy, os.path
+from itertools import islice
 from warnings import warn
 from esec.utils.configdict import ConfigDict
 from esec.utils.exceptions import ExceptionGroup, UnexpectedKeyWarning
@@ -10,8 +11,8 @@ from esec.utils.exceptions import ExceptionGroup, UnexpectedKeyWarning
 def a_or_an(string):
     '''Returns either 'a' or 'an' depending on the value in `string`.
 
-    This will get a number of cases wrong, but it's better than getting most
-    of the cases wrong.
+    This will get a number of cases wrong, but it's better than getting
+    most of the cases wrong.
     '''
     if string[0].upper() in ('A', 'E', 'I', 'O', 'U'):
         return 'an'
@@ -25,8 +26,9 @@ def safe_div(first, second):
 
 
 def settings_split(values):
-    '''Split a "settings" string into a dict of long.key.name=value pairs.
-    Values are eval()'d to convert them into python types as written.
+    '''Split a "settings" string into a dict of long.key.name=value
+    pairs. Values are eval()'d to convert them into python types as
+    written.
     '''
     if not values: return { }
     bits = [ bit.strip() for bit in values.split(';') ]
@@ -39,16 +41,13 @@ def settings_split(values):
     return result
 
 def cfg_read(cfg, name, die=False, default=None):
-    '''Attempt to read the named property from a dict/ConfigDict instance.
-    `name` may be made up of multiple parts, separate by periods. This
-    method will navigate nested dictionary objects as necessary.
-    
-    :Exceptions:
-      - `ValueError`: `name` is not found in `cfg` and `die` is ``True``.
+    '''Attempt to read the named property from a dict/ConfigDict
+    instance. `name` may be made up of multiple parts, separate by
+    periods. This method will navigate nested dictionary objects as
+    necessary.
     
     :Returns:
-        The value, or `default` if `name` is not found in `cfg` and
-        `die` is ``False``.
+        The value, or `default` if `name` is not found in `cfg`.
     '''
     # Handy nested function
     def get(value, name, default_value):
@@ -63,7 +62,7 @@ def cfg_read(cfg, name, die=False, default=None):
     
     # create sentinel 'default' value
     sentinel = object()
-
+    
     # if needed, extract named value from default
     if isinstance(default, (dict, ConfigDict)):
         default = get(default, name, sentinel)
@@ -106,8 +105,8 @@ def cfg_strict_test(cfg, strict):
             raise ValueError("'%s' must be == %s (not %s)" % (key, str(value), str(cfg_value)))
 
 def dict_merge(first, second):
-    '''Overlay dict `second` on top of `first`. Useful for merging default syntax or
-    configuration data dictionaries
+    '''Overlay dict `second` on top of `first`. Useful for merging
+    default syntax or configuration data dictionaries
     '''
     result = copy.deepcopy(first)
     if second is not None:
@@ -119,9 +118,10 @@ def dict_merge(first, second):
     return result
 
 def get_cls_var(cls, name):
-    '''A recursively called function to return a list of the requested class
-    level variable (if present) as a list (child-to-parent ordered). Absent
-    variables are silently ignored. Root parent class MUST derive from object
+    '''A recursively called function to return a list of the requested
+    class level variable (if present) as a list (child-to-parent
+    ordered). Absent variables are silently ignored. Root parent class
+    MUST derive from ``object``.
     '''
     result = []
     # only if present
@@ -133,9 +133,9 @@ def get_cls_var(cls, name):
     return result
 
 def merge_cls_dicts(obj, name):
-    '''Gets all the class dict of the given name in the class hierarchy and
-    uses dict_merge() to overlay them (from parent first to child last).
-    Returns the combined overlay'd dictionary
+    '''Gets all the class dict of the given name in the class hierarchy
+    and uses dict_merge() to overlay them (from parent first to child
+    last). Returns the combined overlaid dictionary
     '''
     if type(obj) is not type:
         dicts = get_cls_var(type(obj), name)
@@ -149,10 +149,12 @@ def merge_cls_dicts(obj, name):
 
 
 def all_equal(values):
-    '''Return true if all values (a list) are the same. False otherwise.
+    '''
+    :Returns: ``True`` if all elements in `values` are equal; otherwise,
+              ``False``.
     '''
     v0 = values[0]
-    return all((i == v0 for i in values[1:]))
+    return all(i == v0 for i in islice(values, 1, None))
 
 def str_short_list(values):
     '''Check if the list is all the same. If so, show a short version.
@@ -169,7 +171,8 @@ _is_ironpython = None
 
 def is_ironpython():
     '''
-    :Returns: ``True`` if running under IronPython; otherwise, ``False``.
+    :Returns: ``True`` if running under IronPython; otherwise,
+              ``False``.
     '''
     global _is_ironpython       #pylint: disable=W0603
     if _is_ironpython is None:

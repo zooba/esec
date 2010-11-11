@@ -1,7 +1,7 @@
 '''Integer value problem landscapes.
 
-The `Integer` base class inherits from `Landscape` for parameter validation and
-support. See `landscape` for details.
+The `Integer` base class inherits from `Landscape` for parameter
+validation and support. See `landscape` for details.
 
 .. classtree:: esec.landscape.integer.Integer
    :dir: right
@@ -28,13 +28,15 @@ class Integer(Landscape):
             'lower': [tuple, list, int, long, float, str, None],
             'upper': [tuple, list, int, long, float, str, None],
         },
-        'lower_bounds?': [tuple, list, int, long, float, str, None],    # lower_bounds overrules bounds.lower
-        'upper_bounds?': [tuple, list, int, long, float, str, None],    # upper_bounds overrules bounds.upper
+        # lower_bounds overrules bounds.lower
+        'lower_bounds?': [tuple, list, int, long, float, str, None],
+        # upper_bounds overrules bounds.upper
+        'upper_bounds?': [tuple, list, int, long, float, str, None],
     }
     
     # Subclasses can set default to overlay their changes on to this
-    # Note that specifying defaults for lower_bounds or upper_bounds will
-    # overrule any settings for bounds.lower or bounds.upper.
+    # Note that specifying defaults for lower_bounds or upper_bounds
+    # will overrule any settings for bounds.lower or bounds.upper.
     default = {
         'bounds': {
             'lower': 0,
@@ -68,20 +70,19 @@ class Integer(Landscape):
         self.lower_bounds = lbd
         '''The inclusive lower range limit on each gene.
         
-        Use `legal` on a genome to determine whether all genes are in the
-        legal range.
+        Use `legal` on a genome to determine whether all genes are in
+        the legal range.
         '''
         self.upper_bounds = ubd
         '''The inclusive upper range limit on each gene.
         
-        Use `legal` on a genome to determine whether all genes are in the
-        legal range.
+        Use `legal` on a genome to determine whether all genes are in
+        the legal range.
         '''
     
     
     def legal(self, indiv):
-        '''Check to see if an individual is legal.
-        '''
+        '''Check to see if an individual is legal.'''
         if not (self.size.min <= len(indiv) <= self.size.max):
             return False
         
@@ -91,8 +92,7 @@ class Integer(Landscape):
         return True
     
     def info(self, level):
-        '''Return landscape info for any integer landscape.
-        '''
+        '''Return landscape info for any integer landscape.'''
         if self.size.exact:
             result = ["Using %s landscape with %d parameter(s)" % (self.lname, self.size.exact)]
         else:
@@ -196,8 +196,8 @@ class Nmin(Integer):
 class Nmatch(Integer):
     '''N-dimensional N-match (integer) landscape
     
-    Like the Nmax function, however optimum is set to centre of the value
-    range. ( ie. "Match" the center value.)
+    Like the Nmax function, however optimum is set to centre of the
+    value range. (ie. "Match" the center value.)
     
     
     2D example:
@@ -217,10 +217,11 @@ class Nmatch(Integer):
     def __init__(self, cfg=None, **other_cfg):
         super(Nmatch, self).__init__(cfg, **other_cfg)
         # specialised setup - target[i] in middle range for each indiv[i].
-        self.target = [(upper-lower)//2 for upper, lower in zip(self.lower_bounds, self.upper_bounds)]
+        self.target = [(upper-lower) // 2 for upper, lower in zip(self.lower_bounds, self.upper_bounds)]
     
     def _eval(self, indiv):
-        '''Like the Nmax function with the optimum set to the range center.
+        '''Like the Nmax function with the optimum set to the range
+        center.
         '''
         fitness = 0
         for expected, actual in zip(self.target, indiv):
@@ -242,8 +243,7 @@ class Robbins(Integer):
     test_illegal = ([-6]*10, [6]*10)
     
     def _eval(self, indiv):
-        '''Map a binary list to an integer value.
-        '''
+        '''Map a binary list to an integer value.'''
         fitness = 0
         for value in indiv:
             # integer fitness, shift left by 1. eg (256 << 1) == 512

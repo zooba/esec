@@ -3,14 +3,16 @@ compiling ESDL code.
 '''
 
 class ESDLSyntaxErrorBase(BaseException):
-    '''Returned when an error or warning is encountered while compiling ESDL code.
+    '''Returned when an error or warning is encountered while compiling
+    ESDL code.
     
-    Derived classes should specify their own `code` and `default_message`.
-    Initialisers may also be overridden.
+    Derived classes should specify their own `code` and
+    `default_message`. Initialisers may also be overridden.
     
-    Warnings should also derive from this class, but use a code beginning with 'W'.
-    All codes should be unique. Codes with different prefixes (that is, either 'W' or
-    'E') are considered to be different.
+    Warnings should also derive from this class, but use a code
+    beginning with 'W'. All codes should be unique. Codes with different
+    prefixes (that is, either 'W' or 'E') are considered to be
+    different.
     
     Errors are ordered by line number, code and then message.
     '''
@@ -39,21 +41,21 @@ class ESDLSyntaxErrorBase(BaseException):
             return '[%s] %s (ESDL Definition, line %d)' % (self.code, self.message, self.line)
     
     def __eq__(self, other):
-        if hasattr(other, 'line') and hasattr(other, 'col') and \
-           hasattr(other, 'code') and hasattr(other, 'message'):
-            return self.lineno == other.lineno and self.charno == other.charno and \
-                   self.code == other.code and self.message == other.message
+        if (hasattr(other, 'line') and hasattr(other, 'col') and
+            hasattr(other, 'code') and hasattr(other, 'message')):
+            return (self.lineno == other.lineno and self.charno == other.charno and
+                    self.code == other.code and self.message == other.message)
         return False
     
     def __gt__(self, other):
-        if hasattr(other, 'line') and hasattr(other, 'col') and \
-           hasattr(other, 'code') and hasattr(other, 'message'):
+        if (hasattr(other, 'line') and hasattr(other, 'col') and
+            hasattr(other, 'code') and hasattr(other, 'message')):
             return (self.line, self.code, self.message) > (other.line, other.code, other.message)
         return False
     
     def __lt__(self, other):
-        if hasattr(other, 'line') and hasattr(other, 'col') and \
-           hasattr(other, 'code') and hasattr(other, 'message'):
+        if (hasattr(other, 'line') and hasattr(other, 'col') and
+            hasattr(other, 'code') and hasattr(other, 'message')):
             return (self.line, self.code, self.message) < (other.line, other.code, other.message)
         return False
 
@@ -67,7 +69,8 @@ class InvalidSyntaxError(ESDLSyntaxErrorBase):
     default_message = "Invalid syntax"
 
 class UnexpectedEndOfDefinitionError(ESDLSyntaxErrorBase):
-    '''Returned when the end of the definition is reached unexpectedly.'''
+    '''Returned when the end of the definition is reached unexpectedly.
+    '''
     code = "E0002"
     default_message = "Unexpected end of definition"
 
@@ -96,9 +99,9 @@ class UnexpectedStatementError(ESDLSyntaxErrorBase):
     code = "E0007"
     default_message = "%s cannot be specified here"
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Errors/warnings used by AST nodes
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class InvalidFunctionCallError(ESDLSyntaxErrorBase):
     '''Returned when a function call is not valid.'''
@@ -126,7 +129,8 @@ class ExpectedIntoError(ESDLSyntaxErrorBase):
     default_message = "Expected INTO"
 
 class ExpectedEvalError(ESDLSyntaxErrorBase):
-    '''Returned when an EVAL(UATE) command was expected but not found.'''
+    '''Returned when an EVAL(UATE) command was expected but not found.
+    '''
     code = "E1006"
     default_message = "Expected EVAL or EVALUATE"
 
@@ -141,7 +145,9 @@ class ExpectedEvaluatorError(ESDLSyntaxErrorBase):
     default_message = "Expected evaluator"
 
 class GeneratorAsDestinationError(ESDLSyntaxErrorBase):
-    '''Returned when a generator or function is the destination of a FROM statement.'''
+    '''Returned when a generator or function is the destination of a
+    FROM statement.
+    '''
     code = "E1009"
     default_message = "Generator cannot be specified as a destination group"
 
@@ -185,9 +191,9 @@ class ExpectedCommaError(ESDLSyntaxErrorBase):
     code = "E1014"
     default_message = "Expected comma separator"
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Errors/warnings used by Verifier
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class AmbiguousVariableBlockNameError(ESDLSyntaxErrorBase):
     '''Returned when a block name is also used as a variable name.'''
@@ -195,12 +201,16 @@ class AmbiguousVariableBlockNameError(ESDLSyntaxErrorBase):
     default_message = "Block name '%s' is also used as a variable"
 
 class RepeatedDestinationGroupError(ESDLSyntaxErrorBase):
-    '''Returned when a SELECT clause specifies the same group multiple times.'''
+    '''Returned when a SELECT clause specifies the same group multiple
+    times.
+    '''
     code = "E2002"
     default_message = "Group '%s' is selected into multiple times"
 
 class InvalidGroupSizeError(ESDLSyntaxErrorBase):
-    '''Returned when the size specifier for a group is not an acceptable type.'''
+    '''Returned when the size specifier for a group is not an acceptable
+    type.
+    '''
     code = "E2003"
     default_message = "Size specifier for group '%s' is not valid"
 
@@ -209,7 +219,7 @@ class UnexpectedGroupSizeError(ESDLSyntaxErrorBase):
     code = "E2004"
     default_message = "Size specifier for group '%s' not permitted"
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class InternalVariableNameError(ESDLSyntaxErrorBase):
     '''Returned when a variable name begins with an underscore.'''
@@ -217,26 +227,36 @@ class InternalVariableNameError(ESDLSyntaxErrorBase):
     default_message = "Variable '%s' may be overwritten by the compiler"
 
 class UninitialisedGlobalError(ESDLSyntaxErrorBase):
-    '''Returned when a global variable is not initialised within the definition.'''
+    '''Returned when a global variable is not initialised within the
+    definition.
+    '''
     code = "W2002"
     default_message = "Global variable '%s' not initialised"
 
 class UninitialisedConstantError(ESDLSyntaxErrorBase):
-    '''Returned when a global constant variable is not initialised within the definition.'''
+    '''Returned when a global constant variable is not initialised
+    within the definition.
+    '''
     code = "W2003"
     default_message = "Constant '%s' not initialised"
 
 class UninitialisedVariableError(ESDLSyntaxErrorBase):
-    '''Returned when a variable is not initialised within the definition.'''
+    '''Returned when a variable is not initialised within the
+    definition.
+    '''
     code = "W2004"
     default_message = "Variable '%s' not initialised"
 
 class UnusedVariableError(ESDLSyntaxErrorBase):
-    '''Returned when a variable is initialised but not used within the definition.'''
+    '''Returned when a variable is initialised but not used within the
+    definition.
+    '''
     code = "W2005"
     default_message = "Variable '%s' unused"
 
 class UnusedGroupError(ESDLSyntaxErrorBase):
-    '''Returned when a group appears after an unbounded group and will never be selected into.'''
+    '''Returned when a group appears after an unbounded group and will
+    never be selected into.
+    '''
     code = "W2006"
     default_message = "Group '%s' specified after an unbounded group"

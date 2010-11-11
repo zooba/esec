@@ -1,5 +1,5 @@
-'''Provides the `Experiment` class which manages the running of
-a single experiment.
+'''Provides the `Experiment` class which manages the running of a single
+experiment.
 '''
 
 from esec.utils import cfg_read, cfg_validate, ConfigDict
@@ -10,63 +10,67 @@ import esec.landscape as landscape
 import random, sys
 
 class Experiment(object):
-    '''Used to conduct an experiment using a specified breeding system over
-    a given landscape.
+    '''Used to conduct an experiment using a specified breeding system
+    over a given landscape.
     
     This class is instatiated with a dictionary matching `syntax`.
     '''
     
     syntax = {
-        'random_seed': [None, int],
+        'random_seed': [int, None],
         'monitor': '*', # pre-initialised MonitorBase instance, class or dict
         'landscape': '*',
         'system': '*', # allow System to validate
         'selector?': '*', # System also validates this
         'verbose': int,
     }
-    '''The expected format of the configuration dictionary passed to `__init__`.
+    '''The expected format of the configuration dictionary passed to
+    `__init__`.
     
     .. include:: epydoc_include.txt
     
     Members:
-      random_seed : (int or ``None`` [defaults to ``None``])
-        The seed value to use for random number generation in the system.
-        Landscapes use their own random number generators and must be seeded
-        independently.
+      random_seed : (int [optional])
+        The seed value to use for random number generation in the
+        system. Landscapes use their own random number generators and
+        may be seeded independently.
       
       monitor : (`MonitorBase` instance, subclass or dictionary)
-        The monitor to use for the experiment. If it is an instance of a class
-        derived from `MonitorBase`, it is used without modification. If it is
-        a subclass of `MonitorBase`, it is instantiated with no parameters.
+        The monitor to use for the experiment. If it is an instance of a
+        class derived from `MonitorBase`, it is used without
+        modification. If it is a subclass of `MonitorBase`, it is
+        instantiated with no parameters.
         
-        If it is a dictionary, it must have either a key ``instance`` or a key
-        ``class``. The ``instance`` key contains an instance of `MonitorBase`.
-        The ``class`` key contains a subclass of `MonitorBase` that will be
-        instantiated with the relevant configuration dictionary (from ``monitor``
-        downwards).
+        If it is a dictionary, it must have either a key ``instance`` or
+        a key ``class``. The ``instance`` key contains an instance of
+        `MonitorBase`. The ``class`` key contains a subclass of
+        `MonitorBase` that will be instantiated with the relevant
+        configuration dictionary (from ``monitor`` downwards).
         
         If a valid value is not provided, a `ValueError` is raised.
       
       landscape : (`Landscape` instance, subclass or dictionary)
-        The landscape to use for the experiment. If it is an instance of a class
-        derived from `Landscape`, it is used without modification. If it is
-        a subclass of `Landscape`, it is instantiated with no parameters.
+        The landscape to use for the experiment. If it is an instance of
+        a class derived from `Landscape`, it is used without
+        modification. If it is a subclass of `Landscape`, it is
+        instantiated with no parameters.
         
-        If it is a dictionary, it must have either a key ``instance`` or a key
-        ``class``. The ``instance`` key contains an instance of `Landscape`.
-        The ``class`` key contains a subclass of `Landscape` that will be
-        instantiated with the relevant configuration dictionary (from
-        ``landscape`` downwards).
+        If it is a dictionary, it must have either a key ``instance`` or
+        a key ``class``. The ``instance`` key contains an instance of
+        `Landscape`. The ``class`` key contains a subclass of
+        `Landscape` that will be instantiated with the relevant
+        configuration dictionary (from ``landscape`` downwards).
         
         If a valid value is not provided, a `ValueError` is raised.
       
       system : (dictionary)
-        The definition of the system. This includes the key ``definition``,
-        which is the ESDL text to compile. Any other values provided in
-        ``system`` are made available to the system.
+        The definition of the system. This includes the key
+        ``definition``, which is the ESDL text to compile. Any other
+        values provided in ``system`` are made available to the system.
         
-        Keys in ``system`` should not start with an underscore, since these
-        names are reserved for use by the ESDL compiler and runtime.
+        Keys in ``system`` should not start with an underscore, since
+        these names are reserved for use by the ESDL compiler and
+        runtime.
       
       verbose : (int |ge| 0 [defaults to zero])
         The verbosity level to use.
@@ -75,19 +79,19 @@ class Experiment(object):
     
     
     default = {
-        'random_seed': None,
         'verbose': 0,
+        'random_seed': None,
     }
     '''The default values to use for unspecified keys in `syntax`.
     '''
     
     def _load(self, cfg, key, base):
-        '''Returns the object provided in `key` of `cfg` if it is derived from
-        `base`.
+        '''Returns the object provided in `key` of `cfg` if it is
+        derived from `base`.
         
-        If not, looks for ``instance`` within `key` and returns that. If that
-        fails, instantiates ``class`` within `key` with ``cfg.key`` and returns
-        that.
+        If not, looks for ``instance`` within `key` and returns that. If
+        that fails, instantiates ``class`` within `key` with ``cfg.key``
+        and returns that.
         
         If everything fails, returns ``None``.
         '''
@@ -112,17 +116,17 @@ class Experiment(object):
         return None
     
     def __init__(self, cfg):
-        '''Initialises a new experiment with configuration dictionary `cfg`.
-        `cfg` must match the syntax given in `syntax`.
+        '''Initialises a new experiment with configuration dictionary
+        `cfg`. `cfg` must match the syntax given in `syntax`.
         
         :Exceptions:
-          - `ValueError`: Unusable values were passed in ``monitor`` or ``landscape``.
-            See `syntax` for a description of what constitutes a valid
-            value.
+          - `ValueError`: Unusable values were passed in ``monitor`` or
+            ``landscape``. See `syntax` for a description of what
+            constitutes a valid value.
           
-          - `ExceptionGroup`: One or more unspecified errors were found in `cfg`.
-            Access the `ExceptionGroup.exceptions` list to view all
-            problems.
+          - `ExceptionGroup`: One or more unspecified errors were found
+            in `cfg`. Access the `ExceptionGroup.exceptions` list to
+            view all problems.
         
         '''
         # Configuration processing...
@@ -161,8 +165,7 @@ class Experiment(object):
     
     
     def run(self):
-        '''Run the experiment.
-        '''
+        '''Run the experiment.'''
         self.begin()
         
         while self.step(): pass
@@ -170,8 +173,7 @@ class Experiment(object):
         self.close()
     
     def begin(self):
-        '''Start the experiment.
-        '''
+        '''Start the experiment.'''
         self.system.begin()
     
     def step(self, always_step=False):
@@ -198,7 +200,6 @@ class Experiment(object):
             return True
     
     def close(self):
-        '''Closes the experiment.
-        '''
+        '''Closes the experiment.'''
         self.system.close()
         

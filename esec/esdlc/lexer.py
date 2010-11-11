@@ -17,23 +17,23 @@ class Token(object):    #pylint: disable=R0903
             The raw text parsed into this token.
           
           line : int
-            The line number of the source file where this token was found.
-            The first list of a file is line 1.
+            The line number of the source file where this token was
+            found. The first list of a file is line 1.
           
           col : int
-            The column number of the source line where this token was found.
-            The first column of a line is column 1.
+            The column number of the source line where this token was
+            found. The first column of a line is column 1.
         '''
         self.tag = tag
         '''A string identifier for the type of the token.'''
         self.value = value
         '''The text parsed into this token.'''
         self.line = line
-        '''The line of the original source file where this token was found.
-        The first line of a file is line 1.'''
+        '''The line of the original source file where this token was
+        found. The first line of a file is line 1.'''
         self.col = col
-        '''The column of the original source line where this token was found.
-        The first column of a line is column 1.'''
+        '''The column of the original source line where this token was
+        found. The first column of a line is column 1.'''
     
     def __eq__(self, other):
         if type(other) is str: return False

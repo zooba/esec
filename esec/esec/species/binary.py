@@ -316,8 +316,8 @@ class BinarySpecies(Species):
                     cut2 = cut1 + length
                 else:
                     cut1, cut2 = 0, len_indiv
-                new_genes = list(chain(islice(indiv.genome, cut1), \
-                                       ((1 - g) for g in islice(indiv.genome, cut1, cut2)), \
+                new_genes = list(chain(islice(indiv.genome, cut1),
+                                       ((1 - g) for g in islice(indiv.genome, cut1, cut2)),
                                        islice(indiv.genome, cut2, len(indiv.genome))))
                 yield type(indiv)(new_genes, indiv, statistic={ 'mutated': 1 })
             else:

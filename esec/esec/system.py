@@ -189,15 +189,17 @@ class System(object):
         return result
     
     def seed_offset(self, offset):
-        '''Re-seed the random instance (shared everywhere) with an offset amount.
-        Can be called before each ``run()`` for repeatable variation.
+        '''Re-seed the random instance (shared everywhere) with an
+        offset amount. Can be called before each ``run()`` for
+        repeatable variation.
         '''
         seed = self.cfg.random_seed
         self._context['rand'].seed(seed + offset)
         print '>> New Seed: %d + %d (offset)' % (seed, offset)
     
     def begin(self):
-        '''Begins the system. Each call to `step` executes one generation.
+        '''Begins the system. Each call to `step` executes one
+        generation.
         '''
         # Allowed to use exec
         #pylint: disable=W0122
@@ -225,23 +227,27 @@ class System(object):
             return
     
     def step(self, block=None):
-        '''Executes one or more iteration. If `step` is called from the monitor's
-        ``on_pre_breed``, ``on_post_breed`` or ``on_exception``, more than one iteration
-        will occur. Otherwise, only one iteration will be executed.
+        '''Executes one or more iteration. If `step` is called from the
+        monitor's ``on_pre_breed``, ``on_post_breed`` or
+        ``on_exception``, more than one iteration will occur. Otherwise,
+        only one iteration will be executed.
         
         :Parameters:
           block : string [optional]
-            The name of the block to execute. If specified, the block is used for
-            every iteration executed. If omitted, the block selector associated
-            with the system is queried for each iteration.
+            The name of the block to execute. If specified, the block is
+            used for the first iteration executed. If omitted, the block
+            selector associated with the system is queried for each
+            iteration.
             
-            This name is not case-sensitive: it is converted to lowercase before use.
+            This name is not case-sensitive: it is converted to
+            lowercase before use.
         '''
         self._next_block.append(block)
         
         if self._in_step:
-            # If step() has been called from one of our own callbacks, we should
-            # return now and let the while loop below pick up the next block.
+            # If step() has been called from one of our own callbacks,
+            # we should return now and let the while loop below pick up
+            # the next block.
             return
         
         try:
@@ -295,6 +301,5 @@ class System(object):
             self._in_step = False
     
     def close(self):
-        '''Executes clean-up code.
-        '''
+        '''Executes clean-up code.'''
         self.monitor.on_run_end(self)

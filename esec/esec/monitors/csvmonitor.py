@@ -8,8 +8,9 @@ from esec.monitors.consolemonitor import ConsoleMonitor
 from esec.utils import ConfigDict
 
 class CSVMonitor(ConsoleMonitor):
-    '''A monitor that displays output using the console or other 'file-like' object
-    based on prespecified report strings formatted for writing to a CSV file.
+    '''A monitor that displays output using the console or other
+    'file-like' object based on prespecified report strings formatted
+    for writing to a CSV file.
     
     See `esec.monitors` for a general overview of monitors.
     '''
@@ -77,8 +78,8 @@ class CSVMonitor(ConsoleMonitor):
         
         'sizes': [ 'Sizes', '"%s"', '_sizes_info'],
         
-        # abbreviations (unchanged from ConsoleMonitor, but behave differently
-        # because some parts are now set to None)
+        # abbreviations (unchanged from ConsoleMonitor, but behave
+        # differently because some parts are now set to None)
         'brief': 'gen+births+evals+best_fit+|',
         'brief_int': 'gen+births+evals+best_fit_int+|',
         'brief_float': 'gen+births+evals+best_fit_float+|',
@@ -105,22 +106,26 @@ class CSVMonitor(ConsoleMonitor):
     }
     '''The set of known column descriptors.
     
-    Each descriptor is either a string or a list of three elements. Strings are
-    interpreted as a list of other headers, allowing multiple columns to be specified
-    under one name. For example, ``'best'`` is defined as ``'best_bday+best_fit+|'``;
-    specifying ``'best'`` in a report string is equivalent to specifying
+    Each descriptor is either a string or a list of four elements.
+    Strings are interpreted as a list of other headers, allowing
+    multiple columns to be specified under one name. For example,
+    ``'best'`` is defined as ``'best_bday+best_fit+|'``; specifying
+    ``'best'`` in a report string is equivalent to specifying
     ``'best_bday+best_fit+|'``.
     
-    Descriptors mapping to a list of three elements include, in order, a heading,
-    a format string and a method or statistic name. The headings are used to display
-    the heading of a table. The method name is mapped to a callable object or function
-    on `ConsoleMonitor`. Specifying ``'stats.'`` at the start of the method name
-    interprets the next dotted-part of the name as a member of the statistics object
-    kept by the monitor, and the remainder as a member of that.
+    Descriptors mapping to a list of four elements include, in order, a
+    heading, a format string, a method or statistic name and a default
+    value. The headings are used to display the heading of a table. The
+    method name is mapped to a callable object or function on
+    `CSVMonitor`. Specifying ``'stats.'`` at the start of the method
+    name interprets the next dotted-part of the name as a member of the
+    statistics object kept by the monitor, and the remainder as a member
+    of that. The default value is used if the member does not exist. If
+    a default has not been specified, an error may be raised.
     
-    For example, the value ``'stats.global_max.fitness'`` retrieves the value of
-    ``global_max``. The displayed value, however, is the ``fitness`` member of the
-    retrieved value.
+    For example, the value ``'stats.global_max.fitness'`` retrieves the
+    value of ``global_max``. The displayed value, however, is the
+    ``fitness`` member of the retrieved value.
     
     The format string is any standard Python format string.
     '''
@@ -128,7 +133,8 @@ class CSVMonitor(ConsoleMonitor):
     syntax = {
         'csv_formats?' : dict
     }
-    '''The expected format of the configuration dictionary passed to `__init__`.
+    '''The expected format of the configuration dictionary passed to
+    `__init__`.
     
     See `ConsoleMonitor.syntax` for other available settings.
 
@@ -136,9 +142,9 @@ class CSVMonitor(ConsoleMonitor):
     
     Members:
       csv_formats : (dictionary)
-        A dictionary of extra formats to include with those in `format`. These
-        completely replace any settings provided in ``formats`` (from
-        `ConsoleMonitor.syntax`).
+        A dictionary of extra formats to include with those in `format`.
+        These completely replace any settings provided in ``formats``
+        (from `ConsoleMonitor.syntax`).
     '''
 
     default = {
@@ -147,8 +153,8 @@ class CSVMonitor(ConsoleMonitor):
 
     def __init__(self, cfg):
         '''Initialises a new CSV monitor. Behaviour is similar to that
-        of `ConsoleMonitor`, but output is formatted suitable for writing
-        to a comma-separated-value format file.
+        of `ConsoleMonitor`, but output is formatted suitable for
+        writing to a comma-separated-value format file.
         
         :Parameters:
           cfg : `ConfigDict`
@@ -172,14 +178,14 @@ class CSVMonitor(ConsoleMonitor):
                 yield lambda owner: self._make_csv_safe(call(owner))
         
         def _make_csv_safe(self, values):   #pylint: disable=R0201
-            '''Returns a sequence of values taken from `values` with strings
-            converted to be CSV-'safe'.
+            '''Returns a sequence of values taken from `values` with
+            strings converted to be CSV-'safe'.
             
             :Note:
-                `values` is typically a tuple but this method is a generator.
-                For the current implementation of `ConsoleMonitor` this is
-                fine, but if the implementation changes this may need to be
-                updated.
+                `values` is typically a tuple but this method is a
+                generator. For the current implementation of
+                `ConsoleMonitor` this is fine, but if the implementation
+                changes this may need to be updated.
             '''
             for value in values:
                 if isinstance(value, Fitness):
@@ -213,8 +219,9 @@ class CSVMonitor(ConsoleMonitor):
                 print >> self.summary_out
                 print >> self.summary_out, 'Statistic,Value'
                 def _disp(source, scope):
-                    '''Displays a dict/`ConfigDict` recursively with commas separating keys
-                    and values.'''
+                    '''Displays a dict/`ConfigDict` recursively with
+                    commas separating keys and values.
+                    '''
                     for key, value in sorted(source.iteritems()):
                         if isinstance(value, (dict, ConfigDict)): _disp(value, scope + key + '.')
                         else: print >> self.summary_out, scope + key + ',' + ('%s' % value)
@@ -226,21 +233,29 @@ class CSVMonitor(ConsoleMonitor):
     
     # override time functions to return milliseconds/microseconds only
     def _time(self, owner):
-        '''Returns ``(milliseconds,)`` that the process has been active for.'''
+        '''Returns ``(milliseconds,)`` that the process has been active
+        for.
+        '''
         return (self._get_ms(),)
     
     def _time_delta(self, owner):
-        '''Returns ``(milliseconds,)`` since the last call to `_time_delta`.'''
+        '''Returns ``(milliseconds,)`` since the last call to
+        `_time_delta`.
+        '''
         prev_time = self._last_time_ms
         now_time = self._last_time_ms = self._get_ms()
         return (now_time - prev_time,) if prev_time is not None else (0,)
     
     def _time_precise(self, owner):
-        '''Returns ``(microseconds,)`` since the first call to `_time_precise`.'''
+        '''Returns ``(microseconds,)`` since the first call to
+        `_time_precise`.
+        '''
         return (self._get_us(),)
     
     def _time_delta_precise(self, owner):
-        '''Returns ``(microseconds,)`` since the last call to `_time_delta_precise`.'''
+        '''Returns ``(microseconds,)`` since the last call to
+        `_time_delta_precise`.
+        '''
         prev_time = self._last_time_us
         now_time = self._last_time_us = self._get_us()
         return (now_time - prev_time,) if prev_time is not None else (0,)

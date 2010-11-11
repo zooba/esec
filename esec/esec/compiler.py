@@ -12,10 +12,11 @@ class Compiler(object):
     '''
     
     def __init__(self, src):
-        '''Initialises the compiler object but does not perform compilation or
-        return any code.
+        '''Initialises the compiler object but does not perform
+        compilation or return any code.
         
-        Call `compile` and then obtain executable Python code from `code`.
+        Call `compile` and then obtain executable Python code from
+        `code`.
         
         :Parameters:
           src : str
@@ -24,21 +25,24 @@ class Compiler(object):
             calling `compile`.
         '''
         self.source_code = src
-        '''ESDL system definition to compile. After calling `compile`, `code` will
-        contain an executable Python script.'''
+        '''ESDL system definition to compile. After calling `compile`,
+        `code` will contain an executable Python script.
+        '''
         
         self.blocks = None
         '''A list of blocks in the order they were specified.'''
         self.uninit = None
-        '''A list of uninitialised variables that need to be provided externally.'''
+        '''A list of uninitialised variables that need to be provided
+        externally.
+        '''
         self.filters = None
         '''A list of filters required by the system.'''
         self.code = None
         '''Compiled Python code implementing `source_code`.'''
     
     def compile(self):
-        '''Compiles the source associated with this compiler object. The result
-        is placed in ``self.code`` as a string.
+        '''Compiles the source associated with this compiler object. The
+        result is placed in ``self.code`` as a string.
         
         May raise `ExceptionGroup` if there are syntactical errors in
         `source_code`. Further errors may be raised when executing the

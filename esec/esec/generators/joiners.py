@@ -19,7 +19,8 @@ def All(_source):
 
 def BestWithAll(_source, best_from=0):
     '''Returns the best individual from group `best_from` (zero-based
-    index into `_source`) matched.'''
+    index into `_source`) matched.
+    '''
     _source, names = _source
     _source = list(_source)
     best_from = int(best_from)
@@ -35,7 +36,8 @@ def BestWithAll(_source, best_from=0):
         yield JoinedIndividual(best + groups, names)
 
 def Tuples(_source):
-    '''Returns all individuals matched with matching elements by index.'''
+    '''Returns all individuals matched with matching elements by index.
+    '''
     _source, names = _source
     for groups in zip(*_source):
         yield JoinedIndividual(groups, names)
@@ -46,7 +48,8 @@ def RandomTuples(_source, distinct=False):
     
     If `distinct` is ``True``, an attempt is made to avoid repetition
     within a tuple, however, if this cannot be achieved then some
-    elements may not be distinct.'''
+    elements may not be distinct.
+    '''
     choice = rand.choice
     
     _source, names = _source

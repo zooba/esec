@@ -13,9 +13,9 @@ class TgpIndividual(Individual):
     terminals is stored with the individual so it may be used during mutation
     operations without being respecified.
     '''
-    def __init__(self, genes, parent, \
-        instructions=None, instruction_set=None, terminals=2, \
-        constant_bounds=None, constant_type=None, \
+    def __init__(self, genes, parent,
+        instructions=None, instruction_set=None, terminals=2,
+        constant_bounds=None, constant_type=None,
         statistic=None):
         '''Initialises a new `TgpIndividual`. Instances are generally
         created using the initialisation methods provided by `TgpSpecies`.
@@ -344,9 +344,9 @@ class TgpSpecies(Species):
     '''The set of integer instructions.'''
     
     @classmethod
-    def _init_one(cls, instructions, terminals, deepest, \
-                  adfs, adf_index, \
-                  constant_bounds, constant_type, \
+    def _init_one(cls, instructions, terminals, deepest,
+                  adfs, adf_index,
+                  constant_bounds, constant_type,
                   terminal_prob):
         '''Creates a single TGP genome.
         
@@ -475,18 +475,28 @@ class TgpSpecies(Species):
         instruction_set = 'boolean'
         constant_bounds = (0, 2) if constants else None
         while True:
-            genes = [self._init_one( \
-                instructions, terminals, deepest, \
-                adfs, i, \
-                constant_bounds, int, \
-                terminal_prob \
-                ) for i in xrange(adfs+1)]
-            yield TgpIndividual( \
-                genes, self, \
-                instructions, instruction_set, terminals, \
-                constant_bounds, int)
+            genes = [self._init_one(instructions,
+                                    terminals,
+                                    deepest,
+                                    adfs,
+                                    i,
+                                    constant_bounds,
+                                    int,
+                                    terminal_prob) for i in xrange(adfs+1)]
+            yield TgpIndividual(genes,
+                                self,
+                                instructions,
+                                instruction_set,
+                                terminals,
+                                constant_bounds,
+                                int)
     
-    def init_real_tgp(self, terminals=0, deepest=10, adfs=0, terminal_prob=0.5, transcendentals=False, \
+    def init_real_tgp(self,
+                      terminals=0,
+                      deepest=10,
+                      adfs=0,
+                      terminal_prob=0.5,
+                      transcendentals=False,
                       lowest_constant=None, highest_constant=None):
         '''Creates tree-based genetic programming (TGP) programs made from
         `real_instructions` and, optionally, `transcendental_instructions`.
@@ -538,18 +548,27 @@ class TgpSpecies(Species):
             instructions = list(TgpSpecies.real_instructions)
             instructions.extend(TgpSpecies.transcendental_instructions)
         while True:
-            genes = [self._init_one( \
-                instructions, terminals, deepest, \
-                adfs, i, \
-                constant_bounds, float, \
-                terminal_prob \
-                ) for i in xrange(adfs+1)]
-            yield TgpIndividual( \
-                genes, self, \
-                instructions, instruction_set, terminals, \
-                constant_bounds, float)
+            genes = [self._init_one(instructions,
+                                    terminals,
+                                    deepest,
+                                    adfs,
+                                    i,
+                                    constant_bounds,
+                                    float,
+                                    terminal_prob) for i in xrange(adfs+1)]
+            yield TgpIndividual(genes,
+                                self,
+                                instructions,
+                                instruction_set,
+                                terminals,
+                                constant_bounds,
+                                float)
     
-    def init_integer_tgp(self, terminals=0, deepest=10, adfs=0, terminal_prob=0.5, \
+    def init_integer_tgp(self,
+                         terminals=0,
+                         deepest=10,
+                         adfs=0,
+                         terminal_prob=0.5,
                         lowest_constant=None, highest_constant=None):
         '''Creates tree-based genetic programming (TGP) programs made from
         `integer_instructions`.
@@ -594,30 +613,38 @@ class TgpSpecies(Species):
         else:
             constant_bounds = (int(lowest_constant), int(highest_constant) + 1)
         while True:
-            genes = [self._init_one( \
-                instructions, terminals, deepest, \
-                adfs, i, \
-                constant_bounds, int, \
-                terminal_prob \
-                ) for i in xrange(adfs+1)]
-            yield TgpIndividual( \
-                genes, self, \
-                instructions, instruction_set, terminals, \
-                constant_bounds, int)
+            genes = [self._init_one(instructions,
+                                    terminals,
+                                    deepest,
+                                    adfs,
+                                    i,
+                                    constant_bounds,
+                                    int,
+                                    terminal_prob) for i in xrange(adfs+1)]
+            yield TgpIndividual(genes,
+                                self,
+                                instructions,
+                                instruction_set,
+                                terminals,
+                                constant_bounds,
+                                int)
     
-    def crossover_one(self, _source, \
-                      per_pair_rate=None, per_indiv_rate=0.1, per_adf_rate=1.0, \
+    def crossover_one(self, _source,
+                      per_pair_rate=None, per_indiv_rate=0.1, per_adf_rate=1.0,
                       longest_result=None, deepest_result=None):
         '''
         :Note: Redirects to `crossover_one_different`. TGP has no sensible
                way in which to cross two individuals at the same point.
         '''
-        return self.crossover_one_different(_source, \
-            per_pair_rate, per_indiv_rate, per_adf_rate, \
-            longest_result, deepest_result)
+        return self.crossover_one_different(_source,
+                                            per_pair_rate,
+                                            per_indiv_rate,
+                                            per_adf_rate,
+                                            longest_result,
+                                            deepest_result)
     
-    def crossover_one_different(self, _source, \
-                                per_pair_rate=None, per_indiv_rate=0.1, per_adf_rate=1.0, \
+    def crossover_one_different(self, _source,
+                                per_pair_rate=None, per_indiv_rate=0.1, per_adf_rate=1.0,
                                 longest_result=None, deepest_result=None):
         '''Performs single-point crossover by selecting a random program
         node in each ADF of a pair of individuals and exchanging the
@@ -692,8 +719,8 @@ class TgpSpecies(Species):
                             start2, end2 = self._pick_random_node(program2)
                             new1 = program1[:start1] + program2[start2:end2] + program1[end1:]
                             new2 = program2[:start2] + program1[start1:end1] + program2[end2:]
-                            if deepest_result and \
-                               (self.depth(new1) > deepest_result or self.depth(new2) > deepest_result):
+                            if (deepest_result and
+                                (self.depth(new1) > deepest_result or self.depth(new2) > deepest_result)):
                                 stats = { 'i1': i1_pre, 'i2': i2_pre, 'adf': adf, 'deepest_result': deepest_result }
                                 notify('crossover_one', 'aborted', stats)
                                 i1_post.append(program1)
@@ -715,9 +742,9 @@ class TgpSpecies(Species):
                 yield i1_pre
                 yield i2_pre
     
-    def mutate_random(self, _source, \
-                      per_indiv_rate=1.0, per_gene_rate=None, per_adf_rate=1.0, \
-                      deepest_result=None, \
+    def mutate_random(self, _source,
+                      per_indiv_rate=1.0, per_gene_rate=None, per_adf_rate=1.0,
+                      deepest_result=None,
                       terminal_prob=0.5):
         '''Mutates a group of individuals by replacing branches with new
         randomly generated branches.
@@ -773,9 +800,9 @@ class TgpSpecies(Species):
                 if do_all_adf or frand() < per_adf_rate:
                     start, end = self._pick_random_node(program)
                     depth_limit = (deepest_result - self.depth(program[:start])) if deepest_result else None
-                    replacement = self._init_one(indiv.instructions, indiv.terminals, depth_limit, \
-                                                 len(indiv.genome) - 1, i, \
-                                                 indiv.constant_bounds, indiv.constant_type, \
+                    replacement = self._init_one(indiv.instructions, indiv.terminals, depth_limit,
+                                                 len(indiv.genome) - 1, i,
+                                                 indiv.constant_bounds, indiv.constant_type,
                                                  terminal_prob)
                     new_genes.append(program[:start] + replacement + program[end:])
                 else:

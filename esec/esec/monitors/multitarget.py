@@ -1,5 +1,5 @@
-'''Provides `MultiTarget`, a file-like object that distributes any writes
-to multiple targets.
+'''Provides `MultiTarget`, a file-like object that distributes any
+writes to multiple targets.
 '''
 
 class MultiTarget(object):
@@ -14,7 +14,8 @@ class MultiTarget(object):
             A sequence of objects provided ``write`` methods.
         '''
         assert self not in targets, "Cannot include self in targets"
-        assert all((hasattr(target, 'write') for target in targets)), "Not all targets have a 'write' method"
+        assert all((hasattr(target, 'write') for target in targets)), \
+               "Not all targets have a 'write' method"
         self._targets = list(targets)
     
     def write(self, text):
@@ -27,7 +28,9 @@ class MultiTarget(object):
         '''Calls ``flush`` on all targets given in the constructor.
         '''
         def _none():
-            '''A 'null' method to simplify the implementation of `flush`.'''
+            '''A 'null' method to simplify the implementation of
+            `flush`.
+            '''
             pass
         for target in self._targets:
             # Use getattr in case ``flush`` is not provided.

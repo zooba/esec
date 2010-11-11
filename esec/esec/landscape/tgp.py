@@ -3,8 +3,9 @@
 
 '''Tree-based Genetic Programming (TGP) problem landscapes.
 
-The `TGP` base class inherits from `esec.landscape.Landscape` for some nice
-assistive magic. See there for details if you wish to write your own new functions.
+The `TGP` base class inherits from `esec.landscape.Landscape` for some
+nice assistive magic. See there for details if you wish to write your
+own new functions.
 
 .. classtree:: esec.landscape.tgp.TGP
    :dir: right
@@ -47,15 +48,14 @@ class TGPFitness(Fitness):
 
 
 class TGP(Landscape):
-    '''Abstract TGP fitness landscape
-    '''
+    '''Abstract TGP fitness landscape'''
     ltype = 'TGP' # subclasses shouldn't change this
     size_equals_parameters = False
     
     # this is universal - should not be changed by subclasses
     syntax = {
-        'parameters': int,                      # landscape specific, but guaranteed to be there
-        'instruction_set?': list,               # optional instruction set name(s)
+        'parameters': int,          # landscape specific
+        'instruction_set?': list,   # optional instruction set name(s)
     }
     # subclasses should set default to overlay their changes on to this
     default = {
@@ -78,24 +78,24 @@ class TGP(Landscape):
     def _size_penalty(self, indiv):
         '''Calculate the penalty value based on the size of the program.
         
-        Returns the sum of the node count of the main program tree and any ADFs.
+        Returns the sum of the node count of the main program tree and
+        any ADFs.
         
-        This function is provided as a helper to landscape implementations. It is
-        not called automatically.
+        This function is provided as a helper to landscape
+        implementations. It is not called automatically.
         '''
         return sum((len(adf) for adf in indiv))
     
     def legal(self, indiv):     #pylint: disable=W0613
-        '''Check to see if an individual is legal.
-        '''
+        '''Check to see if an individual is legal.'''
+        # TGP individuals are always legal by design, though certain
+        # problems may override this method and apply extra criteria.
         return True
 
 
 #==============================================================================
 class Multiplexer(TGP):
-    '''N-address bit multiplexer
-    
-    '''
+    '''N-address bit multiplexer.'''
     
     lname = 'Boolean multiplexer'
     
@@ -113,7 +113,9 @@ class Multiplexer(TGP):
         
         
         def _eval(inputs):
-            '''Returns the value of the input selected by `inputs```[:bits]``.'''
+            '''Returns the value of the input selected by
+            `inputs```[:bits]``.
+            '''
             addr = 0
             for i in xrange(self.bits): addr = (addr + addr) | inputs[i]
             return inputs[addr + self.bits]
@@ -140,9 +142,7 @@ class Multiplexer(TGP):
 
 #==============================================================================
 class SymbolicRegression(TGP):
-    '''Symbolic regression
-    
-    '''
+    '''Symbolic regression.'''
     
     lname = 'Symbolic Regression'
     

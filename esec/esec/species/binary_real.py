@@ -231,9 +231,11 @@ class BinaryRealSpecies(BinarySpecies):
         indiv_len = sum(bits_per_value)
         
         while True:
-            yield BinaryRealIndividual([_gen(i) for i in xrange(indiv_len)], self, \
+            yield BinaryRealIndividual([_gen(i) for i in xrange(indiv_len)],
+                                       self,
                                        bits_per_value=bits_per_value,
-                                       lowest=lowest, highest=highest,
+                                       lowest=lowest,
+                                       highest=highest,
                                        encoding=encoding)
     
     

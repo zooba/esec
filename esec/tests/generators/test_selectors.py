@@ -246,7 +246,7 @@ def check_selectors_RankProportionalSUS(population):
     assert sum(fit[:50]) > sum(fit[-50:]), "Average fitness is not better in early selections (INTERMITTENT)"
     
 def check_selectors_BestOfTuple(population, best_population):
-    _gen = joiners.DistinctRandomTuples(_source=([best_population, population, population], \
+    _gen = joiners.DistinctRandomTuples(_source=([best_population, population, population],
                                                  ['best_population', 'population', 'population']))
     _gen = selectors.BestOfTuple(_source=_gen)
     offspring = list(_gen)

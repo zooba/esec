@@ -18,15 +18,16 @@ class _born_iter(object):
     def __iter__(self): return self
     def next(self): return next(self.src).born()'''
     '''Definitions used in compiled systems.
-
-    The ``_iter`` method automatically calls ``__iter__`` or ``__call__`` depending
-    on the parameter type, allowing constructors and lists to be used interchangeably.
-    If multiple sequences are provided they are concatenated as required by
-    ``FROM-SELECT`` statements.
-
-    The ``_born_iter`` class calls the ``born`` method of individuals after a
-    ``FROM-SELECT`` statement and handles calls to ``rest`` when the underlying
-    sequence does not support it.
+    
+    The ``_iter`` method automatically calls ``__iter__`` or
+    ``__call__`` depending on the parameter type, allowing constructors
+    and lists to be used interchangeably. If multiple sequences are
+    provided they are concatenated as required by ``FROM-SELECT``
+    statements.
+    
+    The ``_born_iter`` class calls the ``born`` method of individuals
+    after a ``FROM-SELECT`` statement and handles calls to ``rest`` when
+    the underlying sequence does not support it.
     '''
     
     DEFINITIONS_PY3 = '''from itertools import islice
@@ -43,15 +44,16 @@ class _born_iter(object):
     def __iter__(self): return self
     def __next__(self): return next(self.src).born()'''
     '''Definitions used in compiled systems.
-
-    The ``_iter`` method automatically calls ``__iter__`` or ``__call__`` depending
-    on the parameter type, allowing constructors and lists to be used interchangeably.
-    If multiple sequences are provided they are concatenated as required by
-    ``FROM-SELECT`` statements.
-
-    The ``_born_iter`` class calls the ``born`` method of individuals after a
-    ``FROM-SELECT`` statement and handles calls to ``rest`` when the underlying
-    sequence does not support it.
+    
+    The ``_iter`` method automatically calls ``__iter__`` or
+    ``__call__`` depending on the parameter type, allowing constructors
+    and lists to be used interchangeably. If multiple sequences are
+    provided they are concatenated as required by ``FROM-SELECT``
+    statements.
+    
+    The ``_born_iter`` class calls the ``born`` method of individuals
+    after a ``FROM-SELECT`` statement and handles calls to ``rest`` when
+    the underlying sequence does not support it.
     '''
     
     if sys.version.startswith('3'):
@@ -85,8 +87,8 @@ class _born_iter(object):
         args = dict((k, ''.join(self.write(v))) for k, v in node.arguments.iteritems())
         if node.name == '_getitem':
             if node.arguments['key'].tag == 'value':
-                yield self.FUNCTIONS['_getitem_int'] % \
-                    { 'source': args['source'], 'key': str(int(node.arguments['key'].value)) }
+                yield (self.FUNCTIONS['_getitem_int'] %
+                       { 'source': args['source'], 'key': str(int(node.arguments['key'].value)) })
             else:
                 yield fmt % args
         elif fmt:
@@ -101,7 +103,7 @@ class _born_iter(object):
                 args['lambda_'] = args['lambda']
                 del args['lambda']
             allargs = sorted(args.iteritems(), key=lambda i: i[0])
-            arglist = ', '.join([value for key, value in allargs if key[0] == '#'] + \
+            arglist = ', '.join([value for key, value in allargs if key[0] == '#'] +
                                 ['%s=%s' % (key, value) for key, value in allargs if key[0] != '#'])
             
             if node.name == '_list':
@@ -192,8 +194,8 @@ class _born_iter(object):
     
     def write_joinsource(self, node):
         sources = [''.join(self.write(s)) for s in node.sources]
-        yield '([' + ', '.join(sources) + '], ' + \
-               '[' + ', '.join('"%s"' % s for s in sources) + '])'
+        yield ('([' + ', '.join(sources) + '], ' +
+               '[' + ', '.join('"%s"' % s for s in sources) + '])')
     
     def write_eval(self, node):
         yield '# ' + str(node)
@@ -221,9 +223,12 @@ class _born_iter(object):
     def write_block(self, node):
         variables_in = ', '.join(sorted(self.safe_argument(n) for n in node.variables_in))
         variables_in_safe = ', '.join(sorted(self.safe_variable(n) for n in node.variables_in))
-        variables_out = ', '.join(sorted(self.safe_argument(n) for n in set(node.variables_out).intersection(self.ast.globals)))
-        variables_out_safe = ', '.join(sorted(self.safe_variable(n) for n in set(node.variables_out).intersection(self.ast.globals)))
-        variables_out_base = ', '.join(sorted(self.base_variable(n) for n in set(node.variables_out).intersection(self.ast.globals)))
+        variables_out = ', '.join(sorted(self.safe_argument(n) 
+                                         for n in set(node.variables_out).intersection(self.ast.globals)))
+        variables_out_safe = ', '.join(sorted(self.safe_variable(n)
+                                              for n in set(node.variables_out).intersection(self.ast.globals)))
+        variables_out_base = ', '.join(sorted(self.base_variable(n)
+                                              for n in set(node.variables_out).intersection(self.ast.globals)))
         yield 'def __block_%s(%s):' % (node.name, variables_in_safe)
         local_groups = list(node.groups_local.iterkeys())
         if local_groups:
@@ -262,11 +267,6 @@ class _born_iter(object):
         # write global definitions
         result.extend(self.DEFINITIONS.splitlines())
         result.append('')
-        
-        # 'declare' global groups and variables
-        #for g in ast.globals:
-        #    result.append(g + ' = None')
-        #result.append('')
         
         # write initialisation block
         result.extend(self.write(ast.init_block))

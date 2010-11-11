@@ -20,8 +20,8 @@ This plugin provides a Differential Evolution system definition.
 from itertools import izip as zip
 
 def mutate_DE(_source, scale):
-    '''A generator that yields one mutated Individual for every JoinedIndividual
-    passed in source.
+    '''A generator that yields one mutated Individual for every
+    JoinedIndividual passed in source.
     '''
     def _combine(v1, p1, p2, low, high):
         result = v1 + scale * (p1 - p2)
@@ -31,8 +31,9 @@ def mutate_DE(_source, scale):
     
     for joined_individual in _source:
         base, parameter1, parameter2 = joined_individual[:]
-        yield type(base)([_combine(b, p1, p2, l, h) for \
-            b, p1, p2, l, h in zip(base, parameter1, parameter2, base.lower_bounds, base.upper_bounds)], base)
+        yield type(base)([_combine(b, p1, p2, l, h) for
+                          b, p1, p2, l, h in zip(base, parameter1, parameter2, base.lower_bounds, base.upper_bounds)],
+                         base)
 
 DE_DEF = r'''
 FROM random_real(length=config.landscape.size.exact, \

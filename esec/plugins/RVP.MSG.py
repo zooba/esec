@@ -14,8 +14,8 @@
 
 '''A Maximum Set of Gaussians landscape.
 
-This plugin provides the `MSG` landscape. The `MaxSetGaussians` class is a helper
-class and is not intended to be used directly.
+This plugin provides the `MSG` landscape. The `MaxSetGaussians` class is
+a helper class and is not intended to be used directly.
 '''
 
 from esec.landscape.real import Real
@@ -24,8 +24,8 @@ from numpy import zeros, random, cos, sin, mat, diag, eye, multiply, exp
 from numpy import max as numpy_max
 
 class MaxSetGaussians(object):
-    '''Helper class for `MSG`. Initialises covariance, meanvector and optimum
-    values needed.
+    '''Helper class for `MSG`. Initialises covariance, meanvector and
+    optimum values needed.
     '''
     def __init__(self, ndims, ngauss, lower, upper, globalvalue, ratio, seed=1):
         # keep a copy of the parameters
@@ -130,25 +130,25 @@ class MaxSetGaussians(object):
 class MSG(Real):
     '''Max Set of Gaussians (MSG) landscape generator
     
-    As proposed by Gallagher and Yuan \cite{Gallagher2006 }. Able to create a
-    wide range of landscape features with a minimal parameter set.  Uses a set
-    of mutivariate Gaussian functions create with the following five
-    parameters:
+    As proposed by Gallagher and Yuan \cite{Gallagher2006 }. Able to
+    create a wide range of landscape features with a minimal parameter
+    set.  Uses a set of mutivariate Gaussian functions create with the
+    following five parameters:
     
     - n = ``parameters`` = dimensionality of the landscape
     - m = ``ngauss`` = number of Gaussian components (functions)
-    - D(lower, upper) = ``bounds.{lower, upper }`` = lower and upper range for
-      components (homogeneous)
+    - D(lower, upper) = ``bounds.{lower, upper }`` = lower and upper
+      range for components (homogeneous)
     - p = ``gvalue`` = value of the single global optimum peak
     - r = ``ratio`` = ratio of the local optima to the global optimum
     
-    See http://www.itee.uq.edu.au/~marcusg/msg.html for descriptions, examples,
-    references and source code (matlab). This subclass uses the real_mst.py
-    module to do the acualy work. See code there (based on matlab code made
-    available by Gallagher).
+    See http://www.itee.uq.edu.au/~marcusg/msg.html for descriptions,
+    examples, references and source code (matlab). This subclass uses
+    the real_mst.py module to do the acualy work. See code there (based
+    on Matlab code made available by Gallagher).
     
     Qualities: maximisation, multimodal, non-separable, unconstrained,
-    normalised (0.0 to 1.0 if gvalue == 1.0)]
+               normalised (0.0 to 1.0 if gvalue == 1.0)]
     '''
     normalised = True
     lname = 'Max Set of Gaussians (MSG)'
@@ -217,14 +217,14 @@ class MSG(Real):
             result.extend(self._msg.info())
         return result
 
-#==============================================================================
+#=======================================================================
 
-# Initialise the default landscape class to MSG. This makes the plugin behave
-# as if this were a built-in landscape.
+# Initialise the default landscape class to MSG. This makes the plugin
+# behave as if this were a built-in landscape.
 defaults = {
     'landscape': {
         'class': MSG,
     }
 }
 
-#==============================================================================
+#=======================================================================

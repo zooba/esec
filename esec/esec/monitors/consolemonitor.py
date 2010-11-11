@@ -1,5 +1,5 @@
-'''A monitor that displays output using the console or other 'file-like' object
-based on prespecified report strings.
+'''A monitor that displays output using the console or other 'file-like'
+object based on prespecified report strings.
 
 See `esec.monitors` for a general overview of monitors.
 '''
@@ -25,8 +25,8 @@ class NullStream(object):
         pass
 
 class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
-    '''A monitor that displays output using the console or other 'file-like' object
-    based on prespecified report strings.
+    '''A monitor that displays output using the console or other
+    'file-like' object based on prespecified report strings.
     
     See `esec.monitors` for a general overview of monitors.
     '''
@@ -126,29 +126,34 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
     }
     '''The set of known column descriptors.
     
-    Each descriptor is either a string or a list of three elements. Strings are
-    interpreted as a list of other headers, allowing multiple columns to be specified
-    under one name. For example, ``'best'`` is defined as ``'best_bday+best_fit+|'``;
-    specifying ``'best'`` in a report string is equivalent to specifying
+    Each descriptor is either a string or a list of four elements.
+    Strings are interpreted as a list of other headers, allowing
+    multiple columns to be specified under one name. For example,
+    ``'best'`` is defined as ``'best_bday+best_fit+|'``; specifying
+    ``'best'`` in a report string is equivalent to specifying
     ``'best_bday+best_fit+|'``.
     
-    Descriptors mapping to a list of three elements include, in order, a heading,
-    a format string and a method or statistic name. The headings are used to display
-    the heading of a table. The method name is mapped to a callable object or function
-    on `ConsoleMonitor`. Specifying ``'stats.'`` at the start of the method name
-    interprets the next dotted-part of the name as a member of the statistics object
-    kept by the monitor, and the remainder as a member of that.
+    Descriptors mapping to a list of four elements include, in order, a
+    heading, a format string, a method or statistic name and a default
+    value. The headings are used to display the heading of a table. The
+    method name is mapped to a callable object or function on
+    `ConsoleMonitor`. Specifying ``'stats.'`` at the start of the method
+    name interprets the next dotted-part of the name as a member of the
+    statistics object kept by the monitor, and the remainder as a member
+    of that. The default value is used if the member does not exist. If
+    a default has not been specified, an error may be raised.
     
-    For example, the value ``'stats.global_max.fitness'`` retrieves the value of
-    ``global_max``. The displayed value, however, is the ``fitness`` member of the
-    retrieved value.
+    For example, the value ``'stats.global_max.fitness'`` retrieves the
+    value of ``global_max``. The displayed value, however, is the
+    ``fitness`` member of the retrieved value.
     
     The format string is any standard Python format string.
     '''
     
     if len('%10.1e' % 1.0) != 10:
-        # IronPython handles the %e format badly, so detect this and work around it.
-        # (Using a test instead of is_ironpython() in case it gets fixed.)
+        # IronPython handles the %e format badly, so detect this and
+        # work around it. (Using a test instead of is_ironpython() in
+        # case this gets fixed.)
         format.update({
             'best_fit_float':   [ '  fitness        ', '%17.3e ', 'stats.global_max.fitness.simple' ],
             
@@ -181,43 +186,45 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         },
         'formats?' : dict,
     }
-    '''The expected format of the configuration dictionary passed to `__init__`.
+    '''The expected format of the configuration dictionary passed to
+    `__init__`.
     
     .. include:: epydoc_include.txt
     
     Members:
-      verbose : (int |ge| 0 [defaults to zero])
+      verbose : (int |ge| 0 [default zero])
         The verbosity level to use.
       
       out : (writeable [optional])
         The file-like object to write all details to. If specified,
         ``report_out``, ``summary_out`` and ``config_out`` are ignored.
       
-      report_out : (writeable [defaults to ``sys.stdout``])
+      report_out : (writeable [default ``sys.stdout``])
         The file-like object to write report details to.
       
-      summary_out : (writeable [defaults to ``sys.stdout``])
+      summary_out : (writeable [default ``sys.stdout``])
         The file-like object to write report summaries to.
       
-      config_out : (writeable [defaults to ``sys.stdout``])
+      config_out : (writeable [default ``sys.stdout``])
         The file-like object to write configuration details to.
       
-      error_out : (writeable [defaults to ``sys.stderr``])
+      error_out : (writeable [default ``sys.stderr``])
         The file-like object to write error details to.
       
-      primary : (str [defaults to ``'population'``])
-        The name of the primary population. The primary population is used
-        to determine whether termination conditions have been reached.
+      primary : (str [default ``'population'``])
+        The name of the primary population. The primary population is
+        used to determine whether termination conditions have been
+        reached.
       
-      report : (str [defaults to ``'brief+global'``])
+      report : (str [default ``'brief+global'``])
         The report format string, made up of the desired report column
         names (from `format`) concatenated with '+' symbols.
       
-      summary : (str [defaults to ``'status+best+best_phenome'``])
+      summary : (str [default ``'status+best+best_phenome'``])
         The summary format string, made up of the desired report column
         names (from `format`) concatenated with '+' symbols.
       
-      exception_summary : (str [defaults to ``'status+gen+births+evals'``])
+      exception_summary : (str [default ``'status+gen+births+evals'``])
         The summary format string to use when an exception has terminated
         the experiment. Uses the same syntax as ``summary``. (Override
         the `on_exception` function to provide different handling of
@@ -236,14 +243,13 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
       
       limits.unique : (int |ge| 1 [optional])
         Terminate when the number of unique individuals (based on
-        phenome) in the primary population reaches or falls below
-        this.
+        phenome) in the primary population reaches or falls below this.
       
       limits.evaluations : (int > 0 [optional])
-        Terminate when the number of evaluations is greater than
-        this. The experiment will not terminate until the end of the
-        current block, which may result in the actual number of
-        evaluations being higher.
+        Terminate when the number of evaluations is greater than this.
+        The experiment will not terminate until the end of the current
+        block, which may result in the actual number of evaluations
+        being higher.
       
       formats : (dictionary)
         A dictionary of extra formats to include with those in `format`.
@@ -292,9 +298,9 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         
         # - Open filenames with optional overwrite-protection
         def _do_open(filename):
-            '''Opens a file with the name or pattern provided. If `filename`
-            contains a ``%`` symbol, it is formatted with a unique integer
-            index.
+            '''Opens a file with the name or pattern provided. If
+            `filename` contains a ``%`` symbol, it is formatted with a
+            unique integer index.
             '''
             if '%' in filename:
                 i = 0
@@ -355,15 +361,21 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         self.exception_summary = self.parse_report(self.cfg.exception_summary)
         
         # These statistics are slow to calculate, so only bother if we're interested in them
-        part_list = set(self.cfg.report.split('+') + \
-                        self.cfg.summary.split('+') + \
+        part_list = set(self.cfg.report.split('+') +
+                        self.cfg.summary.split('+') +
                         self.cfg.exception_summary.split('+'))
         self.measure_diversity = 'local_diversity' in part_list
-        '''``True`` if diversity should be calculated for each group; otherwise, ``False``.'''
+        '''``True`` if diversity should be calculated for each group;
+        otherwise, ``False``.
+        '''
         self.measure_dispersion = 'local_dispersion' in part_list
-        '''``True`` if dispersion should be calculated for each group; otherwise, ``False``.'''
+        '''``True`` if dispersion should be calculated for each group;
+        otherwise, ``False``.
+        '''
         self.measure_unique = 'local_unique' in part_list or 'unique' in self.limits
-        '''``True`` if the number of unique individuals should be calculated for each group; otherwise, ``False``.'''
+        '''``True`` if the number of unique individuals should be
+        calculated for each group; otherwise, ``False``.
+        '''
         
         # ------------------------------------------------------------
         # Other members
@@ -379,12 +391,15 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         self._last_block_name = 'initialisation'
     
     class _read_stats(object):  #pylint: disable=C0103,R0903
-        '''Read any specified statistic from the primary population's Statistics object
+        '''Read any specified value from the primary population's
+        statistics.
         
-        If a value for ``member`` is provided, the value of that member is returned.
+        If a value for ``member`` is provided, the value of that member
+        is returned.
         
-        If the value is a tuple it is returned unmodified. Otherwise, a single element
-        tuple is returned containing the value read.'''
+        If the value is a tuple it is returned unmodified. Otherwise, a
+        single element tuple is returned containing the value read.
+        '''
         
         def __init__(self, key, member=None, default=None):
             '''Initialises a new instance of `_read_stats`.
@@ -394,12 +409,14 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                 The key to look up in ``owner._stats``.
               
               member : string [optional]
-                The member to look up in the returned statistic. This may contain
-                multiple parts, separated by period characters.
+                The member to look up in the returned statistic. This
+                may contain multiple parts, separated by period
+                characters.
               
               default : [optional]
-                The value to return if `key` or `member` are not found. If ``None``
-                or omitted, an assertion is raised when a value is not found.
+                The value to return if `key` or `member` are not found.
+                If ``None`` or omitted, an assertion is raised when a
+                value is not found.
             '''
             self.key = key
             self.member = member.split('.') if member else None
@@ -418,7 +435,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                             value = self.default
                     else:
                         value = getattr(value, part, self.default)
-                    assert value is not None, 'Statistic ' + self.key + ' has no member ' + '.'.join(self.member) + '.'
+                    assert value is not None, 'Statistic %s has no member %s.' % (self.key, '.'.join(self.member))
             if value is None and self.default is not None:
                 value = self.default
             if isinstance(value, tuple):
@@ -430,8 +447,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         '''Parses the report string provided in `report`.
         
         :Returns:
-            A tuple containing the header string, the format string and a
-            list of function calls to obtain the values for the format
+            A tuple containing the header string, the format string and
+            a list of function calls to obtain the values for the format
             string.
         
         :Exceptions:
@@ -483,10 +500,9 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         return (hdrs, fmts, calls)
     
     def on_yield(self, sender, name, group):
-        '''Collates individual statistics for each
-        group. Statistics for the primary population are promoted
-        to the main statistics dictionary to be accessible for
-        the report.
+        '''Collates individual statistics for each group. Statistics for
+        the primary population are promoted to the main statistics
+        dictionary to be accessible for the report.
         '''
         self._stats['groups'].update([name])
         self._stats[name] = pop_stat = self._stats.get(name, { })
@@ -546,8 +562,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         pop_stat['size'] = len(group)
         
         if name == self.primary:
-            # If this is the primary, transfer all stats out to the
-            # root object.
+            # If this is the primary, transfer all stats out to the root
+            # object.
             self._stats.update(pop_stat)
     
     
@@ -610,12 +626,14 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                     self._stats[key] = value
         
         elif name == 'aborted':
-            # keep mutate_insert/crossover type messages quiet, but count them
+            # keep mutate_insert/crossover type messages quiet, but
+            # count them
             for key in ('global_%s_aborted' % sender, 'local_%s_aborted' % sender):
                 self._stats[key] = self._stats.get(key, 0) + 1
 
         elif name == 'message':
-            # `value` contains a string or list of strings to display to the user
+            # `value` contains a string or list of strings to display to
+            # the user
             if isinstance(value, (tuple, list)): value = '\n'.join(value)
             assert isinstance(value, str)
             print >> self.error_out, value
@@ -674,7 +692,9 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
     
     
     def on_post_breed(self, sender):
-        '''Displays the report values and resets individual's statistics.'''
+        '''Displays the report values and resets individuals'
+        statistics.
+        '''
         if self.stop_now: return
         
         rep = self.report
@@ -698,8 +718,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             print >> self.report_out, rep[0]
     
     def on_run_end(self, sender):
-        '''Displays the summary report. If verbosity is
-        set to 4 or higher, displays the full set of statistics.
+        '''Displays the summary report. If verbosity is set to 4 or
+        higher, displays the full set of statistics.
         '''
         rep = self.exception_summary if self.stop_now else self.summary
         
@@ -734,26 +754,31 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         self.end_code = 'EXCEPTION'
     
     def should_terminate(self, sender):
-        '''Returns ``True`` if an exception has occurred or
-        one of the generation or fitness limits have been reached.
+        '''Returns ``True`` if an exception has occurred or one of the
+        generation or fitness limits have been reached.
         '''
         if self.end_code: return True
         
         if self.stop_now:
             self.end_code = 'EXCEPTION'
-        elif ('generations' in self.limits and 'generations' in self._stats and
+        elif ('generations' in self.limits and 
+              'generations' in self._stats and
               self._stats['generations'] >= self.limits.generations):
             self.end_code = 'GEN_LIMIT'
-        elif ('fitness' in self.limits and 'global_max' in self._stats and
+        elif ('fitness' in self.limits and
+              'global_max' in self._stats and
               self._stats['global_max'].fitness >= self.limits.fitness):
             self.end_code = 'FIT_LIMIT'
-        elif ('stable' in self.limits and 'stable_count' in self._stats and
+        elif ('stable' in self.limits and
+              'stable_count' in self._stats and
               self._stats['stable_count'] >= self.limits.stable):
             self.end_code = 'STABLE_LIMIT'
-        elif ('unique' in self.limits and 'local_unique' in self._stats and
+        elif ('unique' in self.limits and
+              'local_unique' in self._stats and
               self._stats['local_unique'] <= self.limits.unique):
             self.end_code = 'UNIQUE_LIMIT'
-        elif ('evaluations' in self.limits and 'global_evals' in self._stats and
+        elif ('evaluations' in self.limits and
+              'global_evals' in self._stats and
               self._stats['global_evals'] >= self.limits.evaluations):
             self.end_code = 'EVAL_LIMIT'
         
@@ -784,7 +809,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         if not is_ironpython():
             windll.kernel32.GetProcessTimes.argtypes = [ c_void_p ] * 5
         def _get_ms(self):
-            '''Returns the number of milliseconds the process has been active for.
+            '''Returns the number of milliseconds the process has been
+            active for.
             '''
             createTime, exitTime, kernelTime, userTime = c_ulonglong(), c_ulonglong(), c_ulonglong(), c_ulonglong()
             if windll.kernel32.GetProcessTimes(-1,                  # current process
@@ -802,7 +828,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         
     else:
         def _get_ms(self):
-            '''Returns the number of milliseconds the process has been active for.
+            '''Returns the number of milliseconds the process has been
+            active for.
             '''
             return long(clock() * 1000.0) - self._start_time_ms
     
@@ -812,8 +839,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         return long(clock() * 1000000.0) - self._start_time_us
     
     def _time(self, owner):
-        '''Returns ``(hours, minutes, seconds, milliseconds)`` since the first call
-        to `_time`.
+        '''Returns ``(hours, minutes, seconds, milliseconds)`` since the
+        first call to `_time`.
         '''
         milliseconds = self._get_ms()
         seconds = milliseconds // 1000
@@ -825,8 +852,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         return (hours, minutes, seconds, milliseconds)
     
     def _time_delta(self, owner):
-        '''Returns ``(hours, minutes, seconds, milliseconds)`` since the last call to
-        `_time_delta`.
+        '''Returns ``(hours, minutes, seconds, milliseconds)`` since the
+        last call to `_time_delta`.
         '''
         prev_time = self._last_time_ms
         now_time = self._last_time_ms = self._get_ms()
@@ -843,8 +870,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             return (hours, minutes, seconds, milliseconds)
 
     def _time_precise(self, owner):
-        '''Returns ``(hours, minutes, seconds, milliseconds, microseconds)`` since the
-        first call to `_time_precise`.
+        '''Returns ``(hours, minutes, seconds, milliseconds,
+        microseconds)`` since the first call to `_time_precise`.
         '''
         microseconds = self._get_us()
         milliseconds = microseconds // 1000
@@ -858,8 +885,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         return (hours, minutes, seconds, milliseconds, microseconds)
     
     def _time_delta_precise(self, owner):
-        '''Returns ``(hours, minutes, seconds, milliseconds, microseconds)`` since the
-        last call to `_time_delta_precise`.
+        '''Returns ``(hours, minutes, seconds, milliseconds,
+        microseconds)`` since the last call to `_time_delta_precise`.
         '''
         prev_time = self._last_time_us
         now_time = self._last_time_us = self._get_us()

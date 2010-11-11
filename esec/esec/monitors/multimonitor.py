@@ -6,7 +6,8 @@ See `esec.monitors` for a general overview of monitors.
 from esec.monitors import MonitorBase
 
 class MultiMonitor(MonitorBase):  #pylint: disable=R0902
-    '''A monitor that redirects all callbacks to a set of child monitors.
+    '''A monitor that redirects all callbacks to a set of child
+    monitors.
     
     See `esec.monitors` for a general overview of monitors.
     '''
@@ -14,7 +15,8 @@ class MultiMonitor(MonitorBase):  #pylint: disable=R0902
     syntax = {
         'monitors?' : list,
     }
-    '''The expected format of the configuration dictionary passed to `__init__`.
+    '''The expected format of the configuration dictionary passed to
+    `__init__`.
     
     Members:
       monitors : (list of `MonitorBase` objects)
@@ -36,15 +38,15 @@ class MultiMonitor(MonitorBase):  #pylint: disable=R0902
     
     
     def on_yield(self, sender, name, group):
-        '''Redirects the yielded groups to all monitors in the order they
-        were provided.
+        '''Redirects the yielded groups to all monitors in the order
+        they were provided.
         '''
         for monitor in self._monitors:
             monitor.on_yield(sender, name, group)
     
     def on_notify(self, sender, name, value):
-        '''Redirects the notification message to all monitors in the order
-        they were provided.
+        '''Redirects the notification message to all monitors in the
+        order they were provided.
         '''
         for monitor in self._monitors:
             monitor.on_notify(sender, name, value)
@@ -57,8 +59,8 @@ class MultiMonitor(MonitorBase):  #pylint: disable=R0902
             monitor.on_pre_reset(sender)
     
     def on_post_reset(self, sender):
-        '''Redirects the post-reset callback to all monitors in the order
-        they were provided.
+        '''Redirects the post-reset callback to all monitors in the
+        order they were provided.
         '''
         for monitor in self._monitors:
             monitor.on_post_reset(sender)
@@ -71,8 +73,8 @@ class MultiMonitor(MonitorBase):  #pylint: disable=R0902
             monitor.on_pre_breed(sender)
     
     def on_post_breed(self, sender):
-        '''Redirects the post-reset callback to all monitors in the order
-        they were provided.
+        '''Redirects the post-reset callback to all monitors in the
+        order they were provided.
         '''
         for monitor in self._monitors:
             monitor.on_post_breed(sender)

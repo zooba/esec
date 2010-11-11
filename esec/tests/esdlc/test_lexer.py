@@ -80,49 +80,49 @@ def check_tags(source, expect):
     assert [t.tag for t in tokens] == expect.split()
 
 def test_tokenise_commands():
-    yield check_tags, \
-        "from FROM select SELECT using USING join JOIN into INTO yield YIELD begin " + \
-        "BEGIN repeat REPEAT end END eval EVAL evaluate EVALUATE", \
-        "FROM FROM SELECT SELECT USING USING JOIN JOIN INTO INTO YIELD YIELD BEGIN " + \
-        "BEGIN REPEAT REPEAT END END EVAL EVAL EVAL EVAL eos"
+    yield (check_tags,
+           "from FROM select SELECT using USING join JOIN into INTO yield YIELD begin " +
+           "BEGIN repeat REPEAT end END eval EVAL evaluate EVALUATE",
+           "FROM FROM SELECT SELECT USING USING JOIN JOIN INTO INTO YIELD YIELD BEGIN " +
+           "BEGIN REPEAT REPEAT END END EVAL EVAL EVAL EVAL eos")
     
 def test_tokenise_continue():
-    yield check_tags, \
-        "name 2.3 \\ \n name 4.6", \
-        "name number continue eos name number eos"
+    yield (check_tags,
+           "name 2.3 \\ \n name 4.6",
+           "name number continue eos name number eos")
 
 def test_tokenise_line_ending():
-    yield check_tags, \
-        'name \n  name \r\n name \r\r\n  name \r  name', \
-        'name eos name eos  name eos eos name eos name eos'
+    yield (check_tags,
+           'name \n  name \r\n name \r\r\n  name \r  name',
+           'name eos name eos  name eos eos name eos name eos')
     
-    yield check_tags, \
-        'name \n  name \r \n   name \r\r \n     name \n\r    name', \
-        'name eos name eos eos name eos eos eos name eos eos name eos'
+    yield (check_tags,
+           'name \n  name \r \n   name \r\r \n     name \n\r    name',
+           'name eos name eos eos name eos eos eos name eos eos name eos')
     
-    yield check_tags, \
-        '', \
-        'eos'
+    yield (check_tags,
+           '',
+           'eos')
     
 def test_tokenise_operator():
-    yield check_tags, \
-        '+ - * / % ^ ( ) { } [ ] = . , +-*/%^(){}[]=.,', \
-        '+ - * / % ^ ( ) { } [ ] = . , + - * / % ^ ( ) { } [ ] = . , eos'
+    yield (check_tags,
+           '+ - * / % ^ ( ) { } [ ] = . , +-*/%^(){}[]=.,',
+           '+ - * / % ^ ( ) { } [ ] = . , + - * / % ^ ( ) { } [ ] = . , eos')
     
     # each of these should be separate operators
-    yield check_tags, \
-        '+-+ -+- -- ++ *- ^- %+', \
-        '+ - + - + - - - + + * - ^ - % + eos'
+    yield (check_tags,
+           '+-+ -+- -- ++ *- ^- %+',
+           '+ - + - + - - - + + * - ^ - % + eos')
 
 def test_tokenise_equation():
-    yield check_tags, \
-        'y = (-b + sqrt(b^2 - 4*a*c)) / (2 * a)', \
-        'name = ( - name + name ( name ^ number - number * name * name ) ) / ( number * name ) eos'
+    yield (check_tags,
+           'y = (-b + sqrt(b^2 - 4*a*c)) / (2 * a)',
+           'name = ( - name + name ( name ^ number - number * name * name ) ) / ( number * name ) eos')
 
 def test_tokenise_functioncall():
-    yield check_tags, \
-        'class.method(param=value,   param = value[index+2],         param =   2.3 )', \
-        'name        ( name = name , name = name [ name + number ] , name = number ) eos'
+    yield (check_tags,
+           'class.method(param=value,   param = value[index+2],         param =   2.3 )',
+           'name        ( name = name , name = name [ name + number ] , name = number ) eos')
 
 CODE = r'''FROM random_real(length=cfg.length,lowest=-2.0,highest=2.0) SELECT (size) population
 YIELD population

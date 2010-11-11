@@ -24,7 +24,7 @@ config = {
         'size_penalty_linear_factor': 0.1,
     },
     'monitor': {
-        'report': 'gen+births+best_header+best+stable_count+best_length+|+' + \
+        'report': 'gen+births+best_header+best+stable_count+best_length+|+' +
                   'local+local_no_compile+local_unique+|+time_delta',
         'summary': 'status+best_bday+best_fit+best_length+best_phenome',
         'limits': {

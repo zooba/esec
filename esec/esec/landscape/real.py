@@ -3,8 +3,8 @@
 
 '''Real valued problem landscapes.
 
-The `Real` base class inherits from `Landscape` for parameter validation and
-support. See `landscape` for details.
+The `Real` base class inherits from `Landscape` for parameter validation
+and support. See `landscape` for details.
 
 Algorithm Test Standards:
 
@@ -48,27 +48,29 @@ class Real(Landscape):
             'lower': [tuple, list, int, float, str, None],
             'upper': [tuple, list, int, float, str, None],
         },
-        'lower_bounds?': [tuple, list, int, float, str, None],    # lower_bounds overrules bounds.lower
-        'upper_bounds?': [tuple, list, int, float, str, None],    # upper_bounds overrules bounds.upper
+        # lower_bounds overrules bounds.lower
+        'lower_bounds?': [tuple, list, int, float, str, None],
+        # upper_bounds overrules bounds.upper
+        'upper_bounds?': [tuple, list, int, float, str, None],
     }
     
     # Subclasses can set default to overlay their changes on to this
-    # Note that specifying defaults for lower_bounds or upper_bounds will
-    # overrule any settings for bounds.lower or bounds.upper.
+    # Note that specifying defaults for lower_bounds or upper_bounds
+    # will overrule any settings for bounds.lower or bounds.upper.
     default = {
         'bounds': { 'lower': -1.0, 'upper': 1.0 }
     }
     
     
-    # used by code testing to easily test each class using simple strings
+    # used by testing to easily test each class using simple strings
     test_key = (('size.exact', int), ('bounds.lower', float), ('bounds.upper', float),)
     #n=params lbd ubd
     test_cfg = ('2 0.0 1.0',)
     
     
     def __init__(self, cfg=None, **other_cfg):
-        '''Overlay syntax and default requirements, validate, assign range
-        bounds and init bounds, and other landscape settings.
+        '''Overlay syntax and default requirements, validate, assign
+        range bounds and init bounds, and other landscape settings.
         '''
         # call super for overlaid syntax/defaults and validation
         super(Real, self).__init__(cfg, **other_cfg)
@@ -87,19 +89,18 @@ class Real(Landscape):
         self.lower_bounds = lbd
         '''The inclusive lower range limit on each gene.
         
-        Use `legal` on a genome to determine whether all genes are in the
-        legal range.
+        Use `legal` on a genome to determine whether all genes are in
+        the legal range.
         '''
         self.upper_bounds = ubd
         '''The exclusive upper range limit on each gene.
         
-        Use `legal` on a genome to determine whether all genes are in the
-        legal range.
+        Use `legal` on a genome to determine whether all genes are in
+        the legal range.
         '''
     
     def legal(self, indiv):
-        '''Check to see if an individual is legal.
-        '''
+        '''Check to see if an individual is legal.'''
         if not (self.size.min <= len(indiv) <= self.size.max):
             return False
         
@@ -110,8 +111,7 @@ class Real(Landscape):
     
     
     def info(self, level):
-        '''Return landscape info for any RvpBase
-        '''
+        '''Return landscape info for any real landscape.'''
         result = []
         part = "Using landscape %s" % self.lname
         if self.invert:
@@ -154,12 +154,14 @@ class Real(Landscape):
 
 #==============================================================================
 class Linear(Real):
-    '''n-dimensional linear landscape. Mainly used for testing. This is the
-    real value equivalent to binary OneMax and integer Nsum problems for n
-    dimensions.
+    '''n-dimensional linear landscape. Mainly used for testing. This is
+    the real value equivalent to binary OneMax and integer Nsum problems
+    for n dimensions.
     
     Standard initialisation range of [0, 100]
+    
     Maximum vector of x=[100, 100, ..., 100] results in f(x)=100*n
+    
     Minimum vector of x=[0, 0, ..., 0] results in f(x)=0
     
     Qualities: maximisation, separable, unconstrained
@@ -177,8 +179,8 @@ class Linear(Real):
 
 #==============================================================================
 class Neutral(Real):
-    '''n-dimensional constant value landscape of 1.0. Used mainly for testing
-    drift as fitness is not linked to gene value.
+    '''n-dimensional constant value landscape of 1.0. Used mainly for
+    testing drift as fitness is not linked to gene value.
     
     Standard initialisation range of [0, 100]
     Output of f(x) is constant (``mean``), f(x) = 1.0
@@ -210,9 +212,10 @@ class Stabilising(Real):
     '''n-dimensional stabilising value landscape. Used for illustrating
     standard selection pressure effects.
     
-    Output of f(x) a Cauchy-Lorentz distribution of peak amplitude I, centred
-    around the mean x0 (default 50) of the specified range. The scale
-    parameter gamma controls the "spead" of the distribution around the mean.
+    Output of f(x) a Cauchy-Lorentz distribution of peak amplitude I,
+    centred around the mean x0 (default 50) of the specified range. The
+    scale parameter gamma controls the "spead" of the distribution
+    around the mean.
     
     Defaults
     - initialisation range of [0, 100]
@@ -242,8 +245,7 @@ class Stabilising(Real):
         self.amp = self.cfg.amplitude
     
     def _eval(self, indiv):
-        ''' f(x) = I * ( gamma^2 / ((x - mean)^2 + gamma^2))
-        '''
+        '''f(x) = I * ( gamma^2 / ((x - mean)^2 + gamma^2))'''
         result = 0.0
         g_sq = self.gamma_sq
         m = self.mean
@@ -287,8 +289,7 @@ class Disruptive(Real):
         self.amp = self.cfg.amplitude
     
     def _eval(self, indiv):
-        ''' f(x) = I - I * ( gamma^2 / ((x - mean)^2 + gamma^2))
-        '''
+        '''f(x) = I - I * ( gamma^2 / ((x - mean)^2 + gamma^2))'''
         result = 0.0
         g_sq = self.gamma_sq
         m = self.mean
@@ -312,8 +313,8 @@ class Sphere(Real):
         
         f(x) = sum((x_i)^2)
     
-    Note: Minimisation by default. Often inverted and offset for use as a
-    fitness value (as with many other "optimisation" functions).
+    Note: Minimisation by default. Often inverted and offset for use as
+    a fitness value (as with many other "optimisation" functions).
     
     Standard initialisation range of [-5.12, 5.12]
     Minimum vector of x=[0, 0, ..., 0] results in f(x)=0
@@ -341,17 +342,19 @@ Parabola = Sphere
 class Ellipsoid(Real):
     '''Ellipsoid problem landscape.
     
-    A simple unimodal surface, also known as the "axis parallel ellipsoid
-    function". Essentially the same as the Sphere problem, except that it is
-    "stretched" along each additional dimensional axis (creating a different
-    gradient for each dimension). See also `HyperEllipsoid`.
+    A simple unimodal surface, also known as the "axis parallel
+    ellipsoid function". Essentially the same as the `Sphere` problem,
+    except that it is "stretched" along each additional dimensional axis
+    (creating a different gradient for each dimension). See also
+    `HyperEllipsoid`.
         
         f(x) = sum(i*(x_i)^2)
     
     Standard initialisation range of [-5.12, 5.12]
     Minimum vector of x=[0, 0, ..., 0] results in f(x)=0
     
-    Qualities: minimisation, unimodal, additively separable, unconstrained
+    Qualities: minimisation, unimodal, additively separable,
+               unconstrained
     '''
     lname = 'Ellipsoid'
     maximise = False
@@ -361,11 +364,8 @@ class Ellipsoid(Real):
     test_cfg = ('2 -5.12 5.12',)
     
     def _eval(self, indiv):
-        '''f(x) = sum(i^2 * x(i)^2)
-        '''
+        '''f(x) = sum(i^2 * x(i)^2)'''
         return sum(((i+1) * x*x) for i, x in enumerate(indiv))
-
-
 
 
 #==============================================================================
@@ -373,14 +373,15 @@ class HyperEllipsoid(Real):
     '''Hyper Ellipsoid problem landscape.
     
     A simple convex unimodal surface, also known as the "axis parallel
-    hyperellipsoid function". Essentially the same as the Sphere problem,
-    except that it is "stretched" along each additional dimensional axis
-    (creating a different gradient for each dimension).
+    hyperellipsoid function". Essentially the same as the Sphere
+    problem, except that it is "stretched" along each additional
+    dimensional axis (creating a different gradient for each dimension).
     
     Standard initialisation range of [-5.12, 5.12]
     Minimum vector of x=[0, 0, ..., 0] results in f(x)=0
     
-    Qualities: minimisation, unimodal, additively separable, unconstrained
+    Qualities: minimisation, unimodal, additively separable,
+               unconstrained
     '''
     lname = 'Hyper Ellipsoid'
     maximise = False
@@ -399,14 +400,16 @@ class HyperEllipsoid(Real):
 class Quadric(Real):
     '''Quadric problem landscape
     
-    Similar to the stretched-sphere qualities of the hyperellipsoid function
-    and also rotated. This version is also known as "Schwefel's function 1.2",
-    "Schewefel's Double Sum" and the "rotated hyperellipsoid function".
+    Similar to the stretched-sphere qualities of the hyperellipsoid
+    function and also rotated. This version is also known as "Schwefel's
+    function 1.2", "Schewefel's Double Sum" and the "rotated
+    hyperellipsoid function".
         
         f() = sum_{i=1 }^{n }( (sum_{j=1 }^{i }{x_j })^2)
     
-    Other variations exists that also offset each axis in proportion to the
-    dimension indices, which is of use to some specific research questions.
+    Other variations exists that also offset each axis in proportion to
+    the dimension indices, which is of use to some specific research
+    questions.
     
     Standard initialisation range of [-65.536, 65.536]
     Minimum vector of x=[0, 0, ..., 0] results in f(x)=0
@@ -421,7 +424,7 @@ class Quadric(Real):
     test_cfg = ('2 -65.536 65.536',)
     
     def _eval(self, indiv):
-        '''f() = sum_{i=1 }^{n }( (sum_{j=1 }^{i }{x_j })^2) '''
+        '''f() = sum_{i=1 }^{n }( (sum_{j=1 }^{i }{x_j })^2)'''
         total = 0
         for i in xrange(len(indiv)):
             tmp = 0
@@ -433,13 +436,15 @@ RotatedHyperEllipsoid = Quadric
 
 #==============================================================================
 class NoisyQuartic(Real):
-    '''N-dimensional quartic function landscape with added Gaussian noise.
+    '''N-dimensional quartic function landscape with added Gaussian
+    noise.
     
-    No fixed global optimum due to the noise, but on-average the same as the
-    quartic function. An interesting test case for the robustness qualities
-    of some algorithms when faced with noise.
+    No fixed global optimum due to the noise, but on-average the same as
+    the quartic function. An interesting test case for the robustness
+    qualities of some algorithms when faced with noise.
     
-    Gaussian noise (seed) is used. Other random distributions could be used.
+    Gaussian noise (seed) is used. Other random distributions could be
+    used.
     
     Standard initialisation range of [-5.12, 5.12]
     Minimum vector of x=[0, 0, ..., 0] results approximately f(x)=0
@@ -454,8 +459,7 @@ class NoisyQuartic(Real):
     test_cfg = ('2 -5.12 5.12',)
     
     def _eval(self, indiv):
-        '''f(x) = sum(i*(x_i)^4 + gauss(0, 1))
-        '''
+        '''f(x) = sum(i*(x_i)^4 + gauss(0, 1))'''
         gauss = self.rand.gauss
         return sum((i+1) * x**4 + gauss(0, 1) for i, x in enumerate(indiv))
 
@@ -464,22 +468,23 @@ class NoisyQuartic(Real):
 class Easom(Real):
     '''Easom function landscape
     
-    A very specific 2D problem domain. It distinctive qualities are that it
-    contains very little gradient "hint's" that would be of use to
-    hill-climbing or local-optimisation techniques, and a dramatic unimodal
-    optimum region at (pi, pi). The standard value range used is [-100, 100].
+    A very specific 2D problem domain. It distinctive qualities are that
+    it contains very little gradient "hints" that would be of use to
+    hill-climbing or local-optimisation techniques, and a dramatic
+    unimodal optimum region at (pi, pi). The standard value range used
+    is [-100, 100].
         
         f(x) = cos(x1)*cos(x2)*exp(-((x1-pi)^2+(x2-pi)^2))
     
-    When used as a maximisation function, the output is normalised (0, 1).
-    However the function is often inverted for use as minimisation benchmark,
-    and any offset could specified.
+    When used as a maximisation function, the output is normalised
+    (0, 1). However the function is often inverted for use as
+    minimisation benchmark, and any offset could be specified.
     
     Standard initialisation range of [-100, 100]
     Maximum vector of x=[pi, pi] results in f(x)=1.0
     
-    If inverted (for minimisation), an offset of 1.0 is a suggested standard
-    value.
+    If inverted (for minimisation), an offset of 1.0 is a suggested
+    standard value.
     
     Qualities: maximisation, unimodal, normalised, (un)constrained
     '''
@@ -500,19 +505,22 @@ class Easom(Real):
 class Rosenbrock(Real):
     '''n-dimensional Rosenbrock function landscape.
     
-    A very well known classic optimisation problem, with many alternative
-    titles including "De Jong Function 2 (F2)", "Rosenbrock's Saddle" and the
-    "Banana" function. The 2D version is often shown, however there can be
-    issues comparing n-dimensional versions of this function, as some
-    implementations simply use a sum of 2D pairs, while this version is the
-    tougher sum of overlapping pairs version.
+    A very well known classic optimisation problem, with many
+    alternative titles including "De Jong Function 2 (F2)",
+    "Rosenbrock's Saddle" and the "Banana" function. The 2D version is
+    often shown, however there can be issues comparing n-dimensional
+    versions of this function, as some implementations simply use a sum
+    of 2D pairs, while this version is the tougher sum of overlapping
+    pairs version.
     
-    See: http://mathworld.wolfram.com/RosenbrockFunction.html for 2D details.
+    See: http://mathworld.wolfram.com/RosenbrockFunction.html for 2D
+    details.
     
     Standard initialisation range of [-2.048, 2.048]
     Minimum vector of x=[1, 1, ..., 1] results in f(x)=0
     
-    Qualities: minimisation, multimodal (n>2), non-separable, unconstrained.
+    Qualities: minimisation, multimodal (n>2), non-separable,
+               unconstrained
     '''
     lname = 'Rosenbrock'
     maximise = False
@@ -537,23 +545,24 @@ class Rosenbrock(Real):
 class Rastrigin(Real):
     '''Rastrigin problem landscape
     
-    Similar to the Sphere (De Jong F1), however the surface is modulated with
-    an additional cosine term to induce multiple local minima, and hence create
-    a highly multimodal and deceptive surface. Modal features are regular and
-    separable.
+    Similar to the Sphere (De Jong F1), however the surface is modulated
+    with an additional cosine term to induce multiple local minima, and
+    hence create a highly multimodal and deceptive surface. Modal
+    features are regular and separable.
         
         f(x) = 10.0*n + sum(x(i)^2 - 10.0*cos(2*pi*x(i)))
     
-    In this instance the standard values of amplitude A=10 and modulation
-    frequency \omega=2*pi. If altered, this landscape can be used as a simple
-    problem generator, although this is rarely done.
+    In this instance the standard values of amplitude A=10 and
+    modulation frequency \omega=2*pi. If altered, this landscape can be
+    used as a simple problem generator, although this is rarely done.
     
-    The default setting is to use an inverted landscape for maximisation.
+    The default setting is to use an inverted landscape for
+    maximisation.
     
     Standard initialisation range of [-5.12, 5.12]
     Minimum vector of x=[0, 0, ..., 0] results is f(x)=0
     
-    Qualities: minimisation, multimodal, not normalised, unconstrained.
+    Qualities: minimisation, multimodal, not normalised, unconstrained
     '''
     lname = 'Rastrigin'
     maximise = False
@@ -564,8 +573,7 @@ class Rastrigin(Real):
     test_cfg = ('2 -5.12 5.12',)
     
     def _eval(self, indiv):
-        '''f() = 10*n + sum((x_i)^2 - 10cos(2*pi*x_i))
-        '''
+        '''f() = 10*n + sum((x_i)^2 - 10cos(2*pi*x_i))'''
         c = 2*pi
         return 10*len(indiv) + sum( x*x - 10*cos(c*x) for x in indiv)
 
@@ -573,16 +581,17 @@ class Rastrigin(Real):
 class Griewangk(Real):
     '''Griewangk problem landscape
     
-    The surface of this domain is similar to the Rastrigin function, in that it
-    creates a sphere-like surface modulated by a cosine based term. There are
-    many local optima regularly distributed. At large scale the overall surface
-    is relatively smooth, while at small scale near the optimum, the modulation
-    term creates a very deceptive surface.
+    The surface of this domain is similar to the Rastrigin function, in
+    that it creates a sphere-like surface modulated by a cosine based
+    term. There are many local optima regularly distributed. At large
+    scale the overall surface is relatively smooth, while at small scale
+    near the optimum, the modulation term creates a very deceptive
+    surface.
         
         f(x) = 1/4000*sum(x_i-100)^2 - prod((x_i-100)/sqrt(i)) + 1
     
-    Not recommended as high-dimensional standard (as it becomes smoother and
-    less deceptive as n increases).
+    Not recommended as high-dimensional standard (as it becomes smoother
+    and less deceptive as n increases).
     
     Standard initialisation range of [-600, 600]
     Minimum vector of x=[0, 0, ..., 0] results in f(x)=0.
@@ -598,8 +607,7 @@ class Griewangk(Real):
     test_cfg = ('2 -600 600',)
     
     def _eval(self, indiv):
-        '''f(x) = 1 + sum(x_i^2/4000) - prod(code(x_i/sqrt(i))
-        '''
+        '''f(x) = 1 + sum(x_i^2/4000) - prod(code(x_i/sqrt(i))'''
         total = 0
         prod = 1
         for i, x in enumerate(indiv):
@@ -613,17 +621,19 @@ class Griewangk(Real):
 class Ackley(Real):
     '''Ackley problem landscape
     
-    Also known as "Ackley's Path". Originally defined for two dimensions, later
-    generalised to n. The overall form is an exponential well modulated by a
-    cosine term providing the familiar macro- and micro-level challenge of many
-    benchmark problems. Unlike the Rastigin function, Ackley's is not separable
-    despite the appearance of regular local optima.
+    Also known as "Ackley's Path". Originally defined for two
+    dimensions, later generalised to n. The overall form is an
+    exponential well modulated by a cosine term providing the familiar
+    macro- and micro-level challenge of many benchmark problems. Unlike
+    the Rastigin function, Ackley's is not separable despite the
+    appearance of regular local optima.
         
         f(x) = 20 + e - 20exp(-0.2 * sqrt((1/n)*sum(x_i^2)))
                       - exp((1/n)*sum(cos(2*pi*x_i)))
     
-    Although it is possible to alter the constant terms of the function and use
-    this as a problem generator, it seems this is rarely done in practice.
+    Although it is possible to alter the constant terms of the function
+    and use this as a problem generator, it seems this is rarely done in
+    practice.
     
     Standard initialisation range of [-32.768, 32.768] or [-30, 30]
     Minimum vector of x=[0, 0, ..., 0] results in f(x)=0.
@@ -656,19 +666,23 @@ class Ackley(Real):
 class Schwefel(Real):
     '''Schwefel problem landscape (Sine Root)
     
-    A deceptive multimodal minimisation problem with a single global minimum
-    geometrically distant fromt the best known local minimum within the
-    constrained search space, making it very likely for searches to converge to
-    non-optimal locations.
+    A deceptive multimodal minimisation problem with a single global
+    minimum geometrically distant fromt the best known local minimum
+    within the constrained search space, making it very likely for
+    searches to converge to non-optimal locations.
         
         f(x) = 418.9829*n + sum(x_i * sin(sqrt(abs(x_i))))
     
     The offset term of 418.9829*n is used to create an optimum f(x) = 0
     
-    Standard initialisation of [-500, 500] or [-512, 512] or [-512.03, 511.97]
-    Minimum vector of x=[-420.9687, -420.9687, ..., -420.9687] results in f(x)=0.
+    Standard initialisation of [-500, 500] or [-512, 512] or
+    [-512.03, 511.97]
     
-    Qualities: minimisation, multimodal, additively separable, (un)constrained.
+    Minimum vector of x=[-420.9687, -420.9687, ..., -420.9687] results
+    in f(x)=0.
+    
+    Qualities: minimisation, multimodal, additively separable,
+               (un)constrained.
     '''
     lname = 'Schwefel'
     maximise = False
@@ -679,18 +693,17 @@ class Schwefel(Real):
     test_cfg = ('2 -512 512',)
     
     def _eval(self, indiv):
-        '''f(x) = 418.9829*n + sum(x_i * sin(sqrt(abs(x_i))))
-        '''
+        '''f(x) = 418.9829*n + sum(x_i * sin(sqrt(abs(x_i))))'''
         return 418.9829*len(indiv) + sum(x * sin(sqrt(fabs(x))) for x in indiv)
 
 
 #==============================================================================
 class Michalewicz(Real):
-    '''Michalewicz function landscape
+    '''Michalewicz function landscape.
     
     A multimodal domain with n! local optima and very little gradient
-    information for guided local search methods to take advantage of, although
-    the domain is additively separable.
+    information for guided local search methods to take advantage of,
+    although the domain is additively separable.
         
         f(x) = -sum(sin(x_i)*sin(i*x_i^2 / pi)^(2*m))
     
@@ -701,7 +714,8 @@ class Michalewicz(Real):
         n=5,  f(x) = -4.687658
         n=10, f(x) = -9.66015
     
-    Qualities: minimisation, multimodal, additively separable, unconstrained
+    Qualities: minimisation, multimodal, additively separable,
+               unconstrained
     '''
     lname = 'Michalewicz'
     maximise = False
@@ -716,8 +730,7 @@ class Michalewicz(Real):
         self.m2 = 2*10 # this is a default standard
     
     def _eval(self, indiv):
-        '''f(x) = -sum(sin(x_i)*sin(i*x_i^2 / pi)^(2*m))
-        '''
+        '''f(x) = -sum(sin(x_i)*sin(i*x_i^2 / pi)^(2*m))'''
         m2 = self.m2
         total = 0
         for i, x in enumerate(indiv):
@@ -734,8 +747,8 @@ class Michalewicz(Real):
 class MultiPeak1(Real):
     '''MultiPeak 1: Sinusoidal Multiple Peaks landscape (for Niching)
     
-    Part 1 of a set of four one-dimensional multipeak functions for standard
-    niche method testing.
+    Part 1 of a set of four one-dimensional multipeak functions for
+    standard niche method testing.
         
         f(x) = sin^6(5*pi*x)
     
@@ -743,7 +756,8 @@ class MultiPeak1(Real):
     - Peaks of equal height
     - Regular spacing between peaks
     
-    Five equivalent maxima of f(x) = 1.0 at x values of [0.1, 0.3, 0.5, 0.7, 0.9]
+    Five equivalent maxima of f(x) = 1.0 at x values of
+    [0.1, 0.3, 0.5, 0.7, 0.9]
     
     Qualities: maximisation, multimodal, normalised, constrained.
     '''
@@ -763,8 +777,8 @@ class MultiPeak1(Real):
 class MultiPeak2(Real):
     '''Multipeak2: sinusoidal Multiple Peaks (for Niching)
     
-    Part 2 of a set of four one-dimensional multipeak functions for standard
-    niche method testing.
+    Part 2 of a set of four one-dimensional multipeak functions for
+    standard niche method testing.
         
         f(x) = sin^6(5*pi(x^(3/4)-0.05))
     
@@ -790,8 +804,8 @@ class MultiPeak2(Real):
 class MultiPeak3(Real):
     '''Multipeak3: Decreasing Multiple Peaks (for Niching)
     
-    Part 3 of a set of four one-dimensional multipeak functions for standard
-    niche method testing.
+    Part 3 of a set of four one-dimensional multipeak functions for
+    standard niche method testing.
         
         f(x) = (exp(-2*log(2)*((x-0.08)/0.854)**2))*sin(5*pi*x)**6
     
@@ -818,10 +832,11 @@ class MultiPeak3(Real):
 class MultiPeak4(Real):
     '''Multipeak4: Decreasing Multiple Peaks (for Niching)
     
-    Part 3 of a set of four one-dimensional multipeak functions for standard
-    niche method testing.
+    Part 3 of a set of four one-dimensional multipeak functions for
+    standard niche method testing.
         
-        f(x) = (exp(-2*log(2)*((x-0.08)/0.854)**2))*sin(5*pi*(x**(3.0/4)-0.05))**6
+        f(x) = (exp(-2*log(2)*((x-0.08)/0.854)**2)) * 
+               sin(5*pi*(x**(3.0/4)-0.05))**6
     
     This version:
     - Peaks of decreasing height (single optima)
@@ -847,8 +862,8 @@ class MultiPeak4(Real):
 class Booth(Real):
     '''Booth 2D function landscape.
     
-    A simple constrained two-dimensional multimodal (subtle) domain containing
-    several local minima and one global minimum.
+    A simple constrained two-dimensional multimodal (subtle) domain
+    containing several local minima and one global minimum.
         
         f(x1, x2) = (x_1 + 2*x_2 - 7)^2 + (2*x_1 + x_2 -5)^2
     
@@ -876,9 +891,9 @@ class Booth(Real):
 class Himmelblau(Real):
     '''Himmelblau function (2D)
     
-    A two-dimensional multimodal minimisation problem landscape with four
-    near equal optimum (although there are differences at higher value
-    resolution).
+    A two-dimensional multimodal minimisation problem landscape with
+    four near equal optimum (although there are differences at higher
+    value resolution).
         
         f(x) = (x1^2 + x2 - 11)^2 + (x1 + x2^2 - 7)^2
     
@@ -911,8 +926,9 @@ class Himmelblau(Real):
 class SixHumpCamelBack(Real):
     '''Six Hump Camel-back function landscape.
     
-    A two-dimensional non-separable multimodal and multi-solution minimisation
-    problem with six minimum features within an asymmetric bounded domain.
+    A two-dimensional non-separable multimodal and multi-solution
+    minimisation problem with six minimum features within an asymmetric
+    bounded domain.
         
         f(x) = 4x1^2 - 2.1x1^4 + (1/3)x1^6 + x1*x2 - 4x2^2 + 4x2^4
     
@@ -984,35 +1000,40 @@ class SchafferF6(Real):
 class FMS(Real):
     '''Frequency Modulation Sounds landscape
     
-    A highly complex multimodal function with strong epistasis. The objective
-    is to determine six real value parameters used in a FM sound model.
-    \cite{Tsutsui1993, Tsutsui1997 }
+    A highly complex multimodal function with strong epistasis. The
+    objective is to determine six real value parameters used in a FM
+    sound model. \cite{Tsutsui1993, Tsutsui1997 }
+    
     See http://tracer.lcc.uma.es/problems/fms/fms.html
     
     The sound model is defined as:
         
-        y(t) = a1 * sin(w1*t*theta + a2 * sin(w2*t*theta + a3 * sin(w3*t*theta)))
+        y(t) = a1 * sin(w1*t*theta + a2 * 
+                        sin(w2*t*theta + a3 * sin(w3*t*theta)))
     
-    where a set of values for (a1, w1, a2, w2, a3, w3) has been specified. A
-    standard set of values has been implemented, but other values could also
-    be used to make this function a landscape generator:
+    where a set of values for (a1, w1, a2, w2, a3, w3) has been
+    specified. A standard set of values has been implemented, but other
+    values could also be used to make this function a landscape
+    generator:
         
         x_0 = (1.0, 5.0, -1.5, 4.8, 2.0, 4.9)
     
     All values are in the range of [-6.4, 6.35]
     
-    The output of the function using the reference values y_0 is then sample
-    at 100 points over an interval of 2*pi and compared to the function output
-    using a set of supplied model parameters. The error is squared is summed
+    The output of the function using the reference values y_0 is then
+    sample at 100 points over an interval of 2*pi and compared to the
+    function output using a set of supplied model parameters. The error
+    is squared and summed.
         
-        f(x) = sum(y(t) - y_0(t))^2, for 100 points of t in [0, 2*pi]
+        f(x) = sum((y(t) - y_0(t))^2), for 100 points of t in [0, 2*pi]
     
     The minimum error vector x (matching the x_0 values) gives f(x) = 0
     
-    Difficult (very) to solve without local search so it has been suggest to
-    stop at around 10^-2 resolution.
+    Difficult (very) to solve without local search so it has been
+    suggested to stop at around 10^-2 resolution.
     
-    Qualities: minimisation (error), multimodal, non-separable, constrained
+    Qualities: minimisation (error), multimodal, non-separable,
+               constrained
     '''
     lname = 'Frequency Modulation Sounds (FMS)'
     maximise = False
@@ -1047,6 +1068,8 @@ class FMS(Real):
     
     
     def _fms(self, v, theta_t):
-        '''y(t) = a1 * sin(w1*t*theta + a2 * sin(w2*t*theta + a3 * sin(w3*t*theta)))'''
+        '''y(t) = a1 * sin(w1*t*theta + a2 *
+                           sin(w2*t*theta + a3 * sin(w3*t*theta)))
+        '''
         return v[0] * sin(v[1]*theta_t + v[2]*sin(v[3]*theta_t + v[4]*sin(v[5]*theta_t)))
 

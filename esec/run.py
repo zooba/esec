@@ -5,21 +5,21 @@
 esec Command-line Interface
 ===========================
 
-This script provides an efficient command line interface to run single or
-multiple experiments using |esec|.
+This script provides an efficient command line interface to run single
+or multiple experiments using |esec|.
 
-All configuration information can be provided using command line arguments,
-however for research experiments the recommended method is to use a batch file
-and store the results to file. This allows experiments to be easily reproduced
-if necessary.
+All configuration information can be provided using command line
+arguments, however for research experiments the recommended method is to
+use a batch file and store the results to file. This allows experiments
+to be easily reproduced if necessary.
 
 General options (single run or batch run mode)
 
 .. _Psyco: http://psyco.sourceforge.net/
 
---optimise          Use Psyco optimisation. Requires Psyco_ to be installed.
-                    (Note that using Psyco does not guarantee that processing
-                    speed will be improved.)
+--optimise          Use Psyco optimisation. Requires Psyco_ to be
+                    installed. (Note that using Psyco does not guarantee
+                    that processing speed will be improved.)
                     
                     Abbreviation: ``-o``
 
@@ -34,21 +34,22 @@ General options (single run or batch run mode)
 
 Single "run" configuration mode
 
---config            A set of configuration names or plugins joined by plus
-                    symbols (``+``). Items are applied in the order that they
-                    appear.
+--config            A set of configuration names or plugins joined by
+                    plus symbols (``+``). Items are applied in the order
+                    that they appear.
                     
                     Abbreviation: ``-c``
                     
                     Example: ``-c RVP.Sphere+n2+GA``
 
---settings          Manually override any configuration setting. The parameter
-                    must be a quoted string of parameter-value pairs, separated
-                    by semicolons. Values are evaluated using ``eval`` and
-                    assigned in the order that they appear.
+--settings          Manually override any configuration setting. The
+                    parameter must be a quoted string of parameter-value
+                    pairs, separated by semicolons. Values are evaluated
+                    using ``eval`` and assigned in the order that they
+                    appear.
                     
-                    These overrides are applied after any settings specified
-                    with ``--config``.
+                    These overrides are applied after any settings
+                    specified with ``--config``.
                     
                     Abbreviation: ``-s``
                     
@@ -56,9 +57,10 @@ Single "run" configuration mode
 
 Multiple "batch" configuration model with logging of results
 
---batch             The name of a single batch file. This batch file must
-                    exist in the ``cfgs`` directory with an identical name
-                    (including case) and a ``.py`` extension.
+--batch             The name of a single batch file. This batch file
+                    must exist in the ``cfgs`` directory with an
+                    identical name (including case) and a ``.py``
+                    extension.
                     
                     Abbreviation: ``-b``
 
@@ -84,7 +86,6 @@ default = {
     'random_seed': 12345,
     'monitor': {
         'class': ConsoleMonitor,
-#        'limits': { },
     },
     'landscape': { 'random_seed': 12345 },
     'verbose': 0
@@ -142,8 +143,9 @@ configs.update(dialects.configs)
 #==============================================================================
 
 def _load_module(folder, mod_name):
-    '''Loads a module. Has improved error handling that reveals more
-    detail than `ImportError`.
+    '''Loads a module. Modules are loaded using ``exec`` rather than
+    ``__import__`` to allow errors in the module to appear naturally
+    rather than as an ``ImportError``.
     '''
     py_source = os.path.join(folder, mod_name + '.py')
     if os.path.exists(py_source):
@@ -167,8 +169,7 @@ def _load_module(folder, mod_name):
 
 
 def _load_config(config_string, defaults):
-    '''Loads a configuration from a configuration string.
-    '''
+    '''Loads a configuration from a configuration string.'''
     cfg = ConfigDict(defaults)
     for name in (o for o in config_string.split('+') if o):
         # Get name from configs
@@ -180,7 +181,8 @@ def _load_config(config_string, defaults):
         # Attempt to load module from cfgs or plugins
         else:
             mod = _load_module('cfgs', name) or _load_module('plugins', name)
-            if not mod: raise ImportError('Cannot find ' + name + ' as configuration or plugin.')
+            if not mod:
+                raise ImportError('Cannot find ' + name + ' as configuration or plugin.')
             
             mod_cfg1 = mod.get('configs', None)
             mod_def = mod.get('defaults', None)
@@ -194,8 +196,8 @@ def _load_config(config_string, defaults):
 def _set_low_priority():
     '''Sets the current Python process to run at low priority.
     
-    Currently only implemented for Windows (where ``sys.platform``
-    is ``'win32'``).
+    Currently only implemented for Windows (where ``sys.platform`` is
+    ``'win32'``) and IronPython (where ``sys.playform`` is ``'cli'``).
     '''
     if sys.platform == 'win32':
         from ctypes import windll, c_voidp, c_ulong
@@ -211,12 +213,13 @@ def _set_low_priority():
 # Run a single configuration
 #==============================================================================
 def esec_run(options):
-    '''Load a system configuration with results sent directly to the console
-    or automatically named CSV files in results/.
+    '''Load a system configuration with results sent directly to the
+    console or automatically named CSV files in results/.
     
-    The configuration can be specified firstly by the ``-c`` option and either
-    built-in configuration names, names of configuration files saved in cfgs/
-    or the name of a plugin file or package saved in plugins/.
+    The configuration can be specified firstly by the ``-c`` option and
+    either built-in configuration names, names of configuration files
+    saved in cfgs/ or the name of a plugin file or package saved in
+    plugins/.
     
     Settings specified with the ``-s`` option, are overlaid in the order
     specified.
@@ -270,8 +273,8 @@ def esec_run(options):
     try:
         ea_app = Experiment(cfg)
     except ExceptionGroup:
-        # Display any grouped errors nicely - they are probably syntax errors
-        # in the system definition.
+        # Display any grouped errors nicely - they are probably syntax
+        # errors in the system definition.
         ex = sys.exc_info()[1]
         print >> sys.stderr, HR, "Errors occurred:"
         print >> sys.stderr, ' ' + '\n '.join(str(i) for i in ex.exceptions)
@@ -325,7 +328,8 @@ def esec_batch(options):
     
         ./results/batchname/_tags.(txt|csv)
     
-    A summary file of the summary line from each experiment is saved in::
+    A summary file of the summary line from each experiment is saved
+    in::
     
         ./results/batchname/_summary.(txt|csv)
     
@@ -337,16 +341,37 @@ def esec_batch(options):
     
     Handy ``run.py`` settings (-s "...") for batch runs include::
         
-        batch.dry_run=True # create each configuration to test that they work but does nothing.
-        batch.start_at=... # configuration id to start at. Will run the start_at id.
-        batch.stop_at=... # configuration id to stop at. Will run the stop_at id, but not after it.
-        batch.include_tags=[...] # only run experiments that include these "tags"
-        batch.exclude_tags=[...] # do not run experiments that include these "tags"
-        batch.pathbase="..." # relative path to store results in
-        batch.summary=True # create a summary file of all experiments
-        batch.csv=True # create CSV files instead of TXT files (except for config)
-        batch.low_priority=True # run with low CPU priority
-        batch.quiet=True # hide console output
+    batch.dry_run=True
+        Create each configuration to test that they work but do not
+        execute them.
+    
+    batch.start_at=...
+        Configuration id to start at. Will run the ``start_at`` id.
+    
+    batch.stop_at=...
+        Configuration id to stop at. Will run the ``stop_at id``, but
+        not after it.
+    
+    batch.include_tags=[...]
+        Only run experiments that include these tags
+    
+    batch.exclude_tags=[...]
+        Do not run experiments that include these tags
+    
+    batch.pathbase="..."
+        Relative path to store results in
+    
+    batch.summary=True
+        Create a summary file of all experiments
+    
+    batch.csv=True
+        Create CSV files instead of TXT files (except for config)
+    
+    batch.low_priority=True
+        Run with low CPU priority
+    
+    batch.quiet=True
+        Hide console output
     
     '''
     # Disable pylint complaints about branches and local variables
@@ -472,8 +497,8 @@ def esec_batch(options):
         if i < batch_cfg.start_at: continue
         if i > batch_cfg.stop_at: break
         # Include/exclude list?
-        if batch_cfg.include_tags and not batch_cfg.include_tags.intersection(tags) \
-        or batch_cfg.exclude_tags and batch_cfg.exclude_tags.intersection(tags):
+        if (batch_cfg.include_tags and not batch_cfg.include_tags.intersection(tags) or
+            batch_cfg.exclude_tags and batch_cfg.exclude_tags.intersection(tags)):
             continue
         # Print an obvious header
         print '\n** ' + "*"*117
@@ -503,8 +528,9 @@ def esec_batch(options):
 
         # Helper function to open a unique file
         def _open(filepattern, mode='w'):
-            '''Returns an open file. `filepattern` must contain a ``%d`` value so
-            a unique index may be included.'''
+            '''Returns an open file. `filepattern` must contain a ``%d``
+            value so a unique index may be included.
+            '''
             i = 0
             filename = filepattern % i
             # Not reliable, but no other choice in Python

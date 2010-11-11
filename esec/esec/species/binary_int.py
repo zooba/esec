@@ -200,9 +200,10 @@ class BinaryIntegerSpecies(BinarySpecies):
         indiv_len = sum(bits_per_value)
         
         while True:
-            yield BinaryIntegerIndividual([_gen(i) for i in xrange(indiv_len)], self, \
-                                       bits_per_value=bits_per_value,
-                                       encoding=encoding)
+            yield BinaryIntegerIndividual([_gen(i) for i in xrange(indiv_len)],
+                                          self,
+                                          bits_per_value=bits_per_value,
+                                          encoding=encoding)
     
     
     def init_random_int(self,
