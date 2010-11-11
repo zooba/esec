@@ -60,6 +60,7 @@ calls the `Landscape` initialiser.
 import random
 from sys import maxint
 from random import Random
+import esec.context
 from esec.fitness import Fitness, FitnessMaximise, FitnessMinimise
 from esec.utils import ConfigDict, merge_cls_dicts, cfg_validate, cfg_strict_test
 from esec.utils import a_or_an
@@ -87,18 +88,17 @@ class Landscape(object):
     syntax = { # configuration syntax key's and type. MERGED
         'class?': type, # specific class of landscape
         'instance?': '*', # landscape instance
-        'random_seed': [None, int], # for random number instance (if used)
+        'random_seed?': int, # for random number instance
         'invert?': bool,
         'offset?': float,
         'parameters': [None, int],   # may be used by subclasses
-        'size': {           # size should be used for all genome size references
+        'size': {   # size should be used for all genome size references
             'min': int,
             'max': int,
             'exact': int
         },
     }
     default = { # default syntax values. MERGED
-        'random_seed': 12345,
         'invert': False,
         'offset': 0.0,
         'parameters': None,
@@ -138,8 +138,7 @@ class Landscape(object):
         
         # random seed?
         if not isinstance(self.cfg.random_seed, int):
-            random.seed()
-            self.cfg.random_seed = cfg.random_seed = random.randint(0, maxint)
+            self.cfg.random_seed = cfg.random_seed = esec.context.rand.randint(0, maxint)
         self.rand = Random(self.cfg.random_seed)
         
         # inversion? offset?
