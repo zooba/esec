@@ -36,6 +36,15 @@ config = {
 
 settings = "low_priority=False;quiet=True"
 
+other_tests = [
+    ('BVP.OneMax',
+     ['GA'],
+     [{ 'random_seed': None, 'landscape': { 'random_seed': None } },
+      { 'random_seed':    1, 'landscape': { 'random_seed':    1 } },
+      { 'random_seed':   -1, 'landscape': { 'random_seed':   -1 } }],
+    ),
+]
+
 std_dialects = ['GA', 'SSGA']
 bvp_tests = [
     ('BVP.OneMax',      std_dialects, [{ 'landscape': { 'N': 3 } }, { 'landscape': { 'N': 8 } }, { 'landscape': { 'N': 100 } }]),
@@ -45,7 +54,7 @@ bvp_tests = [
     ('BVP.Multimodal',  std_dialects, [{ 'landscape': { 'N': 10, 'P': 4 } }, { 'landscape': { 'N': 100, 'P': 20 } }]),
     ('BVP.CNF_SAT',     std_dialects, [{ 'landscape': { 'SAW': False } }, { 'landscape': { 'SAW': True } }]),
     ('BVP.NK',          std_dialects, [{ 'landscape': { 'N': 5, 'K': 2 } }, { 'landscape': { 'N': 10, 'K': 4 } }]),
-    ('BVP.NKC',         ['NKC_GA'],     [{ 'landscape': { 'N': 5, 'K': 2, 'C': 2 } }, { 'landscape': { 'N': 10, 'K': 4, 'C': 2 } }]),
+    ('BVP.NKC',         ['NKC_GA'],   [{ 'landscape': { 'N': 5, 'K': 2, 'C': 2 } }, { 'landscape': { 'N': 10, 'K': 4, 'C': 2 } }]),
     ('BVP.MMDP6',       std_dialects, [{ 'landscape': { 'subs': 5 } }, { 'landscape': { 'subs': 20 } }]),
     ('BVP.ECC',         std_dialects, [{ 'landscape': { 'n': 2, 'M': 2, 'd': 1 } }, { 'landscape': { 'n': 6, 'M': 6, 'd': 3 } }]),
     ('BVP.SUS',         std_dialects, [{ 'landscape': { 'even': False } }, { 'landscape': { 'even': True } }]),
@@ -191,7 +200,7 @@ for i, d in enumerate(TGP_BOOL_DEFS): configs['TGP_BOOL_%d' % i] = { 'system': {
 for i, d in enumerate(TGP_INT_DEFS):  configs['TGP_INT_%d'  % i] = { 'system': { 'definition': d } }
 for i, d in enumerate(TGP_REAL_DEFS): configs['TGP_REAL_%d' % i] = { 'system': { 'definition': d } }
 
-tests = bvp_tests + ivp_tests + rvp_tests + tgp_tests + ge_tests
+tests = other_tests + bvp_tests + ivp_tests + rvp_tests + tgp_tests + ge_tests
 #tests = bvp_tests
 #tests = ivp_tests
 #tests = rvp_tests

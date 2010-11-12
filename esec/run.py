@@ -381,6 +381,8 @@ def esec_batch(options):
     # A batch file is a normal .py file with a method named "batch" that 
     # returns a sequence of tuples of settings.
     mod = _load_module('cfgs', options.batch)
+    if not mod:
+        raise ImportError('Cannot find ' + options.batch + ' as batch file.')
     # Update configs with anything specified in the batch file
     configs.update(mod.get('configs', None) or { })
     # Get any settings overrides from the batch file
