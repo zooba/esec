@@ -510,11 +510,15 @@ def esec_batch(options):
         print "** "+ "*"*117 + '\n'
         
         # Overlay any configuration names specified for this run.
-        try:
-            cfg = _load_config(names, batch_default)
-        except AttributeError:
-            print >> sys.stderr, 'Loading config file(s) failed: '+ names
-            raise
+        if names:
+            try:
+                cfg = _load_config(names, batch_default)
+            except AttributeError:
+                print >> sys.stderr, 'Loading config file(s) failed: '+ names
+                raise
+        else:
+            cfg = ConfigDict(batch_default)
+        
         # Overlay any config dictionary (copy to avoid shared reference issues)
         cfg.overlay(ConfigDict(config) if isinstance(config, ConfigDict) else config)
         # Override cfg.verbose
