@@ -75,5 +75,50 @@ used for storing some global objects.)
 '''
 __docformat__ = 'restructuredtext'
 
+from esec.individual import OnIndividual
+
+GLOBAL_ESDL_FUNCTIONS = { }
+
+class _esdl_func(object):       #pylint: disable=R0903
+    '''Delayed handling for named or parameterised instances of the
+    `esdl_func` decorator.
+    '''
+    def __init__(self, *names, **kwargs):
+        self.names = names
+        self.on_individual = kwargs.get('on_individual', False)
+    
+    def __call__(self, func):
+        if self.on_individual:
+            if self.names:
+                for name in self.names:
+                    GLOBAL_ESDL_FUNCTIONS[name] = OnIndividual(name, func)
+            else:
+                GLOBAL_ESDL_FUNCTIONS[func.__name__] = OnIndividual(func.__name__, func)
+        else:
+            if self.names:
+                for name in self.names:
+                    GLOBAL_ESDL_FUNCTIONS[name] = func
+            else:
+                GLOBAL_ESDL_FUNCTIONS[func.__name__] = func
+        return func
+
+def esdl_func(*names, **kwargs):
+    '''A function decorator that exposes an unbound function within an
+    ESDL system.
+    
+    If specified, `names` is a tuple of strings specifying the aliases
+    by which the function may be accessed. If unspecified, the
+    ``__name__`` member of the function object is used instead.
+    
+    The named parameter `on_individual`, if ``True``, produces an
+    `OnIndividual` object for each alias with the wrapped function as 
+    the default. If unspecified, this is assumed to be ``False``.
+    '''
+    if len(names) == 1 and hasattr(names[0], '__call__'):
+        return _esdl_func(**kwargs)(names[0])
+    else:
+        return _esdl_func(*names, **kwargs)
+
 from esec.experiment import Experiment
 import esec.landscape
+

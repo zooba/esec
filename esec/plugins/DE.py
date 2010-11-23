@@ -17,8 +17,10 @@
 This plugin provides a Differential Evolution system definition.
 '''
 
+from esec import esdl_func
 from itertools import izip as zip
 
+@esdl_func
 def mutate_DE(_source, scale):
     '''A generator that yields one mutated Individual for every
     JoinedIndividual passed in source.
@@ -66,6 +68,5 @@ defaults = {
     'system': {
         'size': 100,
         'definition': DE_DEF,
-        'mutate_DE': mutate_DE
     }
 }

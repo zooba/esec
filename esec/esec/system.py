@@ -7,10 +7,11 @@ from warnings import warn
 from esec.utils import ConfigDict, cfg_validate, merge_cls_dicts
 from esec.utils.exceptions import EvaluatorError
 
+from esec import GLOBAL_ESDL_FUNCTIONS
 from esec.compiler import Compiler
 from esec.monitors import MonitorBase
 from esec.individual import Individual, OnIndividual
-from esec.generators import selectors, recombiners, joiners
+import esec.generators  #pylint: disable=W0611
 from esec.species import SPECIES
 
 from esec.context import _context as global_context
@@ -34,53 +35,10 @@ class System(object):
     
     default = {
         'system': {
-            'select_all':           selectors.All,
-            'repeated':             selectors.Repeat,
-            'best_only':            selectors.BestOnly,
-            'worst_only':           selectors.WorstOnly,
-            'best':                 selectors.Best,
-            'worst':                selectors.Worst,
-            'truncate_best':        selectors.Best,
-            'truncate_worst':       selectors.Worst,
-            'youngest_only':        selectors.YoungestOnly,
-            'oldest_only':          selectors.OldestOnly,
-            'youngest':             selectors.Youngest,
-            'oldest':               selectors.Oldest,
-            'unique':               selectors.Unique,
-            'best_of_tuple':        selectors.BestOfTuple,
-            
-            'tournament':           selectors.Tournament,
-            'binary_tournament':    selectors.BinaryTournament,
-            'uniform_random':       selectors.UniformRandom,
-            'uniform_shuffle':      selectors.UniformRandomWithoutReplacement,
-            
-            'fitness_proportional': selectors.FitnessProportional,
-            'rank_proportional':    selectors.RankProportional,
-            'fitness_sus':          selectors.FitnessProportionalSUS,
-            'rank_sus':             selectors.RankProportionalSUS,
-            
-            
-            'crossover':                OnIndividual('crossover', recombiners.Same),
-            'crossover_different':      OnIndividual('crossover_different', recombiners.Different),
-            'crossover_uniform':        OnIndividual('crossover_uniform', recombiners.Uniform),
-            'crossover_discrete':       OnIndividual('crossover_discrete', recombiners.Discrete),
-            'crossover_one':            OnIndividual('crossover_one', recombiners.SingleSame),
-            'crossover_one_different':  OnIndividual('crossover_one_different', recombiners.SingleDifferent),
-            'crossover_two':            OnIndividual('crossover_one', recombiners.DoubleSame),
-            'crossover_two_different':  OnIndividual('crossover_one_different', recombiners.DoubleDifferent),
-            'crossover_segmented':      OnIndividual('crossover_segmented', recombiners.Segmented),
-            'crossover_tuple':          OnIndividual('crossover_tuple', recombiners.PerGeneTuple),
-            
-            # All other filters are assumed to be OnIndividual
-            # and are added to the configuration implicitly.
-            
-            
-            '_default_join':            joiners.Tuples, # key is hard-coded in compiler.py
-            'full_combine':             joiners.All,
-            'best_with_rest':           joiners.BestWithAll,
-            'tuples':                   joiners.Tuples,
-            'random_tuples':            joiners.RandomTuples,
-            'distinct_random_tuples':   joiners.DistinctRandomTuples,
+            # Filters are specified using esdl_func for unbound
+            # functions or public_context when bound to a species.
+            # All other filters are assumed to be OnIndividual and are
+            # included implicitly.
         }
     }
     
@@ -89,6 +47,9 @@ class System(object):
         # Merge syntax and default details
         self.syntax = merge_cls_dicts(self, 'syntax')
         self.cfg = ConfigDict(merge_cls_dicts(self, 'default'))
+        # Merge in all globally defined ESDL functions
+        for key, value in GLOBAL_ESDL_FUNCTIONS.iteritems():
+            self.cfg.system[key.lower()] = value
         # Now apply user cfg details and test against syntax
         self.cfg.overlay(cfg)
         # If no default evaluator has been provided, use `lscape`

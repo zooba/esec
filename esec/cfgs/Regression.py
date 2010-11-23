@@ -201,11 +201,6 @@ for i, d in enumerate(TGP_INT_DEFS):  configs['TGP_INT_%d'  % i] = { 'system': {
 for i, d in enumerate(TGP_REAL_DEFS): configs['TGP_REAL_%d' % i] = { 'system': { 'definition': d } }
 
 tests = other_tests + bvp_tests + ivp_tests + rvp_tests + tgp_tests + ge_tests
-#tests = bvp_tests
-#tests = ivp_tests
-#tests = rvp_tests
-#tests = tgp_tests
-#tests = ge_tests
 
 def batch():
     for (landscape, dialects, config_overrides) in tests:

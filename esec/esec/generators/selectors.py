@@ -7,6 +7,7 @@ which the selectors are executed.
 
 from itertools import repeat
 from warnings import warn
+from esec import esdl_func
 from esec.fitness import Fitness
 from esec.generators import _key_fitness, _key_birthday
 from esec.individual import JoinedIndividual
@@ -52,6 +53,7 @@ class NoReplacementSelector(object):
         del self._source[i]
         return indiv
 
+@esdl_func('select_all')
 def All(_source):
     '''Returns all individuals in an unspecified order.
     
@@ -62,6 +64,7 @@ def All(_source):
     '''
     return iter(_source)
 
+@esdl_func('repeated')
 def Repeat(_source):
     '''Returns all individuals in an unspecified order, returning to the
     start when the end is reached.
@@ -76,6 +79,7 @@ def Repeat(_source):
         for i in group:
             yield i
 
+@esdl_func('best', 'truncate_best')
 def Best(_source, only=False):
     '''Returns the individuals in decreasing fitness order.
     
@@ -94,6 +98,7 @@ def Best(_source, only=False):
     else:
         return NoReplacementSelector(sorted(_source, key=_key_fitness, reverse=True), lambda s, _source: 0)
 
+@esdl_func('best_only')
 def BestOnly(_source):
     '''Repeatedly returns the individual with the highest fitness.
     
@@ -104,6 +109,7 @@ def BestOnly(_source):
     '''
     return Best(_source, True)
 
+@esdl_func('worst', 'truncate_worst')
 def Worst(_source, only=False):
     '''Returns the individuals in increasing fitness order.
     
@@ -122,6 +128,7 @@ def Worst(_source, only=False):
     else:
         return NoReplacementSelector(sorted(_source, key=_key_fitness, reverse=False), lambda s, _source: 0)
 
+@esdl_func('worst_only')
 def WorstOnly(_source):
     '''Repeatedly returns the individual with the lowest fitness.
     
@@ -132,6 +139,7 @@ def WorstOnly(_source):
     '''
     return Worst(_source, True)
 
+@esdl_func('youngest')
 def Youngest(_source, only=False):
     '''Returns the individuals in decreasing birthdate order.
     
@@ -150,6 +158,7 @@ def Youngest(_source, only=False):
     else:
         return NoReplacementSelector(sorted(_source, key=_key_birthday, reverse=True), lambda s, _source: 0)
 
+@esdl_func('youngest_only')
 def YoungestOnly(_source):
     '''Repeatedly returns the individual with the latest birthday.
     
@@ -160,6 +169,7 @@ def YoungestOnly(_source):
     '''
     return Youngest(_source, True)
 
+@esdl_func('oldest')
 def Oldest(_source, only=False):
     '''Returns the individuals in increasing birthdate order.
     
@@ -178,6 +188,7 @@ def Oldest(_source, only=False):
     else:
         return NoReplacementSelector(sorted(_source, key=_key_birthday, reverse=False), lambda s, _source: 0)
 
+@esdl_func('oldest_only')
 def OldestOnly(_source):
     '''Repeatedly returns the individual with the earliest birthday.
     
@@ -188,7 +199,7 @@ def OldestOnly(_source):
     '''
     return Oldest(_source, True)
 
-
+@esdl_func('tournament')
 def Tournament(_source, k=2, replacement=True, greediness=1.0):
     '''Returns a sequence of individuals selected using tournament
     selection. `k` individuals are selected at random and the individual
@@ -253,6 +264,7 @@ def Tournament(_source, k=2, replacement=True, greediness=1.0):
                 return 0
         return NoReplacementSelector(_source, _func)
 
+@esdl_func('binary_tournament')
 def BinaryTournament(_source, replacement=True, greediness=1.0):
     '''Returns a sequence of individuals selected using binary
     tournament selection. Two individuals are selected at random and the
@@ -279,6 +291,7 @@ def BinaryTournament(_source, replacement=True, greediness=1.0):
     '''
     return Tournament(_source, 2, replacement, greediness)
 
+@esdl_func('uniform_random')
 def UniformRandom(_source, replacement=True):
     '''Returns a sequence of individuals selected randomly, without
     regard to their fitness.
@@ -308,6 +321,7 @@ def UniformRandom(_source, replacement=True):
     else:
         return NoReplacementSelector(_source, lambda s, _src: irand(len(_src)))
 
+@esdl_func('uniform_random_no_replacement', 'uniform_shuffle')
 def UniformRandomWithoutReplacement(_source):
     '''Returns a sequence of individuals selected randomly, without
     regard to their fitness. Each individual is guaranteed to return
@@ -321,6 +335,7 @@ def UniformRandomWithoutReplacement(_source):
     '''
     return UniformRandom(_source, replacement=False)
 
+@esdl_func('fitness_proportional')
 def FitnessProportional(_source, replacement=True,
                         sus=False, mu=None,
                         fitness_offset=None):
@@ -442,6 +457,7 @@ def FitnessProportionalNormal(_source, replacement=True, fitness_offset=None):
             yield winner[1]
             size -= 1
 
+@esdl_func('fitness_sus')
 def FitnessProportionalSUS(_source, mu=None, fitness_offset=None):
     '''Returns a sequence of individuals selected using fitness based
     Stochastic Universal Sampling (SUS). The simplified fitness value
@@ -491,6 +507,7 @@ def FitnessProportionalSUS(_source, mu=None, fitness_offset=None):
             change_level += wheel[i][0]
         yield wheel[i][1]
 
+@esdl_func('rank_proportional')
 def RankProportional(_source, replacement=True,
                      expectation=1.1, neta=None,
                      invert=False,
@@ -614,6 +631,7 @@ def RankProportionalNormal(_source, replacement=True, expectation=1.1, neta=None
             yield winner[1]
             size -= 1
 
+@esdl_func('rank_sus')
 def RankProportionalSUS(_source, mu=None, expectation=1.1, neta=None, invert=False):
     '''Returns a sequence of individuals using rank-based Stochastic
     Uniform Sampling (SUS).
@@ -669,7 +687,7 @@ def RankProportionalSUS(_source, mu=None, expectation=1.1, neta=None, invert=Fal
             change_level += wheel[i][0]
         yield wheel[i][1]
 
-
+@esdl_func('unique')
 def Unique(_source):
     '''Returns a sequence of the unique individuals based on phenomes.
     
@@ -688,6 +706,7 @@ def Unique(_source):
             known.add(phenome)
             yield indiv
 
+@esdl_func('best_of_tuple')
 def BestOfTuple(_source):
     '''Returns a sequence of the individuals with highest fitness from
     each `JoinedIndividual` provided.

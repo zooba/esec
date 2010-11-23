@@ -11,6 +11,7 @@ type validation, all constructors should use ``type`` on an existing
 
 from itertools import izip as zip   #pylint: disable=W0622
 from itertools import islice, chain
+from esec import esdl_func
 from esec.context import rand, notify
 
 def _pairs(source):
@@ -22,7 +23,7 @@ def _pairs(source):
     while True:
         yield next(source), next(source)
 
-
+@esdl_func('crossover_uniform', on_individual=True)
 def Uniform(_source,
             per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5,
             discrete=False,
@@ -123,6 +124,7 @@ def Uniform(_source,
             yield i1
             yield i2
 
+@esdl_func('crossover_discrete', on_individual=True)
 def Discrete(_source,
              per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=1.0,
              one_child=False, two_children=None):
@@ -136,6 +138,7 @@ def Discrete(_source,
                    discrete=True,
                    one_child=one_child, two_children=two_children)
 
+@esdl_func('crossover', on_individual=True)
 def Same(_source,
          points=1,
          per_pair_rate=None, per_indiv_rate=1.0,
@@ -240,6 +243,7 @@ def Same(_source,
             yield i1
             yield i2
 
+@esdl_func('crossover_one', on_individual=True)
 def SingleSame(_source,
                per_pair_rate=None, per_indiv_rate=1.0,
                one_child=False, two_children=None):
@@ -249,6 +253,7 @@ def SingleSame(_source,
                 per_pair_rate=per_pair_rate, per_indiv_rate=per_indiv_rate,
                 one_child=one_child, two_children=two_children)
 
+@esdl_func('crossover_two', on_individual=True)
 def DoubleSame(_source,
                per_pair_rate=None, per_indiv_rate=1.0,
                one_child=False, two_children=None):
@@ -258,6 +263,7 @@ def DoubleSame(_source,
                 per_pair_rate=per_pair_rate, per_indiv_rate=per_indiv_rate,
                 one_child=one_child, two_children=two_children)
 
+@esdl_func('crossover_different', on_individual=True)
 def Different(_source,          #pylint: disable=R0915
               points=1,
               per_pair_rate=None, per_indiv_rate=1.0,
@@ -379,6 +385,7 @@ def Different(_source,          #pylint: disable=R0915
             yield i1
             yield i2
 
+@esdl_func('crossover_one_different', on_individual=True)
 def SingleDifferent(_source,
                     per_pair_rate=None, per_indiv_rate=1.0,
                     longest_result=None,
@@ -390,6 +397,7 @@ def SingleDifferent(_source,
                      longest_result=longest_result,
                      one_child=one_child, two_children=two_children)
 
+@esdl_func('crossover_two_different', on_individual=True)
 def DoubleDifferent(_source,
                     per_pair_rate=None, per_indiv_rate=1.0,
                     longest_result=None,
@@ -401,7 +409,7 @@ def DoubleDifferent(_source,
                      longest_result=longest_result,
                      one_child=one_child, two_children=two_children)
 
-
+@esdl_func('crossover_segmented', on_individual=True)
 def Segmented(_source,
             per_pair_rate=None, per_indiv_rate=1.0, switch_rate=0.1,
             one_child=False, two_children=None):
@@ -501,7 +509,7 @@ def Segmented(_source,
             yield i1
             yield i2
 
-
+@esdl_func('crossover_tuple', on_individual=True)
 def PerGeneTuple(_source, per_indiv_rate=None, per_pair_rate=1.0, per_gene_rate=None):
     '''Performs per-gene crossover by selecting one gene from each
     individual in the tuples provided in `_source`.

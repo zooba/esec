@@ -7,16 +7,19 @@ which the joiners are executed.
 
 from itertools import product
 from itertools import izip as zip   #pylint: disable=W0622
+from esec import esdl_func
 from esec.individual import JoinedIndividual
 from esec.generators.selectors import BestOnly
 from esec.context import rand
 
+@esdl_func('full_combine')
 def All(_source):
     '''Returns all individuals matched with all other individuals.'''
     _source, names = _source
     for groups in product(*_source):
         yield JoinedIndividual(groups, names)
 
+@esdl_func('best_with_rest')
 def BestWithAll(_source, best_from=0):
     '''Returns the best individual from group `best_from` (zero-based
     index into `_source`) matched.
@@ -35,6 +38,7 @@ def BestWithAll(_source, best_from=0):
     for groups in product(*rest):
         yield JoinedIndividual(best + groups, names)
 
+@esdl_func('tuples', '_default_join')
 def Tuples(_source):
     '''Returns all individuals matched with matching elements by index.
     '''
@@ -42,6 +46,7 @@ def Tuples(_source):
     for groups in zip(*_source):
         yield JoinedIndividual(groups, names)
 
+@esdl_func('random_tuples')
 def RandomTuples(_source, distinct=False):
     '''Matches each individual from the first source with randomly
     selected individuals from the other sources.
@@ -70,6 +75,7 @@ def RandomTuples(_source, distinct=False):
             group.append(indiv2)
         yield JoinedIndividual(group, names)
 
+@esdl_func('distinct_random_tuples')
 def DistinctRandomTuples(_source):
     '''Matches each individual from the first source with randomly
     selected individuals from the other sources, avoiding repetition
