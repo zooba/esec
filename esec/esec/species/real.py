@@ -3,6 +3,7 @@ real-valued genomes.
 '''
 from itertools import izip as zip   #pylint: disable=W0622
 from itertools import islice
+import math
 from esec.species import Species
 from esec.individual import Individual
 from esec.context import rand
@@ -287,6 +288,7 @@ class RealSpecies(Species):
             if do_all_indiv or frand() < per_indiv_rate:
                 new_genes = list(indiv.genome)
                 source = zip(xrange(len(new_genes)), indiv.lower_bounds, indiv.upper_bounds)
+                source = (i for i in source if not math.isinf(i[1]) and not math.isinf(i[2]))
                 
                 if genes:
                     do_all_gene = True
