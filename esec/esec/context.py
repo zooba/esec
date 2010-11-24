@@ -22,8 +22,12 @@ class _context_property(object):    #pylint: disable=R0903
     '''
     def __getattr__(self, name): return getattr(_context.context, name)
     def __setattr__(self, name, value): setattr(_context.context, name, value)
+    def __delattr__(self, name): return delattr(_context.context, name)
     def __getitem__(self, name): return _context.context[name]
     def __setitem__(self, name, value): _context.context[name] = value
+    def __delitem__(self, name): del _context.context[name]
+    def __contains__(self, name): return name in _context.context
+    def __iter__(self, name): return iter(_context.context)
 
 class _config_property(object):     #pylint: disable=R0903
     '''Internal object for providing normal access to the configuration
@@ -31,21 +35,22 @@ class _config_property(object):     #pylint: disable=R0903
     '''
     def __getattr__(self, name): return getattr(_context.config, name)
     def __setattr__(self, name, value): setattr(_context.config, name, value)
+    def __delattr__(self, name): return delattr(_context.config, name)
     def __getitem__(self, name): return _context.config[name]
     def __setitem__(self, name, value): _context.config[name] = value
+    def __delitem__(self, name): del _context.config[name]
+    def __contains__(self, name): return name in _context.config
+    def __iter__(self, name): return iter(_context.config)
 
 class _rand_property(object):       #pylint: disable=R0903
     '''Internal object for providing normal access to the random object.
     '''
     def __getattr__(self, name): return getattr(_context.rand, name)
-    def __setattr__(self, name, value): setattr(_context.rand, name, value)
 
 class _notify_property(object):     #pylint: disable=R0903
     '''Internal object for providing normal access to the ``notify``
     method.
     '''
-    def __getattr__(self, name): return getattr(_context.notify, name)
-    def __setattr__(self, name, value): setattr(_context.notify, name, value)
     def __call__(self, *p, **kw): return _context.notify(*p, **kw)
 
 
