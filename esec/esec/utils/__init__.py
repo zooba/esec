@@ -98,12 +98,12 @@ def cfg_validate(cfg, syntax, caller='', warnings=True):
 def cfg_strict_test(cfg, strict):
     '''Test the cfg for any violations of strict conditions
     '''
-    for key, value in strict.items():
+    for key, value in strict.iteritems():
         cfg_value = cfg.get_by_name(key)
         if value == '*':
             pass
         elif cfg_value != value:
-            raise ValueError("'%s' must be == %s (not %s)" % (key, str(value), str(cfg_value)))
+            raise ValueError("'%s' must be == %s (not %s)" % (key, value, cfg_value))
 
 def dict_merge(first, second):
     '''Overlay dict `second` on top of `first`. Useful for merging

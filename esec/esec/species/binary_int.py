@@ -1,6 +1,6 @@
 '''Provides the `BinaryIntegerIndividual` class for binary-valued genomes.
 '''
-from itertools import izip as zip   #pylint: disable=W0622
+from itertools import izip
 from esec.individual import Individual
 from esec.context import rand
 from esec.species.binary import BinarySpecies
@@ -123,7 +123,7 @@ class BinaryIntegerSpecies(BinarySpecies):
                 factor += factor
         
         for gene in genes:
-            yield sum(i * f for i, f in zip(reversed(gene), _factor_iter()))
+            yield sum(i * f for i, f in izip(reversed(gene), _factor_iter()))
     
     @classmethod
     def twos_complement_mapping(cls, genes):
@@ -140,7 +140,7 @@ class BinaryIntegerSpecies(BinarySpecies):
                 factor += factor
         
         for gene in genes:
-            gene_parts = list(zip(reversed(gene), _factor_iter()))
+            gene_parts = list(izip(reversed(gene), _factor_iter()))
             gene_parts[-1] = (gene_parts[-1][0], -gene_parts[-1][1])
             value = sum(i * f for i, f in gene_parts)
             yield value

@@ -5,8 +5,7 @@ The global variable ``rand`` is made available through the context in
 which the joiners are executed.
 '''
 
-from itertools import product
-from itertools import izip as zip   #pylint: disable=W0622
+from itertools import product, izip
 from esec import esdl_func
 from esec.individual import JoinedIndividual
 from esec.generators.selectors import BestOnly
@@ -43,7 +42,7 @@ def Tuples(_source):
     '''Returns all individuals matched with matching elements by index.
     '''
     _source, names = _source
-    for groups in zip(*_source):
+    for groups in izip(*_source):
         yield JoinedIndividual(groups, names)
 
 @esdl_func('random_tuples')

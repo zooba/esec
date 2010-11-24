@@ -18,7 +18,7 @@ This plugin provides a Differential Evolution system definition.
 '''
 
 from esec import esdl_func
-from itertools import izip as zip
+from itertools import izip
 
 @esdl_func
 def mutate_DE(_source, scale):
@@ -34,7 +34,7 @@ def mutate_DE(_source, scale):
     for joined_individual in _source:
         base, parameter1, parameter2 = joined_individual[:]
         yield type(base)([_combine(b, p1, p2, l, h) for
-                          b, p1, p2, l, h in zip(base, parameter1, parameter2, base.lower_bounds, base.upper_bounds)],
+                          b, p1, p2, l, h in izip(base, parameter1, parameter2, base.lower_bounds, base.upper_bounds)],
                          base)
 
 DE_DEF = r'''

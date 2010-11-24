@@ -1,5 +1,5 @@
 from tests import *
-from itertools import izip as zip
+from itertools import izip
 from esec.context import rand, notify
 from esec.generators import selectors, joiners
 
@@ -58,7 +58,7 @@ def check_selectors_Best_max(population):
     print
     print ['[fit=%s]' % i.fitness for i in population]
     print
-    assert all((i==j for i,j in zip(offspring, reversed(population[-10:])))), "Did not select correct individuals"
+    assert all((i==j for i,j in izip(offspring, reversed(population[-10:])))), "Did not select correct individuals"
     
     _gen = selectors.Best(_source=iter(population), only=True)
     offspring = [next(_gen) for _ in xrange(10)]
@@ -74,7 +74,7 @@ def check_selectors_Best_min(population):
     print
     print ['[fit=%s]' % i.fitness for i in population]
     print
-    assert all((i==j for i,j in zip(offspring, population[:10]))), "Did not select correct individuals"
+    assert all((i==j for i,j in izip(offspring, population[:10]))), "Did not select correct individuals"
     
     _gen = selectors.Best(_source=iter(population), only=True)
     offspring = [next(_gen) for _ in xrange(10)]
@@ -86,7 +86,7 @@ def check_selectors_Worst_max(population):
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
-    assert all((i==j for i,j in zip(offspring, population[:10]))), "Did not select correct individuals"
+    assert all((i==j for i,j in izip(offspring, population[:10]))), "Did not select correct individuals"
 
     _gen = selectors.Worst(_source=iter(population), only=True)
     offspring = [next(_gen) for _ in xrange(10)]
@@ -99,7 +99,7 @@ def check_selectors_Worst_min(population):
     offspring = [next(_gen) for _ in xrange(10)]
     print "len(offspring) = %d, expected = 10" % len(offspring)
     assert len(offspring) == 10, "Did not select expected number of individuals"
-    assert all((i==j for i,j in zip(offspring, reversed(population[-10:])))), "Did not select correct individuals"
+    assert all((i==j for i,j in izip(offspring, reversed(population[-10:])))), "Did not select correct individuals"
 
     _gen = selectors.Worst(_source=iter(population), only=True)
     offspring = [next(_gen) for _ in xrange(10)]
@@ -196,7 +196,7 @@ def check_selectors_FitnessProportionalSUS(population):
     print "len(offspring) = %d, expected = 20" % len(offspring)
     assert len(offspring) == 20, "Did not select expected number of individuals"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
-    gaps = [abs(i2.fitness.simple - i1.fitness.simple) for i1, i2 in zip(offspring[::2], offspring[1::2])]
+    gaps = [abs(i2.fitness.simple - i1.fitness.simple) for i1, i2 in izip(offspring[::2], offspring[1::2])]
     print ', '.join(str(i) for i in gaps)
     assert gaps[0] < gaps[-1], "Gaps between selections do not increase"
     
@@ -232,7 +232,7 @@ def check_selectors_RankProportionalSUS(population):
     print "len(offspring) = %d, expected = 20" % len(offspring)
     assert len(offspring) == 20, "Did not select expected number of individuals"
     assert all([i in population for i in offspring]), "Some individuals not in original population"
-    gaps = [abs(i2.fitness.simple - i1.fitness.simple) for i1, i2 in zip(offspring[::2], offspring[1::2])]
+    gaps = [abs(i2.fitness.simple - i1.fitness.simple) for i1, i2 in izip(offspring[::2], offspring[1::2])]
     print ', '.join(str(i) for i in gaps)
     assert gaps[0] < gaps[-1], "Gaps between selections do not increase"
     

@@ -1,6 +1,6 @@
 '''Provides the `BinaryRealIndividual` class for binary-valued genomes.
 '''
-from itertools import izip as zip   #pylint: disable=W0622
+from itertools import izip
 from esec.individual import Individual
 from esec.context import rand
 from esec.species.binary import BinarySpecies
@@ -133,8 +133,8 @@ class BinaryRealSpecies(BinarySpecies):
                 factor *= 0.5
                 yield factor
         
-        for gene, low, high in zip(genes, lowest, highest):
-            mapped = [(i*f, f) for i, f in zip(gene, _factor_iter())]
+        for gene, low, high in izip(genes, lowest, highest):
+            mapped = [(i*f, f) for i, f in izip(gene, _factor_iter())]
             value = sum(i[0] for i in mapped) / sum(i[1] for i in mapped)
             yield (high - low) * value + low
     
@@ -151,10 +151,10 @@ class BinaryRealSpecies(BinarySpecies):
                 factor *= 0.5
                 yield factor
         
-        for gene, low, high in zip(genes, lowest, highest):
+        for gene, low, high in izip(genes, lowest, highest):
             temp_gene = list(gene)
             temp_gene[0] = 1 - temp_gene[0]
-            mapped = [(i * f, f) for i, f in zip(temp_gene, _factor_iter())]
+            mapped = [(i * f, f) for i, f in izip(temp_gene, _factor_iter())]
             value = sum(i[0] for i in mapped) / sum(i[1] for i in mapped)
             yield (high - low) * value + low
     
@@ -179,7 +179,7 @@ class BinaryRealSpecies(BinarySpecies):
         '''Converts a list of gene blocks into a list of real values
         by scaling the number of 1 bits.
         '''
-        for gene, low, high in zip(genes, lowest, highest):
+        for gene, low, high in izip(genes, lowest, highest):
             res = (high - low) / len(gene)
             yield res * sum(gene) + low
     

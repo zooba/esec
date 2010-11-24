@@ -1,5 +1,5 @@
 import tests
-from itertools import izip as zip, islice, chain
+from itertools import islice, chain
 import esec.species.integer as integer
 
 from esec.context import rand, notify

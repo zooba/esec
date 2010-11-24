@@ -5,7 +5,7 @@ These systems may also be taken as examples to be used with
 configuration files.
 '''
 
-from itertools import izip as zip
+from itertools import izip
 from esec.context import context, config
 
 ########################################################################
@@ -109,7 +109,7 @@ END generation
 def _es_success_rate(parents, offspring):
     # each offspring is still matched with their parent
     count = 0
-    for p,o in zip(parents, offspring):
+    for p,o in izip(parents, offspring):
         if o.fitness > p.fitness: count += 1
     return float(count) / float(len(parents))
 

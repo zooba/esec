@@ -1,5 +1,5 @@
 from random import uniform
-from itertools import izip as zip
+from itertools import izip
 from esec.fitness import Fitness, EmptyFitness
 import esec.landscape.real as real
 
@@ -19,7 +19,7 @@ def check_rvp(cls):
         #lbd = rvp.lbd if type(rvp.lbd) is list else [rvp.lbd] * rvp.size.max
         #ubd = rvp.ubd if type(rvp.ubd) is list else [rvp.ubd] * rvp.size.max
         
-        param = [uniform(lower, upper) for lower, upper in zip(rvp.lower_bounds, rvp.upper_bounds)]
+        param = [uniform(lower, upper) for lower, upper in izip(rvp.lower_bounds, rvp.upper_bounds)]
         # test list of random real values
         fitness = rvp.eval(param)
         assert isinstance(fitness, (int, long, float, Fitness, EmptyFitness)), "Result was not fitness value"

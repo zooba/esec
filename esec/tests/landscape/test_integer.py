@@ -1,5 +1,5 @@
 from random import randrange
-from itertools import izip as zip
+from itertools import izip
 from esec.fitness import Fitness, EmptyFitness
 import esec.landscape.integer as integer
 
@@ -15,7 +15,7 @@ def check_ivp(cls):
     for cfg in cls.test_cfg:
         ivp = cls.by_cfg_str(cfg)
         # create a test individual (random binary list)
-        param = [randrange(lower, upper) for lower, upper in zip(ivp.lower_bounds, ivp.upper_bounds)]
+        param = [randrange(lower, upper) for lower, upper in izip(ivp.lower_bounds, ivp.upper_bounds)]
         # test list of random integer values
         fitness = ivp.eval(param)
         assert isinstance(fitness, (int, long, float, Fitness, EmptyFitness)), "Result was not fitness value"

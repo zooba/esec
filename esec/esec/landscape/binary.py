@@ -13,7 +13,7 @@ Most of these binary landscapes are problem generators.
 
 '''
 
-from itertools import izip as zip   #pylint: disable=W0622
+from itertools import izip
 from esec.landscape import Landscape
 from esec.individual import JoinedIndividual
 
@@ -747,7 +747,7 @@ class ECC(Binary):
     
     def _HammDist(self, v1, v2):
         '''The count of difference components in two vectors (codes).'''
-        return sum((1 if i1 != i2 else 0) for i1, i2 in zip(v1, v2))
+        return sum((1 if i1 != i2 else 0) for i1, i2 in izip(v1, v2))
     
     def _splitgenome(self, indiv):
         '''Split genes into M/2 codewords of length n and creates a
@@ -840,7 +840,7 @@ class SUS(Binary):
         '''Evaluate subset sum.'''
         # Create an integer subset from the binary selection x (indiv)
         # and sum() to give P(x)
-        P_x = sum(wi for wi, xi in zip(self._W, indiv) if xi == 1)
+        P_x = sum(wi for wi, xi in izip(self._W, indiv) if xi == 1)
         # get the difference to C
         gap = self._C - P_x
         # return the MINimization value
@@ -1038,7 +1038,7 @@ class MTTP(Binary):
         f(x) = \sum\limits_{i \in T-S} w_i
         '''
         # - Create the T-S set of penalty tasks
-        T_S = [t for t, x in zip(self._tasks, indiv) if x == 0] # x[i]==0
+        T_S = [t for t, x in izip(self._tasks, indiv) if x == 0] # x[i]==0
         
         # Quick legal version?
         if self.legal(indiv):
@@ -1049,7 +1049,7 @@ class MTTP(Binary):
         #        + (sum of tasks wts that made it infeasible)
         #        + (offset penalty of all task wts)
         # - Get the subset of nominated tasks S
-        S = [t for t, x in zip(self._tasks, indiv) if x == 1] # x[i]==1
+        S = [t for t, x in izip(self._tasks, indiv) if x == 1] # x[i]==1
         # - Tasks have (length, deadline, wt)
         time = 0
         for t in S:
@@ -1065,7 +1065,7 @@ class MTTP(Binary):
         
         f(x) = \sum\limits_{i \in T-S} w_i
         '''
-        T_S = [t for t, x in zip(self._tasks, indiv) if not x]
+        T_S = [t for t, x in izip(self._tasks, indiv) if not x]
         return sum(i[2] for i in T_S)
     
     def legal(self, indiv):
@@ -1075,7 +1075,7 @@ class MTTP(Binary):
         and return True if all okay. (This is not the fitness.)
         '''
         # Get the subset of nominated tasks
-        S = [t for t, x in zip(self._tasks, indiv) if x] # x[i]==1
+        S = [t for t, x in izip(self._tasks, indiv) if x] # x[i]==1
         # Tasks have (length, deadline, wt)
         time = 0
         for t in S:

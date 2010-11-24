@@ -24,7 +24,7 @@ will raise assertions if used in an operation.
 
 import sys
 from types import GeneratorType as generator
-from itertools import izip as zip   #pylint: disable=W0622
+from itertools import izip
 
 class Fitness(object):
     '''Represents a multi-stage fitness value.
@@ -93,16 +93,16 @@ class Fitness(object):
             self.values = values
         elif values is None:
             self.values = tuple(self.check(i, *args) for i, args in
-                                enumerate(zip(self.types, self.defaults, self.defaults)))
+                                enumerate(izip(self.types, self.defaults, self.defaults)))
         elif isinstance(values, Fitness):
             if __debug__:
                 self.values = None
                 self.validate(values)
             self.values = tuple(self.check(i, *args) for i, args in
-                                enumerate(zip(self.types, self.defaults, values.values)))
+                                enumerate(izip(self.types, self.defaults, values.values)))
         elif isinstance(values, (list, tuple, generator)):
             self.values = tuple(self.check(i, *args) for i, args in
-                                enumerate(zip(self.types, self.defaults, values)))
+                                enumerate(izip(self.types, self.defaults, values)))
         elif len(self.types) == 1:
             self.values = (self.check(0, self.types[0], self.defaults[0], values),)
         else:
@@ -137,7 +137,7 @@ class Fitness(object):
             ``__debug__`` is ``False``.
         '''
         if self.values is not None:
-            if not all((isinstance(*args) for args in zip(self.values, self.types))):
+            if not all((isinstance(*args) for args in izip(self.values, self.types))):
                 print >> sys.stderr, self.types
                 print >> sys.stderr, self.values
                 assert False, "Incorrect value type in Fitness object"
@@ -249,7 +249,7 @@ class Fitness(object):
     def __add__(self, other):
         if __debug__: self.validate(other)
         if isinstance(other, EmptyFitness): return NotImplemented
-        values = tuple((value1 + value2 for value1, value2 in zip(self.values, other.values)))
+        values = tuple((value1 + value2 for value1, value2 in izip(self.values, other.values)))
         return type(self)(values, True)
     
     def __neg__(self):
@@ -259,34 +259,34 @@ class Fitness(object):
     def __sub__(self, other):
         if __debug__: self.validate(other)
         if isinstance(other, EmptyFitness): return NotImplemented
-        values = tuple((value1 - value2 for value1, value2 in zip(self.values, other.values)))
+        values = tuple((value1 - value2 for value1, value2 in izip(self.values, other.values)))
         return type(self)(values, True)
     
     def __iadd__(self, other):
         if __debug__: self.validate(other)
         if isinstance(other, EmptyFitness): return NotImplemented
-        self.values = tuple((value1 + value2 for value1, value2 in zip(self.values, other.values)))
+        self.values = tuple((value1 + value2 for value1, value2 in izip(self.values, other.values)))
         return self
     
     def __isub__(self, other):
         if __debug__: self.validate(other)
         if isinstance(other, EmptyFitness): return NotImplemented
-        self.values = tuple((value1 - value2 for value1, value2 in zip(self.values, other.values)))
+        self.values = tuple((value1 - value2 for value1, value2 in izip(self.values, other.values)))
         return self
     
     def __mul__(self, other):
         if not isinstance(other, (int, float)): return NotImplemented
-        result = (expected_type(value * other) for expected_type, value in zip(self.types, self.values))
+        result = (expected_type(value * other) for expected_type, value in izip(self.types, self.values))
         return type(self)(tuple(result), True)
     
     def __div__(self, other):
         if not isinstance(other, (int, float)): return NotImplemented
-        result = (expected_type(value / other) for expected_type, value in zip(self.types, self.values))
+        result = (expected_type(value / other) for expected_type, value in izip(self.types, self.values))
         return type(self)(tuple(result), True)
     
     def __truediv__(self, other):
         if not isinstance(other, (int, float)): return NotImplemented
-        result = (expected_type(value / other) for expected_type, value in zip(self.types, self.values))
+        result = (expected_type(value / other) for expected_type, value in izip(self.types, self.values))
         return type(self)(tuple(result), True)
 
 class FitnessMaximise(Fitness):

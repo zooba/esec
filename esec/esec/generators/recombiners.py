@@ -9,8 +9,7 @@ type validation, all constructors should use ``type`` on an existing
 `Individual` to ensure the correct derivation is used.
 '''
 
-from itertools import izip as zip   #pylint: disable=W0622
-from itertools import islice, chain
+from itertools import islice, chain, izip
 from esec import esdl_func
 from esec.context import rand, notify
 
@@ -362,7 +361,7 @@ def Different(_source,          #pylint: disable=R0915
                 new_genes1 = list(i1_genome)
                 new_genes2 = list(i2_genome)
                 
-                for (i1_cut_i, i1_cut_j), (i2_cut_i, i2_cut_j) in zip(_pairs(iter(i1_cuts)), _pairs(iter(i2_cuts))):
+                for (i1_cut_i, i1_cut_j), (i2_cut_i, i2_cut_j) in izip(_pairs(iter(i1_cuts)), _pairs(iter(i2_cuts))):
                     i1_cut = islice(new_genes1, i1_cut_i, i1_cut_j)
                     i2_cut = islice(new_genes2, i2_cut_i, i2_cut_j)
                     new_genes1 = list(chain(islice(new_genes1, i1_cut_i), i2_cut, islice(new_genes1, i1_cut_j, None)))

@@ -31,10 +31,10 @@ Problem Generators:
 
 '''
 
-from itertools import izip as zip   #pylint: disable=W0622
-from esec.utils import all_equal
 from math import sin, cos, fabs, sqrt, pi, e, exp, log
+from itertools import izip
 from esec.landscape import Landscape
+from esec.utils import all_equal
 
 #==============================================================================
 class Real(Landscape):
@@ -104,7 +104,7 @@ class Real(Landscape):
         if not (self.size.min <= len(indiv) <= self.size.max):
             return False
         
-        for lower, i, upper in zip(self.lower_bounds, indiv, self.upper_bounds):
+        for lower, i, upper in izip(self.lower_bounds, indiv, self.upper_bounds):
             if not (lower <= i <= upper):
                 return False
         return True
@@ -1058,7 +1058,7 @@ class FMS(Real):
         fms = self._fms
         
         # use the pre-computed theta*t values and reference y0[t] values
-        #for theta_t, y0_t in zip(self._theta_t, self._y0):
+        #for theta_t, y0_t in izip(self._theta_t, self._y0):
         for t in xrange(101):
             theta_t = self._theta_t[t]
             y0_t = self._y0[t]

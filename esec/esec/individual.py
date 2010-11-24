@@ -24,8 +24,7 @@ potential solution to a problem.
 from esec.fitness import Fitness, EmptyFitness
 from esec.context import notify
 from esec.utils.exceptions import EvaluatorError
-from itertools import izip as zip   #pylint: disable=W0622
-from itertools import chain
+from itertools import chain, izip
 
 class Individual(object):
     '''Represents a single member of the population with some type of
@@ -269,7 +268,7 @@ class JoinedIndividual(Individual):
             parent = JoinedSpecies
         super(JoinedIndividual, self).__init__(members, parent)
         self.sources = { }
-        for source, member in zip(sources, self.genome):
+        for source, member in izip(sources, self.genome):
             if source not in self.sources:
                 self.sources[source] = member
     

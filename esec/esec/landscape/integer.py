@@ -9,7 +9,7 @@ validation and support. See `landscape` for details.
 
 from sys import maxsize
 from math import sqrt
-from itertools import izip as zip   #pylint: disable=W0622
+from itertools import izip
 from esec.landscape import Landscape
 from esec.utils import all_equal
 
@@ -86,7 +86,7 @@ class Integer(Landscape):
         if not (self.size.min <= len(indiv) <= self.size.max):
             return False
         
-        for lower, i, upper in zip(self.lower_bounds, indiv, self.upper_bounds):
+        for lower, i, upper in izip(self.lower_bounds, indiv, self.upper_bounds):
             if not (lower <= i <= upper):
                 return False
         return True
@@ -114,7 +114,7 @@ class Integer(Landscape):
             result.append("    :    ...         ...    ")
             result.append(" %3d: %10d  %10d" % (len(lbd), lbd[0], ubd[0]))
         else:
-            for i, (lower, upper) in enumerate(zip(lbd, ubd)):
+            for i, (lower, upper) in enumerate(izip(lbd, ubd)):
                 result.append(" %3d: %10d  %10d" % ((i+1), lower, upper))
         return result
 
@@ -156,7 +156,7 @@ class Nmax(Integer):
         its maximum value.'''
         if self.legal(indiv):
             fitness = 0
-            for expected, actual in zip(self.upper_bounds, indiv):
+            for expected, actual in izip(self.upper_bounds, indiv):
                 tmp = expected - actual
                 fitness += tmp * tmp
             return -sqrt(fitness)
@@ -184,7 +184,7 @@ class Nmin(Integer):
         its maximum value.'''
         if self.legal(indiv):
             fitness = 0
-            for expected, actual in zip(self.lower_bounds, indiv):
+            for expected, actual in izip(self.lower_bounds, indiv):
                 tmp = expected - actual
                 fitness += tmp * tmp
             return sqrt(fitness)
@@ -217,14 +217,14 @@ class Nmatch(Integer):
     def __init__(self, cfg=None, **other_cfg):
         super(Nmatch, self).__init__(cfg, **other_cfg)
         # specialised setup - target[i] in middle range for each indiv[i].
-        self.target = [(upper-lower) // 2 for upper, lower in zip(self.lower_bounds, self.upper_bounds)]
+        self.target = [(upper-lower) // 2 for upper, lower in izip(self.lower_bounds, self.upper_bounds)]
     
     def _eval(self, indiv):
         '''Like the Nmax function with the optimum set to the range
         center.
         '''
         fitness = 0
-        for expected, actual in zip(self.target, indiv):
+        for expected, actual in izip(self.target, indiv):
             tmp = expected - actual
             fitness += tmp * tmp
         return -sqrt(fitness)

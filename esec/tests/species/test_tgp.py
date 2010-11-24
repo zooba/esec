@@ -1,5 +1,5 @@
 import tests
-from itertools import izip as zip
+from itertools import izip
 import esec.species.tgp as tgp
 
 from esec.context import rand, notify
@@ -33,7 +33,7 @@ def _cmp(source, expected):
     print [repr(p) for p in source]
     print [repr(p) for p in program]
     print [repr(p) for p in expected]
-    for i, (g1, g2) in enumerate(zip(program, expected)):
+    for i, (g1, g2) in enumerate(izip(program, expected)):
         assert isinstance(g1, type(g2)), "Instructions at %d are not the same type. Expect %s, not %s" % (i, type(g2), type(g1))
         assert g1 == g2, "Instructions at %d are not equal. Expect %s, not %s" % (i, repr(g2), repr(g1))
 

@@ -1,5 +1,5 @@
 from . import *
-from itertools import izip as zip
+from itertools import izip
 from esec.context import rand
 from esec.generators import recombiners, joiners
 
@@ -241,7 +241,7 @@ def test_recombiners_PerGeneTuple_None():
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
-    assert all(g1 is g2 for g1, g2 in zip(population, offspring)), "Did not return first individual"
+    assert all(g1 is g2 for g1, g2 in izip(population, offspring)), "Did not return first individual"
 
 def test_recombiners_PerGeneTuple_NotFromFirst():
     population = make_pop()
@@ -251,7 +251,7 @@ def test_recombiners_PerGeneTuple_NotFromFirst():
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
-    assert all(g1 is not g2 for g1, g2 in zip(population, offspring)), "DistinctRandom failed"
+    assert all(g1 is not g2 for g1, g2 in izip(population, offspring)), "DistinctRandom failed"
     assert all(g not in population for g in offspring), "Some individuals were not cloned"
     assert sum(g.statistic.get('recombined', 0) for g in offspring) == len(offspring), "Some individuals were not recombined"
 
@@ -263,7 +263,7 @@ def test_recombiners_PerGeneTuple_AutoProb():
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
-    assert all(g1 is not g2 for g1, g2 in zip(population, offspring)), "DistinctRandom failed"
+    assert all(g1 is not g2 for g1, g2 in izip(population, offspring)), "DistinctRandom failed"
     assert all(g not in population for g in offspring), "Some individuals were not cloned"
     assert sum(g.statistic.get('recombined', 0) for g in offspring) == len(offspring), "Some individuals were not recombined"
     strikes = sum(len(set(g)) < 2 for g in offspring)
@@ -278,7 +278,7 @@ def test_recombiners_PerGeneTuple_HalfFromFirst():
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
-    assert all(g1 is not g2 for g1, g2 in zip(population, offspring)), "DistinctRandom failed"
+    assert all(g1 is not g2 for g1, g2 in izip(population, offspring)), "DistinctRandom failed"
     assert all(g not in population for g in offspring), "Some individuals were not cloned"
     assert sum(g.statistic.get('recombined', 0) for g in offspring) == len(offspring), "Some individuals were not recombined"
     strikes = sum(len(set(g)) < 2 for g in offspring)

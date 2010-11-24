@@ -1,7 +1,7 @@
 '''Provides the `IntegerSpecies` and `IntegerIndividual` classes for
 integer-valued genomes.
 '''
-from itertools import izip as zip   #pylint: disable=W0622
+from itertools import izip
 from itertools import islice
 from esec.species import Species
 from esec.individual import Individual
@@ -124,18 +124,18 @@ class IntegerSpecies(Species):
         lower_bounds = self._convert_bounds(lower_bounds, longest)
         upper_bounds = self._convert_bounds(upper_bounds, longest)
         
-        assert all(h >= l for h, l in zip(highest, lowest)), \
+        assert all(h >= l for h, l in izip(highest, lowest)), \
             "Values of highest (%s) must be greater than or equal to those in lowest (%s)" % (highest, lowest)
         
         if shortest >= longest:
             while True:
-                genes = [_gen(*i) for i in zip(lowest, highest, xrange(shortest))]
+                genes = [_gen(*i) for i in izip(lowest, highest, xrange(shortest))]
                 yield IntegerIndividual(genes, parent=self, lower_bounds=lower_bounds, upper_bounds=upper_bounds)
         else:
             irand = rand.randrange
             while True:
                 length = irand(shortest, longest+1)
-                genes = [_gen(*i) for i in zip(lowest, highest, xrange(length))]
+                genes = [_gen(*i) for i in izip(lowest, highest, xrange(length))]
                 yield IntegerIndividual(genes, parent=self, lower_bounds=lower_bounds, upper_bounds=upper_bounds)
 
     def init_random(self,
@@ -311,7 +311,7 @@ class IntegerSpecies(Species):
         for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
                 new_genes = list(indiv.genome)
-                source = zip(xrange(len(new_genes)), indiv.lower_bounds, indiv.upper_bounds)
+                source = izip(xrange(len(new_genes)), indiv.lower_bounds, indiv.upper_bounds)
                 
                 if genes:
                     do_all_gene = True
@@ -379,7 +379,7 @@ class IntegerSpecies(Species):
             if do_all_indiv or frand() < per_indiv_rate:
                 step_size_sum = 0
                 new_genes = list(indiv.genome)
-                source = zip(xrange(len(new_genes)), new_genes, indiv.lower_bounds, indiv.upper_bounds)
+                source = izip(xrange(len(new_genes)), new_genes, indiv.lower_bounds, indiv.upper_bounds)
                 
                 if genes:
                     do_all_gene = True
@@ -450,7 +450,7 @@ class IntegerSpecies(Species):
             if do_all_indiv or frand() < per_indiv_rate:
                 step_size_sum = 0
                 new_genes = list(indiv.genome)
-                source = zip(xrange(len(new_genes)), new_genes, indiv.lower_bounds, indiv.upper_bounds)
+                source = izip(xrange(len(new_genes)), new_genes, indiv.lower_bounds, indiv.upper_bounds)
                 
                 if genes:
                     do_all_gene = True

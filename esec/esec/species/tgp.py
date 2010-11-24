@@ -1,7 +1,7 @@
 '''Provides the `TgpSpecies` and `TgpIndividual` classes for tree-based
 genetic programming (Koza-style) genomes.
 '''
-from itertools import izip as zip   #pylint: disable=W0622
+from itertools import izip
 from esec.species import Species
 from esec.individual import Individual, OnIndividual
 from esec.context import rand, notify
@@ -703,13 +703,13 @@ class TgpSpecies(Species):
         deepest_result = int(deepest_result or 0)
         
         group = list(_source)
-        for i1_pre, i2_pre in zip(group[::2], group[1::2]):
+        for i1_pre, i2_pre in izip(group[::2], group[1::2]):
             if do_all_pairs or frand() < per_pair_rate:
                 assert len(i1_pre.genome) == len(i2_pre.genome), "ADF counts are not consistent"
                 i1_post = []
                 i2_post = []
                 
-                for adf, (program1, program2) in enumerate(zip(i1_pre.genome, i2_pre.genome)):
+                for adf, (program1, program2) in enumerate(izip(i1_pre.genome, i2_pre.genome)):
                     if do_all_adf or frand() < per_adf_rate:
                         if len(program1) <= 1 or len(program2) <= adf:
                             i1_post.append(program1)
