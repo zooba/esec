@@ -65,7 +65,7 @@ method and calls the `Landscape` initialiser.
 '''
 
 import random
-from sys import maxint
+import sys
 from random import Random
 import esec.context
 from esec.fitness import Fitness, FitnessMaximise, FitnessMinimise
@@ -158,7 +158,7 @@ class Landscape(object):
         # random seed?
         if not isinstance(self.cfg.random_seed, int):
             random.seed()
-            self.cfg.random_seed = cfg.random_seed = random.randint(0, maxint)
+            self.cfg.random_seed = cfg.random_seed = random.randint(0, sys.maxint)
         self.rand = Random(self.cfg.random_seed)
         
         # inversion? offset?
