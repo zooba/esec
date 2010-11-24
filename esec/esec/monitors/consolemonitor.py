@@ -3,10 +3,10 @@ object based on prespecified report strings.
 
 See `esec.monitors` for a general overview of monitors.
 '''
-from esec.individual import EmptyIndividual
 from esec.fitness import Fitness, EmptyFitness
+from esec.individual import EmptyIndividual
 from esec.monitors import MonitorBase
-from esec.utils import ConfigDict, is_ironpython
+from esec.utils import attrdict, ConfigDict, is_ironpython
 
 import sys
 import os, os.path
@@ -33,7 +33,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
     format = {
         # <name> : ['<header string>', '<format string>', '<self.call string>']
         # building blocks
-        'gen':      [ ' #gen.  ', '%7d ', 'stats.generations' ],
+        'gen': 'iter',
+        'iter':     [ ' #iter. ', '%7d ', 'stats.iterations' ],
         'births':   [ ' births ', '%7d ', 'stats.births' ],
         'evals':    [ ' evals  ', '%7d ', 'stats.global_evals' ],
         'local_evals':  [ ' evals  ', '%7d ', 'stats.local_evals' ],
@@ -94,9 +95,9 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         'sizes': [ '    sizes     ', ' %-12s ', '_sizes_info'],
         
         # abbreviations
-        'brief': 'gen+births+evals+best_fit+|',
-        'brief_int': 'gen+births+evals+best_fit_int+|',
-        'brief_float': 'gen+births+evals+best_fit_float+|',
+        'brief': 'iter+births+evals+best_fit+|',
+        'brief_int': 'iter+births+evals+best_fit_int+|',
+        'brief_float': 'iter+births+evals+best_fit_float+|',
         'global': 'global_header+global_min+global_ave+global_max+|',
         'global_int': 'global_header+global_min_int+global_ave_int+global_max_int+|',
         'global_float': 'global_header+global_min_float+global_ave_float+global_max_float+|',
@@ -179,6 +180,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         'exception_summary': str,
         'limits?': {
             'generations?': [int, None],
+            'iterations?': [int, None],
             'stable?': [int, None],
             'fitness?': '*',
             'unique?': [int, None],
@@ -224,17 +226,21 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         The summary format string, made up of the desired report column
         names (from `format`) concatenated with '+' symbols.
       
-      exception_summary : (str [default ``'status+gen+births+evals'``])
+      exception_summary : (str [default ``'status+iter+births+evals'``])
         The summary format string to use when an exception has terminated
         the experiment. Uses the same syntax as ``summary``. (Override
         the `on_exception` function to provide different handling of
         exceptions.)
       
       limits.generations : (int > 0 [optional])
-        Terminate after this number of generations have been executed.
+        Terminate after this number of iterations have been executed.
+        This is deprecated - use ``limits.iterations`` instead.
+      
+      limits.iterations : (int > 0 [optional])
+        Terminate after this number of iterations have been executed.
       
       limits.stable : (int > 0 [optional])
-        Terminate after this many generations without an improvement in
+        Terminate after this many iterations without an improvement in
         the best individual.
       
       limits.fitness : (`Fitness` [optional])
@@ -264,7 +270,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         'primary': 'population',
         'report': 'brief+global',
         'summary': 'status+best+best_phenome',
-        'exception_summary': 'status+gen+births+evals',
+        'exception_summary': 'status+iter+births+evals',
         'formats': { },
         'limits': { }
     }
@@ -606,11 +612,20 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         
         elif sender == 'Monitor':
             if name == 'Statistics':
-                # `value` contains the _stats dictionary
+                # `value` contains the stats dictionary
                 print >> self.summary_out
                 print >> self.summary_out, ">> Statistics"
-                if not value: value = self._stats
-                print >> self.summary_out, '\n'.join(sorted(ConfigDict(value).lines()))
+                if not value:
+                    for line in attrdict(self._stats).lines():
+                        print >> self.summary_out, line
+                elif isinstance(value, attrdict):
+                    for line in value.lines():
+                        print >> self.summary_out, line
+                elif isinstance(value, dict):
+                    for line in attrdict(value).lines():
+                        print >> self.summary_out, line
+                else:
+                    print >> self.summary_out, str(value)
         
         elif name == 'statistic':
             # `value` contains a string or dictionary of statistics to increment
@@ -644,11 +659,11 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                 print >> self.error_out, value
     
     def on_pre_reset(self, sender):
-        '''Resets the generation count, best individual and average
+        '''Resets the iteration count, best individual and average
         fitness.
         '''
         self._stats = {
-            'generations': 0,
+            'iterations': 0,
             'births': 0,
             'stable_count': 0,
             'global_evals': 0,
@@ -678,7 +693,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
     
     def on_pre_breed(self, sender):
         '''Increments the breed count and resets local statistics.'''
-        self._stats['generations'] += 1
+        self._stats['iterations'] += 1
         self._stats['stable_count'] += 1
         
         local_stats = [k for k in self._stats if k.startswith('local_')]
@@ -755,16 +770,20 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
     
     def should_terminate(self, sender):
         '''Returns ``True`` if an exception has occurred or one of the
-        generation or fitness limits have been reached.
+        limits have been reached.
         '''
         if self.end_code: return True
         
         if self.stop_now:
             self.end_code = 'EXCEPTION'
         elif ('generations' in self.limits and 
-              'generations' in self._stats and
-              self._stats['generations'] >= self.limits.generations):
-            self.end_code = 'GEN_LIMIT'
+              'iterations' in self._stats and
+              self._stats['iterations'] >= self.limits.generations):
+            self.end_code = 'ITER_LIMIT'
+        elif ('iterations' in self.limits and 
+              'iterations' in self._stats and
+              self._stats['iterations'] >= self.limits.iterations):
+            self.end_code = 'ITER_LIMIT'
         elif ('fitness' in self.limits and
               'global_max' in self._stats and
               self._stats['global_max'].fitness >= self.limits.fitness):

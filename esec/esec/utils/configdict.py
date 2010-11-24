@@ -20,7 +20,9 @@ See also `utils.cfg_read()` and `utils.cfg_validate()` which act as
 useful in-application support functions.
 '''
 
-class ConfigDict(object):
+from esec.utils.attributedict import attrdict
+
+class ConfigDict(attrdict):     #pylint: disable=R0904
     '''A custom dictionary for configuration data that supports:
     
     - default None for empty values (not key error)
@@ -50,17 +52,16 @@ class ConfigDict(object):
             data = "key1.subkey3='Fred'; key2.subkey5=False"
         
         '''
-        #NOTE: Can NOT set self.attributes normally. Must "call" to set
-        object.__setattr__(self, '_dict', {} )
+        super(ConfigDict, self).__init__()
         
         if data:
-            if isinstance(data, (dict, ConfigDict)):
+            if isinstance(data, dict):
                 for key, value in data.items():
                     if isinstance(value, dict) and all(isinstance(i, str) for i in value.iterkeys()):
                         value = ConfigDict(value)
                     elif isinstance(value, ConfigDict):
                         value = ConfigDict(value)
-                    self._dict[key] = value
+                    self[key] = value
             elif isinstance(data, str):
                 bits = [bit.strip() for bit in data.split(';')]
                 for bit in bits:
@@ -92,8 +93,8 @@ class ConfigDict(object):
         warnings = []
         unrecognised_keys = []
         
-        allkeys = self._dict.keys()
-        for key, valuetype in syntax.items():
+        allkeys = self.keys()
+        for key, valuetype in syntax.iteritems():
             
             # check for "?" - an optional key, and strip
             optional = key[-1] == '?'
@@ -111,7 +112,7 @@ class ConfigDict(object):
             else:
                 # mark key as "known", keep value handy
                 allkeys.remove(key)
-                value = self._dict[key]
+                value = self[key]
                 # do we validate?
                 if valuetype != '*':
                     # check for nested keys and do recursion check
@@ -126,7 +127,7 @@ class ConfigDict(object):
                             if isinstance(value, float) and int in valuetype:
                                 ivalue = int(value)
                                 if ivalue != value: warnings.append(UserWarning("Cast '%s' value to int" % scopekey))
-                                self._dict[key] = value = ivalue
+                                self[key] = value = ivalue
                             else:
                                 errors.append(ValueError("Value '%s' not in %s" % (value, str(valuetype)), scopekey))
                     # check for valid type in a list of types
@@ -141,7 +142,7 @@ class ConfigDict(object):
                         if isinstance(value, float) and float not in valuetype and int in valuetype:
                             ivalue = int(value)
                             if ivalue != value: warnings.append(UserWarning("Cast '%s' value to int" % scopekey))
-                            self._dict[key] = value = ivalue
+                            self[key] = value = ivalue
                         # check the value type...
                         if not isinstance(value, tuple(t for t in valuetype if isinstance(t, type))):
                             errors.append(TypeError("Type '%s' not in %s" % (type(value), str(valuetype)), scopekey))
@@ -154,7 +155,7 @@ class ConfigDict(object):
                         if valuetype is int and isinstance(value, float):
                             ivalue = int(value)
                             if ivalue != value: warnings.append(UserWarning("Cast '%s' value to int" % scopekey))
-                            self._dict[key] = value = ivalue
+                            self[key] = value = ivalue
                             continue
                         # check for literal string match with type
                         if valuetype == value:
@@ -172,30 +173,8 @@ class ConfigDict(object):
     
     def __getitem__(self, key):
         '''Item get access. Default to ``None`` if not present.'''
-        return self._dict.get(key, None)
+        return self.get(key, None)
 
-    def get(self, key, default=None):
-        '''Item get access. Default to ``default`` if not present.'''
-        return self._dict.get(key, default)
-    
-    def __setitem__(self, key, value):
-        '''Item set access.'''
-        self._dict[key] = value
-    
-    def __delitem__(self, key):
-        '''Item delete access.'''
-        del self._dict[key]
-    
-    def __getattr__(self, key):
-        '''Attribute-based access. Get item, otherwise default to
-        ``None``.
-        '''
-        return self._dict.get(key, None)
-    
-    def __setattr__(self, key, value):
-        '''Attribute-based set access.'''
-        self._dict[key] = value
-    
     def overlay(self, other):
         '''Overlay the other ConfigDict, dict or appropriate string of
         values onto this instance. If ``other`` is a simple ``dict`` or
@@ -218,7 +197,7 @@ class ConfigDict(object):
         if not isinstance(other, ConfigDict):
             raise TypeError("Can only overlay a ConfigDict (or dict) instance")
         # Go through other's items and apply to self, recursively if needed
-        for key, value in other._dict.items(): #pylint: disable=W0212
+        for key, value in other.iteritems():
             if isinstance(value, ConfigDict):
                 if isinstance(self[key], ConfigDict):
                     self[key].overlay(value)
@@ -232,7 +211,7 @@ class ConfigDict(object):
         which are `ConfigDict` instances will not be modified.
         '''
         result = {}
-        for key, value in self._dict.items():
+        for key, value in self.iteritems():
             result[key] = value
         return result
     
@@ -248,31 +227,6 @@ class ConfigDict(object):
         '''Overlays `other` onto `self`.'''
         self.overlay(other)
         return self
-    
-    def __str__(self):
-        '''Compact single string of sorted key=value pairs.'''
-        bits = sorted('%s:%s' % (k, str(v)) for k, v in self._dict.items())
-        return '{'+ ', '.join(bits) + '}'
-    
-    def __len__(self):
-        return len(self._dict)
-    
-    def __eq__(self, other):
-        # quick exit tests
-        if not isinstance(other, ConfigDict) or len(self) != len(other):
-            return False
-        # list are only == if their order is also equal.. so use sets
-        if set(self._dict.keys()) != set(other._dict.keys()): #pylint: disable=W0212
-            return False
-        # long test values (nested)
-        for key, value in self._dict.items():
-            if value != other[key]:
-                return False
-        # fall through equal
-        return True
-    
-    def __ne__(self, other):
-        return not (self == other)
     
     def list(self, indent_level=0):
         '''Returns the keys and values as a list of strings.
@@ -293,8 +247,8 @@ class ConfigDict(object):
         '''
         indent = '    ' * indent_level
         result = [indent + '{']
-        for key in sorted(self._dict.iterkeys()):
-            value = self._dict[key]
+        for key in sorted(self.iterkeys()):
+            value = self[key]
             if isinstance(value, ConfigDict):
                 result.append(indent + "    '" + key + "': ")
                 result.extend(value.list(indent_level + 1))
@@ -306,35 +260,6 @@ class ConfigDict(object):
             result.append(indent + '},')
         else:
             result.append('}')
-        return result
-    
-    def lines(self, prefix=''):
-        '''Returns keys and values as a list of strings in a
-        ``long.name.key=value`` style (rather than dict style of
-        `list`).
-        
-        :Parameters:
-          prefix : str [optional]
-            The prefix to display with each line of output. This
-            parameter is used to include the scope when this method
-            recurses into a contained dictionary or `ConfigDict`.
-        
-        :Returns:
-            A list of strings, each element containing one line of
-            output.
-            
-            Use ``'\\n'.join(o.lines())`` to print to the console.
-        
-        '''
-        result = []
-        for key in sorted(self._dict.keys()):
-            value = self._dict[key]
-            if isinstance(value, ConfigDict):
-                result.extend(value.lines(prefix + key + '.'))
-            else:
-                if type(value) is str:
-                    value = "'" + value + "'"
-                result.append(prefix + key + "=" + str(value))
         return result
     
     
@@ -373,26 +298,6 @@ class ConfigDict(object):
             if value is None:
                 return None
         return value
-    
-    def __iter__(self):
-        return self._dict.__iter__()
-    
-    def __contains__(self, item):
-        return item in self._dict
-    
-    def keys(self):
-        '''Provide the keys for typical dict style behaviour.'''
-        return self._dict.keys()
-    
-    def items(self):
-        '''Provide an item list for typical dict style behaviour.
-        '''
-        return self._dict.items()
-    
-    def iteritems(self):
-        '''Provide an item iterator typical dict style behaviour.
-        '''
-        return self._dict.iteritems()
     
     def savetofile(self, filename, comment=None):
         '''Save all details to text file. A list of comments can also be

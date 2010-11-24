@@ -110,7 +110,7 @@ def esdl_func(*names, **kwargs):
     by which the function may be accessed. If unspecified, the
     ``__name__`` member of the function object is used instead.
     
-    The named parameter `on_individual`, if ``True``, produces an
+    The named parameter ``on_individual``, if ``True``, produces an
     `OnIndividual` object for each alias with the wrapped function as 
     the default. If unspecified, this is assumed to be ``False``.
     '''

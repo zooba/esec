@@ -5,6 +5,7 @@ Support functions for the |esec| framework.
 import sys, copy, os.path
 from itertools import islice
 from warnings import warn
+from esec.utils.attributedict import attrdict
 from esec.utils.configdict import ConfigDict
 from esec.utils.exceptions import ExceptionGroup, UnexpectedKeyWarning
 

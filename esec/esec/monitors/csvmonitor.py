@@ -17,7 +17,8 @@ class CSVMonitor(ConsoleMonitor):
     format = {
         # <name> : ['<header string>', '<format string>', '<self.call string>']
         # building blocks
-        'gen':      [ 'Generation', '%d', 'stats.generations' ],
+        'gen': 'iter',
+        'iter':     [ 'Iteration', '%d', 'stats.iterations' ],
         'births':   [ 'Births', '%d', 'stats.births' ],
         'evals':    [ 'Evals', '%d', 'stats.global_evals' ],
         'local_evals':  [ 'Local evals', '%d', 'stats.local_evals' ],
@@ -80,9 +81,9 @@ class CSVMonitor(ConsoleMonitor):
         
         # abbreviations (unchanged from ConsoleMonitor, but behave
         # differently because some parts are now set to None)
-        'brief': 'gen+births+evals+best_fit+|',
-        'brief_int': 'gen+births+evals+best_fit_int+|',
-        'brief_float': 'gen+births+evals+best_fit_float+|',
+        'brief': 'iter+births+evals+best_fit+|',
+        'brief_int': 'iter+births+evals+best_fit_int+|',
+        'brief_float': 'iter+births+evals+best_fit_float+|',
         'global': 'global_header+global_min+global_ave+global_max+|',
         'global_int': 'global_header+global_min_int+global_ave_int+global_max_int+|',
         'global_float': 'global_header+global_min_float+global_ave_float+global_max_float+|',

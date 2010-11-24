@@ -109,9 +109,9 @@ configs = {
         'error_out': sys.stderr,
     } },
     
-    'short': { 'monitor': { 'limits': { 'generations': 10 } } },
-    'long': { 'monitor': { 'limits': { 'generations': 100 } } },
-    'infinite': { 'monitor': { 'limits': { 'generations': None } } },
+    'short': { 'monitor': { 'limits': { 'iterations': 10 } } },
+    'long': { 'monitor': { 'limits': { 'iterations': 100 } } },
+    'infinite': { 'monitor': { 'limits': { 'iterations': None } } },
     
     'n2' : { 'landscape': { 'parameters': 2 } },
     'n3' : { 'landscape': { 'parameters': 3 } },
@@ -267,7 +267,7 @@ def esec_run(options):
     
     # Set short limit (if it hasn't been set yet)
     if 'limits' not in cfg.monitor:
-        cfg.monitor['limits'] = { 'generations': 10 }
+        cfg.monitor['limits'] = { 'iterations': 10 }
     
     # Start the experiment
     try:
