@@ -137,6 +137,9 @@ class Landscape(object):
         self.syntax = merge_cls_dicts(self, 'syntax') # all in hierarchy
         self.cfg = ConfigDict(merge_cls_dicts(self, 'default'))
         
+        if cfg is None: cfg = ConfigDict()
+        elif not isinstance(cfg, ConfigDict): cfg = ConfigDict(cfg)
+        
         self.cfg.overlay(cfg)
         for key, value in other_cfg.iteritems():
             if key in self.syntax:
@@ -217,8 +220,6 @@ class Landscape(object):
 #==============================================================================
 # Expose landscapes by names and provide easy landscape load(cfg)
 #==============================================================================
-
-from esec.utils import cfg_read
 
 LANDSCAPES = []
 '''An automatically generated list of the available landscape types.'''
