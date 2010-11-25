@@ -135,9 +135,8 @@ class ConfigDict(attrdict):     #pylint: disable=R0904
                         # accept None as a type...
                         if None in valuetype:
                             valuetype.append(type(None))
-                        # accept ConfigDict's in place of normal dict's
-                        if dict in valuetype:
-                            valuetype.append(ConfigDict)
+                            while None in valuetype:
+                                valuetype.remove(None)
                         # handle float/int conversions
                         if isinstance(value, float) and float not in valuetype and int in valuetype:
                             ivalue = int(value)
