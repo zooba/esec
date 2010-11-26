@@ -114,9 +114,9 @@ class Individual(object):
         '''
         if self.birthday is None:
             self.birthday = Individual._next_birthday()
-        if self._eval and hasattr(self._eval, 'prepare'):
+        if self._eval and hasattr(self._eval, 'prepare') and self._eval.prepare:
             self._eval.prepare(self)
-
+        
         return self
     
     def __getattr__(self, name):

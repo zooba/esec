@@ -119,6 +119,60 @@ def esdl_func(*names, **kwargs):
     else:
         return _esdl_func(*names, **kwargs)
 
+class esdl_eval(object):
+    '''A function decorator that produces an evaluator object.
+    
+    For example, specifying::
+    
+        @esdl_eval
+        def onemax(indiv):
+            return sum(indiv)
+    
+    is equivalent to::
+    
+        class onemax_class(object):
+            def eval(self, indiv):
+                return sum(indiv)
+        
+        onemax = onemax_class()
+    
+    A ``prepare`` method may be subsequently specified by using the
+    `pre` member of the evaluator object to decorate the function.
+    
+    For example, given the previous example, specifying::
+    
+        @onemax.pre
+        def onemax(indiv):
+            # start calculation
+    
+    is equivalent to::
+    
+        class onemax_class(object):
+            # eval as above
+            
+            def prepare(self, indiv):
+                # start calculation
+    
+    An evaluator specified with this is automatically included in the
+    ESDL system. Note that, unlike `esdl_func`, an alternative name can
+    not be specified.
+    '''
+    def __init__(self, func):
+        '''Initialises the ``eval`` member of the evaluator with the
+        provided function.
+        '''
+        self.eval = func
+        self.prepare = None
+        GLOBAL_ESDL_FUNCTIONS[func.__name__] = self
+    
+    def pre(self, func):
+        '''Initialises the ``prepare`` member of the evaluator with the
+        provided function.
+        '''
+        self.prepare = func
+        return self
+
+
 from esec.experiment import Experiment
 import esec.landscape
 
