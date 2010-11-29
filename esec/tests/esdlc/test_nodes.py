@@ -68,7 +68,7 @@ def test_ValueNode_parse():
 def test_VariableNode_parse():
     for source, expect in [
         ("undottedname", "undottedname"),
-        ("dotted.name", "dotted.name"),
+        ("dotted.name", "dotted"),
         ("underscore_name", "underscore_name"),
         ("indexed[name]", "indexed"),   # [ operator is not handled by VariableNode
         ("_leading_underscore", "_leading_underscore"),
@@ -221,7 +221,7 @@ def test_EvalNode_parse():
         ("EVAL 5 population", [_g("5 population")], None),
         ("EVALUATE population", [_g("population")], None),
         ("EVAL population USING func()", [_g("population")], [_f("func")]),
-        ("EVAL population USING fA(), fB", [_g("population")], [_f("fA"), _f("fB")]),
+        ("EVAL population USING fA(), fB", [_g("population")], [_f("fA"), _v("fB")]),
         ]:
         yield check_Node_parse, source, EvalNode, EvalNode(srcs, usings, None)
     
