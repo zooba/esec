@@ -94,10 +94,23 @@ class UnknownNode(NodeBase):
                     expect = 'operator'
                 elif token.tag == 'name':
                     token1 = _get_token(tokens, token_i + 1)
-                    if token1 and token1.tag == '(':
-                        token_i, value = FunctionNode.parse(tokens, token_i)
+                    
+                    if stack and stack[-1].tag == '.':
+                        stack.pop()
+                        stack.pop()
+                        base = stack.pop()
+                        value = TextNode(token.value, [token])
+                        base = FunctionNode('_getattr', base.tokens + value.tokens, source=base, attr=value)
+                        if token1 and token1.tag == '(':
+                            token_i, value = FunctionNode.parse_arguments('_call', tokens, token_i + 1, _source=base)
+                        else:
+                            token_i += 1
+                            value = base
                     else:
-                        token_i, value = VariableNode.parse(tokens, token_i)
+                        if token1 and token1.tag == '(':
+                            token_i, value = FunctionNode.parse(tokens, token_i)
+                        else:
+                            token_i, value = VariableNode.parse(tokens, token_i)
                     stack.append(value)
                     expect = 'operator'
                 elif token.tag == '-':  #unary operator
@@ -126,7 +139,7 @@ class UnknownNode(NodeBase):
             elif expect == 'operator':
                 if token.tag in ('name', 'number'):
                     break
-                elif len(token.tag) == 1 and token.tag in '^%/*-+=':
+                elif len(token.tag) == 1 and token.tag in '^%/*-+=.':
                     stack.append(token.tag)
                     stack.append(token)
                     expect = 'operand'
@@ -147,6 +160,25 @@ class UnknownNode(NodeBase):
                 assert False, "expect == '" + expect + "'"
             
             token = _get_token(tokens, token_i)
+        
+        # Dot operator
+        op = '.'
+        while op in stack:
+            i = stack.index(op)
+            if not 0 < i < len(stack) - 2: raise error.InvalidSyntaxError(stack[i+1])
+            val1, _, op_token, val2 = stack[i-1:i+3]
+            if 1 < i and isinstance(stack[i-2], str): raise error.InvalidSyntaxError(op_token)
+            if isinstance(val2, str): raise error.InvalidSyntaxError(stack[i+3])
+            op_tokens = val1.tokens + val2.tokens
+            op_tokens.append(op_token)
+            if val2.tag == 'function':
+                func = FunctionNode('_getattr', op_tokens, source=val1, attr=TextNode(val2.name, val2.tokens))
+                stack[i-1:i+3] = [FunctionNode('_call', op_tokens, _source=func, **val2.arguments)]
+            elif val2.tag == 'variable':
+                name = TextNode(val2.name, val2.tokens)
+                stack[i-1:i+3] = [FunctionNode('_getattr', op_tokens, source=val1, attr=name)]
+            else:
+                stack[i-1:i+3] = [FunctionNode('_getattr', op_tokens, source=val1, attr=val2)]
         
         # Unary operators
         for op in '~':
@@ -188,6 +220,13 @@ class FunctionNode(NodeBase):
     
     def __init__(self, name, tokens, *positional_arguments, **named_arguments):
         super(FunctionNode, self).__init__(tokens)
+        
+        if isinstance(name, NodeBase):
+            if name.tag in ('name', 'variable'):
+                name = name.name
+            elif name.tag == 'function':
+                named_arguments['_source'] = name
+                name = '_call'
         
         assert isinstance(name, str), "name must be a string (" + repr(name) + ")"
         self.name = name.lower()
@@ -241,6 +280,11 @@ class FunctionNode(NodeBase):
     def __str__(self):  #pylint: disable=R0911
         if self.name == '_assign':
             return '%(destination)s = %(source)s' % self.arguments
+        elif self.name == '_getattr':
+            if self.arguments['attr'].tag == 'text':
+                return '%s.%s' % (self.arguments['source'], self.arguments['attr'].text)
+            else:
+                return 'getattr(%(source)s, %(attr)s)' % self.arguments
         elif self.name == '_getitem':
             return '%(source)s[%(key)s]' % self.arguments
         elif self.name == '_call':
@@ -271,22 +315,56 @@ class FunctionNode(NodeBase):
     def parse(cls, tokens, first_token, **other_args):
         '''Reads a `FunctionNode` from `tokens`.'''
         assert tokens, "tokens must be provided"
-        token_i = first_token
         
-        token = _get_token(tokens, token_i)
-        if not token: raise error.InvalidFunctionCallError(tokens[-1])
+        token_i, func = cls.parse_maybe_variable(tokens, first_token, **other_args)
+        if func.tag == 'variable':
+            func = FunctionNode(func.name, tokens[first_token:token_i])
         
-        if token.tag == 'name':
-            func_name = token.value
-        elif token.tag == 'variable':
-            func_name = token.name
-        else:
-            raise error.InvalidFunctionCallError(token)
-        
-        token_i, func = cls.parse_arguments(func_name, tokens, token_i + 1, **other_args)
-        func.tokens = sorted(tokens[first_token:token_i])
         return token_i, func
     
+    @classmethod
+    def parse_maybe_variable(cls, tokens, first_token, **other_args):
+        '''Reads a `FunctionNode` from `tokens`. If it looks like a
+        variable (or object reference), a `VariableNode` is returned
+        instead.
+        '''
+        assert tokens, "tokens must be provided"
+        token_i = first_token
+        
+        func_name_tokens = []
+        token = _get_token(tokens, token_i)
+        if not token: raise error.InvalidFunctionCallError(tokens[-1])
+        while token:
+            if token and token.tag in ('name', '['):
+                func_name_tokens.append(token)
+                token_i += 1
+                token = _get_token(tokens, token_i)
+            else:
+                break
+            
+            if token and token.tag in ('.'):
+                func_name_tokens.append(token)
+                token_i += 1
+                token = _get_token(tokens, token_i)
+            else:
+                break
+        
+        if not func_name_tokens: raise error.InvalidFunctionCallError(tokens[first_token])
+        _, func_name = UnknownNode.parse(func_name_tokens, 0)
+        token = _get_token(tokens, token_i)
+        
+        if token and token.tag == '(':
+            token_i, func = cls.parse_arguments(func_name, tokens, token_i, **other_args)
+            func.tokens = sorted(tokens[first_token:token_i])
+        elif other_args:
+            func = FunctionNode(func_name, tokens[first_token:token_i], **other_args)
+        else:
+            if func_name.tag in ('name'):
+                func = VariableNode(func_name.name, tokens[first_token:token_i])
+            else:
+                func = func_name
+        return token_i, func
+        
     @classmethod
     def parse_arguments(cls, func_name, tokens, first_token, **other_args):
         '''Reads arguments for the given function.
@@ -384,7 +462,7 @@ class TextNode(NodeBase):
         super(TextNode, self).__init__(tokens)
         self.text = text
     
-    def __str__(self): return self.text
+    def __str__(self): return "'" + self.text + "'"
     def __repr__(self): return self.tag + ':' + str(self)
 
 class ValueNode(NodeBase):
@@ -583,7 +661,7 @@ class FromNode(NodeBase):
         
         if not token: raise error.ExpectedFilterError(tokens[-1])
         while token:
-            token_i, using = FunctionNode.parse(tokens, token_i, _source=using)
+            token_i, using = FunctionNode.parse_maybe_variable(tokens, token_i, _source=using)
             token = _get_token(tokens, token_i)
             if not token: break
             if token.tag != ',': raise error.ExpectedCommaError(token)
@@ -681,7 +759,7 @@ class JoinNode(NodeBase):
         token = _get_token(tokens, token_i)
         if not token: raise error.ExpectedFilterError(tokens[-1])
         while token:
-            token_i, using = FunctionNode.parse(tokens, token_i, _source=using)
+            token_i, using = FunctionNode.parse_maybe_variable(tokens, token_i, _source=using)
             token = _get_token(tokens, token_i)
             if not token: break
             if token.tag != ',': raise error.ExpectedCommaError(token)
@@ -746,7 +824,7 @@ class EvalNode(NodeBase):
         token_i += 1
         token = _get_token(tokens, token_i)
         while token:
-            token_i, func = FunctionNode.parse(tokens, token_i)
+            token_i, func = FunctionNode.parse_maybe_variable(tokens, token_i)
             using_list.append(func)
             token = _get_token(tokens, token_i)
             if not token or token.tag != ',': break

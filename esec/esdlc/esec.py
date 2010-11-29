@@ -68,6 +68,7 @@ class _born_iter(object):
         '_assign': '%(destination)s = %(source)s',
         #'_call': handled separately
         #'_list': handled separately
+        '_getattr': '%(source)s.%(attr)s',
         '_getitem': '%(source)s[int(%(key)s) if isinstance(%(source)s, (list, tuple)) else %(key)s]',
         '_getitem_int': '%(source)s[%(key)s]',
         '_op_+': '(%(#0)s + %(#1)s)',
@@ -169,7 +170,20 @@ class _born_iter(object):
             group_name = ''.join(self.write(g.group))
             if g.size:
                 group_size = ''.join(self.write(g.size))
-                yield '%s[:] = islice(_gen, int(%s))' % (group_name, group_size)
+                i = None
+                try:
+                    i = int(float(group_size))
+                except ValueError:
+                    i = None
+                
+                if i is None:
+                    yield '%s[:] = islice(_gen, int(%s))' % (group_name, group_size)
+                elif i == 0:
+                    yield '%s[:] = []' % group_name
+                elif i == 1:
+                    yield '%s[:] = islice(_gen, 1)' % group_name
+                else:
+                    yield '%s[:] = islice(_gen, %d)' % (group_name, i)
             else:
                 yield '%s[:] = %s.rest()' % (group_name, src)
                 break

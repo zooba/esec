@@ -144,7 +144,7 @@ def _tokenise(source):  #pylint: disable=R0912,R0915
                 word = ''
         
         elif mode == 'name':
-            if char.isalpha() or char.isdigit() or char and char in '_.':
+            if char and (char.isalpha() or char.isdigit() or char == '_'):
                 word += char
                 i += 1
             else:
