@@ -4,7 +4,8 @@ import sys
 class EsecEmitter(object):
     INDENT = '    '
     
-    DEFINITIONS_PY2 = '''from itertools import islice
+    DEFINITIONS_PY2 = '''from itertools import islice as _islice
+from copy import copy as _copy
 _lambda = globals().get('lambda', None)
 
 def _iter(*srcs):
@@ -30,7 +31,8 @@ class _born_iter(object):
     the underlying sequence does not support it.
     '''
     
-    DEFINITIONS_PY3 = '''from itertools import islice
+    DEFINITIONS_PY3 = '''from itertools import islice as _islice
+from copy import copy as _copy
 _lambda = globals().get('lambda', None)
 
 def _iter(*srcs):
@@ -122,9 +124,7 @@ class _born_iter(object):
         return (str(node.value),)
     
     @classmethod
-    def safe_variable(cls, name, replace_dots=True):
-        if replace_dots and '.' in name:
-            name = '_dotted_' + name.replace('.', '_')
+    def safe_variable(cls, name):
         assert '[' not in name and ']' not in name, "No indexers allowed in variables"
         assert '(' not in name and ')' not in name, "No parentheses allowed in variables"
         if name == 'lambda': name = '_lambda'
@@ -134,14 +134,6 @@ class _born_iter(object):
     def safe_argument(cls, name):
         if name == 'lambda': name = '_lambda'
         return name
-    
-    @classmethod
-    def base_variable(cls, name):
-        if '.' in name:
-            name = name[:name.index('.')]
-        assert '[' not in name and ']' not in name, "No indexers allowed in variables"
-        assert '(' not in name and ')' not in name, "No parentheses allowed in variables"
-        return cls.safe_variable(name, False)
     
     def write_variable(self, node):
         yield self.safe_variable(node.name)
@@ -177,13 +169,13 @@ class _born_iter(object):
                     i = None
                 
                 if i is None:
-                    yield '%s[:] = islice(_gen, int(%s))' % (group_name, group_size)
+                    yield '%s[:] = _islice(_gen, int(%s))' % (group_name, group_size)
                 elif i == 0:
                     yield '%s[:] = []' % group_name
                 elif i == 1:
-                    yield '%s[:] = islice(_gen, 1)' % group_name
+                    yield '%s[:] = _islice(_gen, 1)' % group_name
                 else:
-                    yield '%s[:] = islice(_gen, %d)' % (group_name, i)
+                    yield '%s[:] = _islice(_gen, %d)' % (group_name, i)
             else:
                 yield '%s[:] = %s.rest()' % (group_name, src)
                 break
@@ -201,7 +193,7 @@ class _born_iter(object):
             group_name = ''.join(self.write(g.group))
             if g.size:
                 group_size = ''.join(self.write(g.size))
-                yield '%s[:] = islice(_gen, int(%s))' % (group_name, group_size)
+                yield '%s[:] = _islice(_gen, int(%s))' % (group_name, group_size)
             else:
                 yield '%s[:] = _gen.rest()' % group_name
                 break
@@ -235,15 +227,18 @@ class _born_iter(object):
             yield '_on_yield("%s", %s)' % (source_name, source_name)
     
     def write_block(self, node):
-        variables_in = ', '.join(sorted(self.safe_argument(n) for n in node.variables_in))
-        variables_in_safe = ', '.join(sorted(self.safe_variable(n) for n in node.variables_in))
-        variables_out = ', '.join(sorted(self.safe_argument(n) 
-                                         for n in set(node.variables_out).intersection(self.ast.globals)))
-        variables_out_safe = ', '.join(sorted(self.safe_variable(n)
-                                              for n in set(node.variables_out).intersection(self.ast.globals)))
-        variables_out_base = ', '.join(sorted(self.base_variable(n)
-                                              for n in set(node.variables_out).intersection(self.ast.globals)))
-        yield 'def __block_%s(%s):' % (node.name, variables_in_safe)
+        parameters = sorted(self.safe_argument(n) for n in node.variables_in.iterkeys())
+        returned = sorted(self.safe_argument(n) for n in set(node.variables_out) & set(self.ast.globals.iterkeys()))
+        global_vars = sorted(self.safe_variable(n) for n in returned) # variable is stricter than argument
+        arguments = ['_copy(' + n + ')' if n in global_vars else n for n in parameters]
+        
+        parameters = ', '.join(parameters)
+        returned = ', '.join(returned)
+        global_vars = ', '.join(global_vars)
+        arguments = ', '.join(arguments)
+        
+        yield 'def __block_%s(%s):' % (node.name, parameters)
+        
         local_groups = list(node.groups_local.iterkeys())
         if local_groups:
             yield '    ' + ', '.join(local_groups) + ' = ' + ', '.join('[]' for _ in local_groups)
@@ -251,15 +246,15 @@ class _born_iter(object):
         for child in node.children:
             for line in self.write(child):
                 yield '    ' + line
-        yield '    return ' + variables_out
+        yield '    return ' + returned
         yield ''
         
         yield 'def _block_' + node.name + '():'
-        if variables_out and variables_out_base:
-            yield '    global ' + variables_out_base
-            yield '    %s = __block_%s(%s)' % (variables_out, node.name, variables_in)
+        if returned and global_vars:
+            yield '    global ' + global_vars
+            yield '    %s = __block_%s(%s)' % (returned, node.name, arguments)
         else:
-            yield '    __block_%s(%s)' % (node.name, variables_in)
+            yield '    __block_%s(%s)' % (node.name, arguments)
         yield ''
     
     def write_repeat(self, node):
