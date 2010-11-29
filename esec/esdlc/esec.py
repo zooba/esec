@@ -97,8 +97,8 @@ class _born_iter(object):
         else:
             func_name = node.name
             if func_name == '_call':
-                func_name = args['_source']
-                del args['_source']
+                func_name = args['_target']
+                del args['_target']
             
             if 'lambda' in args:
                 args['lambda_'] = args['lambda']

@@ -16,7 +16,7 @@ def compileESDL(source):
     from esdlc.parser import AST
     from esdlc.verifier import Verifier
     
-    if '\n' not in source and os.path.exists(source):
+    if isinstance(source, str) and '\n' not in source and os.path.exists(source):
         ast = AST.load(source)
     else:
         ast = AST.parse(source)

@@ -49,7 +49,7 @@ class UnknownNode(NodeBase):
     def __str__(self): return '<?> ' + str(self.text) + ' <?>'
     
     @classmethod
-    def parse(cls, tokens, first_token):    #pylint: disable=R0912,R0915
+    def parse(cls, tokens, first_token):
         '''Parses an unidentified sequence of tokens.
         
         `tokens` is a list of tokens, `first_token` is the index of the
@@ -102,7 +102,7 @@ class UnknownNode(NodeBase):
                         value = TextNode(token.value, [token])
                         base = FunctionNode('_getattr', base.tokens + value.tokens, source=base, attr=value)
                         if token1 and token1.tag == '(':
-                            token_i, value = FunctionNode.parse_arguments('_call', tokens, token_i + 1, _source=base)
+                            token_i, value = FunctionNode.parse_arguments('_call', tokens, token_i + 1, _target=base)
                         else:
                             token_i += 1
                             value = base
@@ -145,11 +145,16 @@ class UnknownNode(NodeBase):
                     expect = 'operand'
                     token_i += 1
                 elif token.tag == '(':  #read function
-                    token_i, func = FunctionNode.parse_arguments('_call', tokens, token_i, _source=stack.pop())
+                    token_i, func = FunctionNode.parse_arguments('_call', tokens, token_i, _target=stack.pop())
                     stack.append(func)
                     expect = 'operator'
                 elif token.tag == '[':  #read subscript
+                    token1 = _get_token(tokens, token_i + 1)
+                    if not token1 or token1.tag == ']':
+                        raise error.ExpectedIndexError(token)
                     token_i, key = UnknownNode.parse(tokens, token_i + 1)
+                    if not key:
+                        raise error.ExpectedIndexError(token)
                     source = stack.pop()
                     stack.append(FunctionNode('_getitem', source.tokens, source=source, key=key))
                     token_i += 1
@@ -171,10 +176,7 @@ class UnknownNode(NodeBase):
             if isinstance(val2, str): raise error.InvalidSyntaxError(stack[i+3])
             op_tokens = val1.tokens + val2.tokens
             op_tokens.append(op_token)
-            if val2.tag == 'function':
-                func = FunctionNode('_getattr', op_tokens, source=val1, attr=TextNode(val2.name, val2.tokens))
-                stack[i-1:i+3] = [FunctionNode('_call', op_tokens, _source=func, **val2.arguments)]
-            elif val2.tag == 'variable':
+            if val2.tag == 'variable':
                 name = TextNode(val2.name, val2.tokens)
                 stack[i-1:i+3] = [FunctionNode('_getattr', op_tokens, source=val1, attr=name)]
             else:
@@ -225,7 +227,7 @@ class FunctionNode(NodeBase):
             if name.tag in ('name', 'variable'):
                 name = name.name
             elif name.tag == 'function':
-                named_arguments['_source'] = name
+                named_arguments['_target'] = name
                 name = '_call'
         
         assert isinstance(name, str), "name must be a string (" + repr(name) + ")"
@@ -264,6 +266,8 @@ class FunctionNode(NodeBase):
             args = (value for key, value in self.arguments.iteritems() if key != 'destination')
         
         for value in args:
+            assert value is not None, ("All arguments must contain a node\n" + 
+                                       '\n'.join('%s=%s' % item for item in self.arguments.iteritems()))
             if value.tag == 'variable':
                 _add(self.variables_in, { value.name: value })
             elif value.tag == 'group':
@@ -277,7 +281,7 @@ class FunctionNode(NodeBase):
                 _add(self.variables_in, value.variables_in)
                 _add(self.variables_out, value.variables_out)
     
-    def __str__(self):  #pylint: disable=R0911
+    def __str__(self):
         if self.name == '_assign':
             return '%(destination)s = %(source)s' % self.arguments
         elif self.name == '_getattr':
@@ -288,11 +292,11 @@ class FunctionNode(NodeBase):
         elif self.name == '_getitem':
             return '%(source)s[%(key)s]' % self.arguments
         elif self.name == '_call':
-            args = sorted((i for i in self.arguments.iteritems() if i[0] != '_source'), key=lambda i: i[0])
+            args = sorted((i for i in self.arguments.iteritems() if i[0] != '_target'), key=lambda i: i[0])
             arglist = (['%s' % item[1] for item in args if item[0][0] == '#'] +
                        ['%s=%s' % item for item in args if item[0][0] != '#'])
             arg_string = ','.join(arglist)
-            return str(self.arguments['_source']) + '(' + arg_string + ')'
+            return str(self.arguments['_target']) + '(' + arg_string + ')'
         elif self.name == '_list':
             arglist = [value for key, value in sorted(self.arguments.iteritems(), key=lambda i: i[0]) if key[0] == '#']
             return '[%s]' % ', '.join(str(arg) for arg in arglist)

@@ -191,6 +191,11 @@ class ExpectedCommaError(ESDLSyntaxErrorBase):
     code = "E1014"
     default_message = "Expected comma separator"
 
+class ExpectedIndexError(ESDLSyntaxErrorBase):
+    '''Returned when a subscript does not contain an index/key.'''
+    code = "E1015"
+    default_message = "Expected index in subscript"
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Errors/warnings used by Verifier
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
