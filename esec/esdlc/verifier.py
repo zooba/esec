@@ -112,8 +112,11 @@ class Verifier(object):
                 _add(variables_in, _diff(groups, variables_out))
                 
                 for func_node in node.using:
-                    _add(variables_in, _diff(func_node.variables_in, variables_out))
-                    _add(variables_out, func_node.variables_out)
+                    if func_node.tag == 'variable':
+                        _add(variables_in, _diff({ func_node.name: func_node }, variables_out))
+                    elif func_node.tag == 'function':
+                        _add(variables_in, _diff(func_node.variables_in, variables_out))
+                        _add(variables_out, func_node.variables_out)
             
             elif node.tag == 'repeat':
                 count = node.count
