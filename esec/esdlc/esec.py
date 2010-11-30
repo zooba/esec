@@ -208,9 +208,9 @@ class _born_iter(object):
         
         if node.using:
             gen = node.using[0]
-            if gen.arguments:
+            if gen.tag == 'function':
                 yield '_eval = ' + ''.join(self.write(gen))
-            else:
+            elif gen.tag == 'variable':
                 name = gen.name
                 yield '_eval = %s() if isinstance(%s, type) else %s' % (name, name, name)
         else:
