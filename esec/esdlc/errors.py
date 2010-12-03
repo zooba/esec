@@ -26,6 +26,7 @@ class ESDLSyntaxErrorBase(BaseException):
             try: self.message = self.message % args
             except TypeError: pass
         self.line, self.col = token.line, token.col
+        self.as_tuple = (self.line, self.col, self.code, self.message)
     
     @property
     def iswarning(self):
@@ -41,23 +42,29 @@ class ESDLSyntaxErrorBase(BaseException):
             return '[%s] %s (ESDL Definition, line %d)' % (self.code, self.message, self.line)
     
     def __eq__(self, other):
-        if (hasattr(other, 'line') and hasattr(other, 'col') and
-            hasattr(other, 'code') and hasattr(other, 'message')):
-            return (self.lineno == other.lineno and self.charno == other.charno and
-                    self.code == other.code and self.message == other.message)
+        if hasattr(other, 'as_tuple'): return self.as_tuple == other.as_tuple
+        return False
+    
+    def __ne__(self, other):
+        if hasattr(other, 'as_tuple'): return self.as_tuple != other.as_tuple
         return False
     
     def __gt__(self, other):
-        if (hasattr(other, 'line') and hasattr(other, 'col') and
-            hasattr(other, 'code') and hasattr(other, 'message')):
-            return (self.line, self.code, self.message) > (other.line, other.code, other.message)
+        if hasattr(other, 'as_tuple'): return self.as_tuple > other.as_tuple
+        return False
+    
+    def __ge__(self, other):
+        if hasattr(other, 'as_tuple'): return self.as_tuple >= other.as_tuple
         return False
     
     def __lt__(self, other):
-        if (hasattr(other, 'line') and hasattr(other, 'col') and
-            hasattr(other, 'code') and hasattr(other, 'message')):
-            return (self.line, self.code, self.message) < (other.line, other.code, other.message)
+        if hasattr(other, 'as_tuple'): return self.as_tuple < other.as_tuple
         return False
+    
+    def __le__(self, other):
+        if hasattr(other, 'as_tuple'): return self.as_tuple <= other.as_tuple
+        return False
+    
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Error/warnings used by AST

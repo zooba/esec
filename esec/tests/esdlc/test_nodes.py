@@ -12,6 +12,7 @@ def test_node_bases():
     assert issubclass(VariableNode, NodeBase)
     assert issubclass(BacktickNode, NodeBase)
     assert issubclass(GroupNode, NodeBase)
+    assert issubclass(FromSourceNode, NodeBase)
     assert issubclass(FromNode, NodeBase)
     assert issubclass(JoinSourceNode, NodeBase)
     assert issubclass(JoinNode, NodeBase)
@@ -135,6 +136,7 @@ def test_FromNode_parse():
     def _g(s): return GroupNode.parse(list(_tokenise(s)), 0)[1]
     def _v(n): return VariableNode(n, None)
     def _f(n, *p, **kw): return FunctionNode(n, None, *p, **kw)
+    def _fs(g): return FromSourceNode(g, None)
     def _p(s): return UnknownNode.parse(list(_tokenise(s)), 0)[1]
     
     for source, srcs, dests, usings in [
@@ -144,19 +146,17 @@ def test_FromNode_parse():
         ("FROM pA, pB, pC SELECT 1 oA, 2 oB, 3 oC", [_g("pA"), _g("pB"), _g("pC")], [_g("1 oA"), _g("2 oB"), _g("3 oC")], None),
         # sizes on source groups are caught by Verifier
         ("FROM 1 pA, 2 pB, 3 pC SELECT oA, oB, oC", [_g("1 pA"), _g("2 pB"), _g("3 pC")], [_g("oA"), _g("oB"), _g("oC")], None),
-        # destination generators are caught by Verifier
-        ("FROM 1 pA() SELECT 2 oA()", [_g("1 pA()")], [_g("2 oA()")], None),
         
         ("FROM p SELECT o USING filter", [_g("p")], [_g("o")], _f('filter')),
         ("FROM p SELECT o USING fA, fB", [_g("p")], [_g("o")], _f('fB', _source=_f('fA'))),
         ("FROM p SELECT o USING filter(param=value)", [_g("p")], [_g("o")], _f('filter', param=_v("value"))),
         ]:
         if usings is None:
-            usings = _f('_iter', *srcs)
+            usings = _fs(srcs)
         else:
             u = usings
             while '_source' in u.arguments: u = u.arguments['_source']
-            u.arguments['_source'] = _f('_iter', *srcs)
+            u.arguments['_source'] = _fs(srcs)
         yield check_Node_parse, source, FromNode, FromNode(srcs, dests, usings, None)
     
     for source, expect in [
@@ -167,6 +167,7 @@ def test_FromNode_parse():
         ("FROM SELECT o USING fA fB", error.ExpectedGroupError),
         ("FROM p SELECT USING fA fB", error.ExpectedGroupError),
         ("FROM p SELECT o USING", error.ExpectedFilterError),
+        ("FROM 1 pA() SELECT 2 oA()", error.GeneratorAsDestinationError),
         ]:
         yield check_Node_parse_fail, source, FromNode, expect
 
@@ -183,8 +184,6 @@ def test_JoinNode_parse():
         ("JOIN pA, pB, pC INTO 1 oA, 2 oB, 3 oC", [_g("pA"), _g("pB"), _g("pC")], [_g("1 oA"), _g("2 oB"), _g("3 oC")], None),
         # sizes on source groups are caught by Verifier
         ("JOIN 1 pA, 2 pB, 3 pC INTO oA, oB, oC", [_g("1 pA"), _g("2 pB"), _g("3 pC")], [_g("oA"), _g("oB"), _g("oC")], None),
-        # destination generators are caught by Verifier
-        ("JOIN 1 pA() INTO 2 oA()", [_g("1 pA()")], [_g("2 oA()")], None),
         
         ("JOIN p INTO o USING filter", [_g("p")], [_g("o")], _f('filter')),
         ("JOIN p INTO o USING fA, fB", [_g("p")], [_g("o")], _f('fB', _source=_f('fA'))),
@@ -206,6 +205,7 @@ def test_JoinNode_parse():
         ("JOIN INTO o USING fA fB", error.ExpectedGroupError),
         ("JOIN p INTO USING fA fB", error.ExpectedGroupError),
         ("JOIN p INTO o USING", error.ExpectedFilterError),
+        ("JOIN 1 pA() INTO 2 oA()", error.GeneratorAsDestinationError),
         ]:
         yield check_Node_parse_fail, source, JoinNode, expect
 

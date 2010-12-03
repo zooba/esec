@@ -1,12 +1,22 @@
+'''Constructs code executable by ``esec`` from an ESDL syntax tree.
+'''
+# Disable: Method could be a function
+#          Too many public methods
+#pylint: disable=R0201,R0904
+
 from __future__ import absolute_import
 import sys
 
 class EsecEmitter(object):
+    '''Constructs code executable by ``esec`` from an ESDL syntax tree.
+    '''
     INDENT = '    '
     
-    DEFINITIONS_PY2 = '''from itertools import islice as _islice
+    UNSAFE_VARIABLES = ['lambda']
+    
+    DEFINITIONS_PY2 = r'''from itertools import islice as _islice
 from copy import copy as _copy
-_lambda = globals().get('lambda', None)
+''' + '\n'.join('_%s = globals().get("%s", None)' % (i, i) for i in UNSAFE_VARIABLES) + r'''
 
 def _iter(*srcs):
     for src in srcs:
@@ -31,9 +41,9 @@ class _born_iter(object):
     the underlying sequence does not support it.
     '''
     
-    DEFINITIONS_PY3 = '''from itertools import islice as _islice
+    DEFINITIONS_PY3 = r'''from itertools import islice as _islice
 from copy import copy as _copy
-_lambda = globals().get('lambda', None)
+''' + '\n'.join('_%s = globals().get("%s", None)' % (i, i) for i in UNSAFE_VARIABLES) + r'''
 
 def _iter(*srcs):
     for src in srcs:
@@ -86,6 +96,7 @@ class _born_iter(object):
     }
     
     def write_function(self, node):
+        '''Emits code for function nodes.'''
         fmt = self.FUNCTIONS.get(node.name, None)
         args = dict((k, ''.join(self.write(v))) for k, v in node.arguments.iteritems())
         if node.name == '_getitem':
@@ -115,41 +126,55 @@ class _born_iter(object):
                 yield func_name + '(' + arglist + ')'
     
     def write_name(self, node):
+        '''Emits text for named nodes.'''
         yield node.name
     
     def write_text(self, node):
+        '''Emits text for text nodes.'''
         yield node.text
     
     def write_value(self, node):
+        '''Emits text for value nodes.'''
         return (str(node.value),)
     
     @classmethod
     def safe_variable(cls, name):
+        '''Ensures variable names are valid Python.'''
         assert '[' not in name and ']' not in name, "No indexers allowed in variables"
         assert '(' not in name and ')' not in name, "No parentheses allowed in variables"
-        if name == 'lambda': name = '_lambda'
+        if name in cls.UNSAFE_VARIABLES:
+            name = '_' + name
         return name
     
     @classmethod
     def safe_argument(cls, name):
-        if name == 'lambda': name = '_lambda'
+        '''Ensures variable names are valid as arguments.'''
+        if name in cls.UNSAFE_VARIABLES:
+            name = '_' + name
         return name
     
     def write_variable(self, node):
+        '''Emits text for variable nodes.'''
         yield self.safe_variable(node.name)
     
-    def write_unknown(self, node): return self.write_text(node)
-    def write_backtick(self, node): return self.write_text(node)
-    def write_filter(self, node): return self.write_function(node)
-    def write_evaluator(self, node): return self.write_function(node)
+    def write_unknown(self, node):
+        '''Emits text for unknown nodes.'''
+        return self.write_text(node)
+    
+    def write_backtick(self, node):
+        '''Emits text for backtick nodes.'''
+        return self.write_text(node)
     
     def write_group(self, node):
+        '''Emits text for group nodes.'''
         yield node.group.name
     
     def write_generator(self, node):
+        '''Emits code for group generators.'''
         return self.write_function(node.group)
     
     def write_from(self, node):
+        '''Emits code for FROM-SELECT statements.'''
         yield '# ' + str(node)
         
         # using includes the source groups
@@ -158,10 +183,10 @@ class _born_iter(object):
             yield '_gen = ' + src
             src = '_gen'
         
-        for g in node.destinations:
-            group_name = ''.join(self.write(g.group))
-            if g.size:
-                group_size = ''.join(self.write(g.size))
+        for group in node.destinations:
+            group_name = ''.join(self.write(group.group))
+            if group.size:
+                group_size = ''.join(self.write(group.size))
                 i = None
                 try:
                     i = int(float(group_size))
@@ -180,7 +205,13 @@ class _born_iter(object):
                 yield '%s[:] = %s.rest()' % (group_name, src)
                 break
     
+    def write_fromsource(self, node):
+        '''Emits code for source groups in FROM-SELECT statements.'''
+        sources = [''.join(self.write(s)) for s in node.sources]
+        yield '_iter(' + ', '.join(sources) + ')'
+    
     def write_join(self, node):
+        '''Emits code for JOIN-INTO statements.'''
         yield '# ' + str(node)
         
         # using includes the source groups
@@ -189,21 +220,23 @@ class _born_iter(object):
         else:
             yield '_gen = _born_iter(' + ''.join(self.write(node.using)) + ')'
         
-        for g in node.destinations:
-            group_name = ''.join(self.write(g.group))
-            if g.size:
-                group_size = ''.join(self.write(g.size))
+        for group in node.destinations:
+            group_name = ''.join(self.write(group.group))
+            if group.size:
+                group_size = ''.join(self.write(group.size))
                 yield '%s[:] = _islice(_gen, int(%s))' % (group_name, group_size)
             else:
                 yield '%s[:] = _gen.rest()' % group_name
                 break
     
     def write_joinsource(self, node):
+        '''Emits code for source groups in JOIN-INTO statements.'''
         sources = [''.join(self.write(s)) for s in node.sources]
         yield ('([' + ', '.join(sources) + '], ' +
                '[' + ', '.join('"%s"' % s for s in sources) + '])')
     
     def write_eval(self, node):
+        '''Emits code for EVAL statements.'''
         yield '# ' + str(node)
         
         if node.using:
@@ -217,16 +250,18 @@ class _born_iter(object):
             yield '_eval = None'
         
         yield 'for _indiv in _iter(' + ', '.join(''.join(self.write(s)) for s in node.sources) + '):'
-        yield '    _indiv._eval = _eval'
-        yield '    del _indiv.fitness'
+        yield self.INDENT + '_indiv._eval = _eval'
+        yield self.INDENT + 'del _indiv.fitness'
     
     def write_yield(self, node):
+        '''Emits codes for YIELD statements.'''
         yield '# ' + str(node)
-        for s in node.sources:
-            source_name = ''.join(self.write(s))
+        for source in node.sources:
+            source_name = ''.join(self.write(source))
             yield '_on_yield("%s", %s)' % (source_name, source_name)
     
     def write_block(self, node):
+        '''Emits code for an entire named block.'''
         parameters = sorted(self.safe_argument(n) for n in node.variables_in.iterkeys())
         returned = sorted(self.safe_argument(n) for n in set(node.variables_out) & set(self.ast.globals.iterkeys()))
         global_vars = sorted(self.safe_variable(n) for n in returned) # variable is stricter than argument
@@ -241,35 +276,42 @@ class _born_iter(object):
         
         local_groups = list(node.groups_local.iterkeys())
         if local_groups:
-            yield '    ' + ', '.join(local_groups) + ' = ' + ', '.join('[]' for _ in local_groups)
+            yield self.INDENT + ', '.join(local_groups) + ' = ' + ', '.join('[]' for _ in local_groups)
         
         for child in node.children:
             for line in self.write(child):
-                yield '    ' + line
-        yield '    return ' + returned
+                yield self.INDENT + line
+        yield self.INDENT + 'return ' + returned
         yield ''
         
         yield 'def _block_' + node.name + '():'
         if returned and global_vars:
-            yield '    global ' + global_vars
-            yield '    %s = __block_%s(%s)' % (returned, node.name, arguments)
+            yield self.INDENT + 'global ' + global_vars
+            yield self.INDENT + '%s = __block_%s(%s)' % (returned, node.name, arguments)
         else:
-            yield '    __block_%s(%s)' % (node.name, arguments)
+            yield self.INDENT + '__block_%s(%s)' % (node.name, arguments)
         yield ''
     
     def write_repeat(self, node):
+        '''Emits code for a REPEAT block.'''
         if node.children:
             count = ''.join(self.write(node.count))
             yield 'for _ in %s(%s):' % (self.RANGE_COMMAND, count)
-            for c in node.children:
-                for el in self.write(c):
-                    yield '    ' + el
+            for child in node.children:
+                for line in self.write(child):
+                    yield self.INDENT + line
             yield ''
     
     def write(self, node):
+        '''Selects the correct overload depending on the type of `node`.
+        '''
         return getattr(self, 'write_' + node.tag)(node)
     
     def emit_to_list(self):
+        '''Emits the entire system to a list. Each element of the list
+        is one line of code. The entire block of Python code can be
+        obtained using ``'\n'.join(emitter.emit_to_list())``.
+        '''
         result = []
         ast = self.ast
         
@@ -292,10 +334,18 @@ class _born_iter(object):
         return result
     
     def emit(self, out):
+        '''Emits the entire system to a file-like object. `out` must
+        provide a ``write`` method.
+        '''
         for line in self.emit_to_list():
             out.write(line)
             out.write('\n')
     
     def __init__(self, ast):
-        assert not ast.errors, "Cannot emit a syntax tree with errors"
+        '''Initialises an emitter for the provided syntax tree. If
+        `ast` evaluates to ``False`` or ``ast.errors`` evaluates to
+        ``True``, a ``ValueError`` is raised.
+        '''
+        if not ast: raise ValueError("A syntax tree must be provided.")
+        if ast.errors: raise ValueError("Cannot emit a syntax tree with errors.")
         self.ast = ast

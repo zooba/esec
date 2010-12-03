@@ -1,12 +1,17 @@
-#pylint: disable=R0903
-# Not interested in:
-#   R0903: Too few public methods
 '''A set of nodes that make up an ESDL AST.
 '''
+# Disable: Too few public methods
+#          Too many lines in module
+#pylint: disable=R0903,C0302
+
 from __future__ import absolute_import
 import esdlc.errors as error
 
 def _get_token(tokens, token_i):
+    '''Returns the token at index `token_i` of `tokens` if `token_i` is
+    a valid index and the token at that index is not an end-of-statement
+    marker. Otherwise, returns ``None``.
+    '''
     if token_i < len(tokens):
         token = tokens[token_i]
         if token and token.tag == 'eos':
@@ -14,6 +19,25 @@ def _get_token(tokens, token_i):
         return token
     else:
         return None
+
+def _add(dest, src):
+    '''Appends the passed items to an existing entry or creates
+    a new entry.
+    '''
+    for key, value in src.iteritems():
+        if key in dest:
+            if isinstance(value, list): dest[key].extend(value)
+            else: dest[key].append(value)
+        else:
+            if isinstance(value, list): dest[key] = value
+            else: dest[key] = [value]
+
+def _diff(src1, src2):
+    '''Returns a dictionary containing items from `src1` that do
+    not appear in `src2`.
+    '''
+    return dict((key, value) for key, value in src1.iteritems() if key not in src2)
+
 
 class NodeBase(object):
     '''The base class of all AST nodes.'''
@@ -86,87 +110,124 @@ class UnknownNode(NodeBase):
         stack = []
         expect = 'operand'
         token = _get_token(tokens, token_i)
-        while token:
+        
+        while token and expect in ('operand', 'operator'):
             if expect == 'operand':
-                if token.tag in ('number', 'constant'):
-                    token_i, value = ValueNode.parse(tokens, token_i)
-                    stack.append(value)
-                    expect = 'operator'
-                elif token.tag == 'name':
-                    token1 = _get_token(tokens, token_i + 1)
-                    
-                    if stack and stack[-1].tag == '.':
-                        stack.pop()
-                        stack.pop()
-                        base = stack.pop()
-                        value = TextNode(token.value, [token])
-                        base = FunctionNode('_getattr', base.tokens + value.tokens, source=base, attr=value)
-                        if token1 and token1.tag == '(':
-                            token_i, value = FunctionNode.parse_arguments('_call', tokens, token_i + 1, _target=base)
-                        else:
-                            token_i += 1
-                            value = base
-                    else:
-                        if token1 and token1.tag == '(':
-                            token_i, value = FunctionNode.parse(tokens, token_i)
-                        else:
-                            token_i, value = VariableNode.parse(tokens, token_i)
-                    stack.append(value)
-                    expect = 'operator'
-                elif token.tag == '-':  #unary operator
-                    stack.append('~')
-                    stack.append(token)
-                    token_i += 1
-                elif token.tag == '(':  #recurse into parentheses
-                    old_token_i = token_i
-                    token_i, value = UnknownNode.parse(tokens, token_i + 1)
-                    if value: stack.append(value)
-                    token = _get_token(tokens, token_i)
-                    if token and token.tag == ')':
-                        token_i += 1
-                    else:
-                        if value: stack.pop()
-                        token_i, func = FunctionNode.parse_list(tokens, old_token_i)
-                        stack.append(func)
-                    if value: expect = 'operator'
-                elif token.tag == '[':  #read list
-                    token_i, func = FunctionNode.parse_list(tokens, token_i)
-                    stack.append(func)
-                    expect = 'operator'
-                else:
-                    break
-            
+                token_i, expect = cls._read_operand(tokens, token_i, stack)
             elif expect == 'operator':
-                if token.tag in ('name', 'number'):
-                    break
-                elif len(token.tag) == 1 and token.tag in '^%/*-+=.':
-                    stack.append(token.tag)
-                    stack.append(token)
-                    expect = 'operand'
-                    token_i += 1
-                elif token.tag == '(':  #read function
-                    token_i, func = FunctionNode.parse_arguments('_call', tokens, token_i, _target=stack.pop())
-                    stack.append(func)
-                    expect = 'operator'
-                elif token.tag == '[':  #read subscript
-                    token1 = _get_token(tokens, token_i + 1)
-                    if not token1 or token1.tag == ']':
-                        raise error.ExpectedIndexError(token)
-                    token_i, key = UnknownNode.parse(tokens, token_i + 1)
-                    if not key:
-                        raise error.ExpectedIndexError(token)
-                    source = stack.pop()
-                    stack.append(FunctionNode('_getitem', source.tokens, source=source, key=key))
-                    token_i += 1
-                    expect = 'operator'
-                else:
-                    break
-            else:
-                assert False, "expect == '" + expect + "'"
+                token_i, expect = cls._read_operator(tokens, token_i, stack)
             
             token = _get_token(tokens, token_i)
         
-        # Dot operator
+        cls._reduce_stack_attributes(stack)
+        cls._reduce_stack_unary_ops(stack)
+        cls._reduce_stack_binary_ops(stack)
+        
+        if len(stack) == 1:
+            return token_i, stack[0]
+        elif len(stack) > 1 or not token:
+            raise error.InvalidSyntaxError(tokens[first_token])
+        else:
+            return token_i, UnknownNode(token.value, [token])
+    
+    
+    @classmethod
+    def _read_operand(cls, tokens, token_i, stack):
+        '''Reads an operand from `tokens`. Returns a tuple containing an
+        updated value of `token_i` and one of ``'operand'``,
+        ``'operator'`` or ``None`` specifying what is expected next.
+        '''
+        token = _get_token(tokens, token_i)
+        expect = 'operand'
+        
+        if token.tag in ('number', 'constant'):
+            token_i, value = ValueNode.parse(tokens, token_i)
+            stack.append(value)
+            expect = 'operator'
+        elif token.tag == 'name':
+            token1 = _get_token(tokens, token_i + 1)
+            
+            if stack and stack[-1].tag == '.':
+                stack.pop()
+                stack.pop()
+                base = stack.pop()
+                value = TextNode(token.value, [token])
+                base = FunctionNode('_getattr', base.tokens + value.tokens, source=base, attr=value)
+                if token1 and token1.tag == '(':
+                    token_i, value = FunctionNode.parse_arguments('_call', tokens, token_i + 1, _target=base)
+                else:
+                    token_i += 1
+                    value = base
+            else:
+                if token1 and token1.tag == '(':
+                    token_i, value = FunctionNode.parse(tokens, token_i)
+                else:
+                    token_i, value = VariableNode.parse(tokens, token_i)
+            stack.append(value)
+            expect = 'operator'
+        elif token.tag == '-':  #unary operator
+            stack.append('~')
+            stack.append(token)
+            token_i += 1
+        elif token.tag == '(':  #recurse into parentheses
+            old_token_i = token_i
+            token_i, value = UnknownNode.parse(tokens, token_i + 1)
+            if value: stack.append(value)
+            token = _get_token(tokens, token_i)
+            if token and token.tag == ')':
+                token_i += 1
+            else:
+                if value: stack.pop()
+                token_i, func = FunctionNode.parse_list(tokens, old_token_i)
+                stack.append(func)
+            expect = 'operator' if value else 'operand'
+        elif token.tag == '[':  #read list
+            token_i, func = FunctionNode.parse_list(tokens, token_i)
+            stack.append(func)
+            expect = 'operator'
+        else:
+            expect = None
+        
+        return token_i, expect
+    
+    @classmethod
+    def _read_operator(cls, tokens, token_i, stack):
+        '''Reads an operator from `tokens`. Returns a tuple containing
+        an updated value of `token_i` and one of ``'operand'``,
+        ``'operator'`` or ``None`` specifying what is expected next.
+        '''
+        token = _get_token(tokens, token_i)
+        
+        if token.tag in ('name', 'number'):
+            expect = None
+        elif len(token.tag) == 1 and token.tag in '^%/*-+=.':
+            stack.append(token.tag)
+            stack.append(token)
+            expect = 'operand'
+            token_i += 1
+        elif token.tag == '(':  #read function
+            token_i, func = FunctionNode.parse_arguments('_call', tokens, token_i, _target=stack.pop())
+            stack.append(func)
+            expect = 'operator'
+        elif token.tag == '[':  #read subscript
+            token1 = _get_token(tokens, token_i + 1)
+            if not token1 or token1.tag == ']': raise error.ExpectedIndexError(token)
+            token_i, key = UnknownNode.parse(tokens, token_i + 1)
+            if not key: raise error.ExpectedIndexError(token)
+            source = stack.pop()
+            stack.append(FunctionNode('_getitem', source.tokens, source=source, key=key))
+            token_i += 1
+            expect = 'operator'
+        else:
+            expect = None
+        
+        return token_i, expect
+    
+    @classmethod
+    def _reduce_stack_attributes(cls, stack):
+        '''Merges attribute specifies in `stack` into `FunctionNode`s
+        calling ``_getattr``.
+        '''
         op = '.'
         while op in stack:
             i = stack.index(op)
@@ -181,8 +242,12 @@ class UnknownNode(NodeBase):
                 stack[i-1:i+3] = [FunctionNode('_getattr', op_tokens, source=val1, attr=name)]
             else:
                 stack[i-1:i+3] = [FunctionNode('_getattr', op_tokens, source=val1, attr=val2)]
-        
-        # Unary operators
+    
+    @classmethod
+    def _reduce_stack_unary_ops(cls, stack):
+        '''Reduces unary operators into `FunctionNode`s where the name
+        of the function begins with ``_uop_``.
+        '''
         for op in '~':
             while op in stack:
                 i = stack.index(op)
@@ -192,8 +257,13 @@ class UnknownNode(NodeBase):
                 op_tokens = list(val.tokens)
                 op_tokens.append(op_token)
                 stack[i:i+3] = [FunctionNode('_uop_' + op_token.tag, op_tokens, val)]
-        
-        # Binary operators
+    
+    @classmethod
+    def _reduce_stack_binary_ops(cls, stack):
+        '''Reduces binary operators into `FunctionNode`s where the name
+        of the function begins with ``_op_``. Assignment operators are
+        also reduced and use the function ``_assign``.
+        '''
         for op in '^%/*-+=':
             while op in stack:
                 i = stack.index(op)
@@ -207,14 +277,7 @@ class UnknownNode(NodeBase):
                     stack[i-1:i+3] = [FunctionNode('_assign', op_tokens, destination=val1, source=val2)]
                 else:
                     stack[i-1:i+3] = [FunctionNode('_op_' + op_token.tag, op_tokens, *(val1, val2))]
-        
-        assert len(stack) <= 1, "Invalid stack"
-        if len(stack) == 1:
-            return token_i, stack[0]
-        elif len(stack) > 1 or not token:
-            raise error.InvalidSyntaxError(tokens[first_token])
-        else:
-            return token_i + 1, UnknownNode(token.value, [token])
+
 
 class FunctionNode(NodeBase):
     '''Represents a function call.'''
@@ -237,24 +300,6 @@ class FunctionNode(NodeBase):
         for i, value in enumerate(positional_arguments):
             self.arguments['#%d' % i] = value
         
-        def _add(dest, src):
-            '''Appends the passed items to an existing entry or creates
-            a new entry.
-            '''
-            for key, value in src.iteritems():
-                if key in dest:
-                    if isinstance(value, list): dest[key].extend(value)
-                    else: dest[key].append(value)
-                else:
-                    if isinstance(value, list): dest[key] = value
-                    else: dest[key] = [value]
-        
-        def _diff(src1, src2):
-            '''Returns a dictionary containing items from `src1` that do
-            not appear in `src2`.
-            '''
-            return dict((key, value) for key, value in src1.iteritems() if key not in src2)
-        
         self.variables_in = { }
         self.variables_out = { }
         args = self.arguments.itervalues()
@@ -272,9 +317,15 @@ class FunctionNode(NodeBase):
                 _add(self.variables_in, { value.name: value })
             elif value.tag == 'group':
                 _add(self.variables_in, { value.group.name: value.group })
-            elif value.tag == 'generator':
-                _add(self.variables_in, value.group.variables_in)
-                _add(self.variables_out, value.group.variables_out)
+            elif value.tag == 'fromsource':
+                for var in value.sources:
+                    if var.tag == 'group':
+                        _add(self.variables_in, { var.group.name: var.group })
+                    elif var.tag in 'function':
+                        _add(self.variables_in, var.variables_in)
+                        _add(self.variables_out, var.variables_out)
+                    else:
+                        assert False, "fromsource should not contain " + repr(var)
             elif value.tag == 'joinsource':
                 _add(self.variables_in, dict((var.group.name, var.group) for var in value.sources))
             elif hasattr(value, 'variables_in') and hasattr(value, 'variables_out'):
@@ -362,11 +413,10 @@ class FunctionNode(NodeBase):
             func.tokens = sorted(tokens[first_token:token_i])
         elif other_args:
             func = FunctionNode(func_name, tokens[first_token:token_i], **other_args)
+        elif func_name.tag == 'name':
+            func = VariableNode(str(func_name), tokens[first_token:token_i])
         else:
-            if func_name.tag in ('name'):
-                func = VariableNode(func_name.name, tokens[first_token:token_i])
-            else:
-                func = func_name
+            func = func_name
         return token_i, func
         
     @classmethod
@@ -569,7 +619,7 @@ class GroupNode(NodeBase):
         
         self.tag = 'group'
         if group.tag == 'function':
-            if group.name.startswith(('_op_', '_uop_', '_assign')):
+            if group.name.startswith(('_op_', '_uop_', '_assign', '_list', '_getattr', '_getitem', '_call')):
                 raise error.ExpectedGroupError(min(group.tokens))
             self.tag = 'generator'
         self.group = group
@@ -600,6 +650,26 @@ class GroupNode(NodeBase):
     
     def __repr__(self): return self.tag + ':' + str(self)
 
+class FromSourceNode(NodeBase):
+    '''Represents the source groups or generators of a FROM-SELECT
+    statement.
+    '''
+    tag = 'fromsource'
+    
+    def __init__(self, source_list, tokens):
+        super(FromSourceNode, self).__init__(tokens)
+        assert isinstance(source_list, list) and source_list, \
+            "source_list must be a list (" + repr(source_list) + ")"
+        assert all(s.tag in ('group', 'generator') for s in source_list), \
+            "source_list must contain groups and generators only (" + repr(source_list) + ")"
+        self.sources = source_list
+    
+    def __str__(self):
+        return '[' + ', '.join(str(s) for s in self.sources) + ']'
+    
+    def __repr__(self): return self.tag + ':' + str(self)
+
+
 class FromNode(NodeBase):
     '''Represents a FROM-SELECT statement.'''
     tag = 'from'
@@ -610,15 +680,15 @@ class FromNode(NodeBase):
             "source_list must be a list (" + str(type(source_list)) + ")"
         assert isinstance(destination_list, list) and destination_list, \
             "destination_list must be a list (" + str(type(destination_list)) + ")"
-        assert isinstance(using, NodeBase), \
-            "using must be a node"
+        assert isinstance(using, NodeBase) and using.tag in ('fromsource', 'function'), \
+            "using must be a from-source node or a function"
         
         self.sources = source_list
         self.destinations = destination_list
         self.using = using
     
     @classmethod
-    def parse(cls, tokens, first_token):
+    def parse(cls, tokens, first_token):    #pylint: disable=R0912,R0915
         '''Reads a `FromNode` from `tokens`.'''
         assert tokens, "tokens must be provided"
         token_i = first_token
@@ -640,7 +710,7 @@ class FromNode(NodeBase):
         if not token: raise error.ExpectedSelectError(tokens[-1])
         if token.tag != 'SELECT': raise error.ExpectedSelectError(token)
         if not source_list: raise error.ExpectedGroupError(token)
-        using = FunctionNode('_iter', None, *source_list)
+        using = FromSourceNode(source_list, tokens[first_token+1:token_i])
         
         dest_list = []
         token_i += 1
@@ -653,12 +723,15 @@ class FromNode(NodeBase):
             token_i += 1
             token = _get_token(tokens, token_i)
         
+        if not dest_list: raise error.ExpectedGroupError(token or tokens[-1])
+        for dest in dest_list:
+            if not dest.group: raise error.ExpectedGroupError(token or tokens[-1])
+            if dest.tag == 'generator': raise error.GeneratorAsDestinationError(dest.group.tokens[0])
+            elif dest.tag != 'group': raise error.ExpectedGroupError(dest.group.tokens[0])
+        
         if not token:
-            if not dest_list: raise error.ExpectedGroupError(tokens[-1])
             return token_i, FromNode(source_list, dest_list, using, tokens[first_token:token_i])
         if token.tag != 'USING': raise error.ExpectedUsingError(token)
-        
-        if not dest_list: raise error.ExpectedGroupError(token)
         
         token_i += 1
         token = _get_token(tokens, token_i)
@@ -715,7 +788,7 @@ class JoinNode(NodeBase):
         self.using = using
     
     @classmethod
-    def parse(cls, tokens, first_token):
+    def parse(cls, tokens, first_token):    #pylint: disable=R0912,R0915
         '''Reads a `JoinNode` from `tokens`.'''
         assert tokens, "tokens must be provided"
         token_i = first_token
@@ -749,15 +822,14 @@ class JoinNode(NodeBase):
             token_i += 1
             token = _get_token(tokens, token_i)
         
-        if not token:
-            if not dest_list: raise error.ExpectedGroupError(tokens[-1])
-            return token_i, JoinNode(source_list, dest_list, using, tokens[first_token:token_i])
-        
-        if not dest_list: raise error.ExpectedGroupError(token)
+        if not dest_list: raise error.ExpectedGroupError(token or tokens[-1])
         for dest in dest_list:
-            if not dest.group: raise error.ExpectedGroupError(token)
-            if dest.group.tag == 'function': raise error.GeneratorAsDestinationError(dest.group.tokens[0])
-            elif dest.group.tag != 'variable': raise error.ExpectedGroupError(dest.group.tokens[0])
+            if not dest.group: raise error.ExpectedGroupError(token or tokens[-1])
+            if dest.tag == 'generator': raise error.GeneratorAsDestinationError(dest.group.tokens[0])
+            elif dest.tag != 'group': raise error.ExpectedGroupError(dest.group.tokens[0])
+        
+        if not token:
+            return token_i, JoinNode(source_list, dest_list, using, tokens[first_token:token_i])
         
         token_i += 1
         token = _get_token(tokens, token_i)

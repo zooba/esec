@@ -117,6 +117,6 @@ class AST(object):
                         i, node = UnknownNode.parse(statement, i)
                         if node: current_block.children.append(node)
             except error.ESDLSyntaxErrorBase as ex:
-                self._errors.append(ex)
+                self._errors.append(ex)     #pylint: disable=W0212
         
         return self

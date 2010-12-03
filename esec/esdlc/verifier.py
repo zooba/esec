@@ -3,6 +3,19 @@
 from __future__ import absolute_import
 import esdlc.errors as error
 
+from esdlc.nodes import _add, _diff
+def _add_function_or_variable(dest_in, dest_out, src):
+    '''Adds a variable or the variables from a function node to a pair
+    of in/out dictionaries.'''
+    
+    if not hasattr(src, 'tag') or src.tag not in ('variable', 'function'):
+        pass
+    elif src.tag == 'variable' and src.name not in dest_out:
+        _add(dest_in, { src.name: src })
+    elif src.tag == 'function':
+        _add(dest_in, _diff(src.variables_in, dest_out))
+        _add(dest_out, src.variables_out)
+
 class Verifier(object):
     '''Performs static analysis of a syntax tree.
     
@@ -41,7 +54,7 @@ class Verifier(object):
         errors.extend(cls._verify_unused(ast))
         errors.extend(cls._ast_recurse(ast, cls._verify_groups))
         
-        ast._errors.extend(errors)
+        ast._errors.extend(errors)  #pylint: disable=W0212
     
     @classmethod
     def _first_ref(cls, items):
@@ -51,93 +64,52 @@ class Verifier(object):
         return min(min(i.tokens) for i in items if hasattr(i, 'tokens'))
     
     @classmethod
-    def _calculate_variables_in_out(cls, block=None):  #pylint: disable=R0912
+    def _calculate_variables_in_out(cls, block=None):
         '''Determines which variables are required at the start of
         the block and which variables are defined at the end of the
         block.'''
-        
-        def _add(dest, src):
-            '''Appends the passed items to an existing entry or creates
-            a new entry.
-            '''
-            for key, value in src.iteritems():
-                if key in dest:
-                    if isinstance(value, list): dest[key].extend(value)
-                    else: dest[key].append(value)
-                else:
-                    if isinstance(value, list): dest[key] = value
-                    else: dest[key] = [value]
-        
-        def _diff(src1, src2):
-            '''Returns a dictionary containing items from `src1` that do
-            not appear in `src2`.
-            '''
-            return dict((key, value) for key, value in src1.iteritems() if key not in src2)
         
         block.variables_in = variables_in = { }
         block.variables_out = variables_out = { }
         block.groups_local = groups_local = { }
         for node in block.children:
+            assert node.tag in (
+                'from', 'join', 'eval', 'repeat', 'block', 'function',
+                'yield', 'unknown', 'backtick', 'value', 'variable'
+                ), "Unhandled tag: " + repr(node)
+            
             if node.tag == 'function':
                 _add(variables_in, _diff(node.variables_in, variables_out))
                 _add(variables_out, node.variables_out)
             
-            elif node.tag == 'variable':
-                # A variable here is probably an error, but assume that
-                # it's being used
-                if node.name not in variables_out:
-                    _add(variables_in, { node.name: node })
-            
             elif node.tag in ('from', 'join'):
-                if node.using.tag == 'joinsource':
-                    variables = dict((v.group.name, v.group) for v in node.using.sources if v.tag == 'group')
-                    _add(variables_in, _diff(variables, variables_out))
+                if node.using.tag in ('fromsource', 'joinsource'):
+                    for group in node.using.sources:
+                        _add_function_or_variable(variables_in, variables_out, group.group)
                 else:
-                    _add(variables_in, _diff(node.using.variables_in, variables_out))
-                    _add(variables_out, node.using.variables_out)
+                    _add_function_or_variable(variables_in, variables_out, node.using)
                 
                 groups = dict((g.group.name, g.group) for g in node.destinations if g.tag == 'group')
                 _add(variables_out, groups)
                 _add(groups_local, _diff(groups, variables_in))
                 for size in (g.size for g in node.destinations if g.tag == 'group' and g.size):
-                    if size.tag == 'function':
-                        _add(variables_in, _diff(size.variables_in, variables_out))
-                        _add(variables_out, size.variables_out)
-                    elif size.tag == 'variable':
-                        if size.name not in variables_out:
-                            _add(variables_in, { size.name: size })
+                    _add_function_or_variable(variables_in, variables_out, size)
             
             elif node.tag == 'eval':
                 groups = dict((g.group.name, g.group) for g in node.sources if g.tag == 'group')
                 _add(variables_in, _diff(groups, variables_out))
                 
                 for func_node in node.using:
-                    if func_node.tag == 'variable':
-                        _add(variables_in, _diff({ func_node.name: func_node }, variables_out))
-                    elif func_node.tag == 'function':
-                        _add(variables_in, _diff(func_node.variables_in, variables_out))
-                        _add(variables_out, func_node.variables_out)
+                    _add_function_or_variable(variables_in, variables_out, func_node)
             
-            elif node.tag == 'repeat':
-                count = node.count
-                if count.tag == 'variable':
-                    _add(variables_in, _diff({ count.name: count }, variables_out))
-                elif count.tag == 'function':
-                    _add(variables_in, _diff(count.variables_in, variables_out))
+            elif node.tag in ('block', 'repeat'):
+                count = getattr(node, 'count', None)
+                _add_function_or_variable(variables_in, variables_out, count)
                 
                 cls._calculate_variables_in_out(node)
                 _add(variables_in, _diff(node.variables_in, variables_out))
                 _add(variables_out, node.variables_out)
                 _add(groups_local, node.groups_local)
-            elif node.tag == 'block':
-                cls._calculate_variables_in_out(node)
-                _add(variables_in, _diff(node.variables_in, variables_out))
-                _add(variables_out, node.variables_out)
-                _add(groups_local, node.groups_local)
-            elif node.tag in ('yield', 'unknown', 'backtick', 'value'):
-                pass
-            else:
-                assert False, "Unhandled tag: " + repr(node)
         
         return []
     
