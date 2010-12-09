@@ -171,9 +171,9 @@ class Landscape(object):
         # Autobind _eval_minimise or _eval_maximise.
         if not hasattr(self, 'eval'):
             if self.maximise == self.invert:
-                self.eval = self._eval_minimise
+                setattr(self, 'eval', self._eval_minimise)
             else:
-                self.eval = self._eval_maximise
+                setattr(self, 'eval', self._eval_maximise)
     
     def _eval_maximise(self, indiv):
         '''Evaluates the provided individual and wraps the result in a
@@ -217,9 +217,9 @@ class Landscape(object):
         return result
 
 
-#==============================================================================
+#=======================================================================
 # Expose landscapes by names and provide easy landscape load(cfg)
-#==============================================================================
+#=======================================================================
 
 LANDSCAPES = []
 '''An automatically generated list of the available landscape types.'''

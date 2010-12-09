@@ -8,9 +8,6 @@ validation and support. See `landscape` for details.
 
 Most of these binary landscapes are problem generators.
 
-.. classtree:: esec.landscape.binary.Binary
-   :dir: right
-
 '''
 
 from itertools import izip
@@ -959,7 +956,7 @@ class MAXCUT(Binary):
         print '*** Doing exhaustive test (%d) to find best. ("." per 10000)' % max_i
         for i in xrange(min_i, max_i):
             x = inttobinlist(i, self.size.exact)
-            result = self.eval(x)
+            result = self._eval(x)
             if result > bsf:
                 bsf = result
                 bsf_i = i

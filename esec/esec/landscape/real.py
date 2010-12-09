@@ -6,37 +6,15 @@
 The `Real` base class inherits from `Landscape` for parameter validation
 and support. See `landscape` for details.
 
-Algorithm Test Standards:
-
-- `Linear`, `Neutral`, `Stabilising`, `Disruptive`
-
-Optimisation Standards (continuous):
-
-- `Sphere` (`Parabola`), `Ellipsoid`, `HyperEllipsoid`, `Quadric`
-  (`RotatedHyperEllipsoid`), `NoisyQuartic`, `Easom` (2D), `Rosenbrock`,
-  `Rastrigin`, `Griewangk`, `Ackley`, `Schwefel`, `Michalewicz`
-
-1D/2D/3D multi-solution/multimodal (niche) benchmark problems:
-
-- `MultiPeak1`, `MultiPeak2`, `MultiPeak3`, `MultiPeak4` (all 1D)
-- `Booth` (2D), `Himmelblau` (2D), `SixHumpCamelBack` (2D)
-
-Problem Generators:
-
-- `FMS` (6D) Frequency Modulated Sound model
-
-
-.. classtree:: esec.landscape.real.Real
-   :dir: right
-
 '''
 
 from math import sin, cos, fabs, sqrt, pi, e, exp, log
 from itertools import izip
+from esec.fitness import SimpleDominatingFitness
 from esec.landscape import Landscape
 from esec.utils import all_equal
 
-#==============================================================================
+#=======================================================================
 class Real(Landscape):
     '''Abstract real-valued parameter fitness landscape
     '''
@@ -148,15 +126,15 @@ class Real(Landscape):
         return result
 
 
-#==============================================================================
+#=======================================================================
 # Algorithm Test Standards: Linear, Neutral, Stabilising and Disruptive!
-#==============================================================================
+#=======================================================================
 
-#==============================================================================
+#=======================================================================
 class Linear(Real):
-    '''n-dimensional linear landscape. Mainly used for testing. This is
-    the real value equivalent to binary OneMax and integer Nsum problems
-    for n dimensions.
+    '''n-dimensional linear landscape for algorithm testing. This is the
+    real value equivalent to binary OneMax and integer Nsum problems for
+    n dimensions.
     
     Standard initialisation range of [0, 100]
     
@@ -177,10 +155,11 @@ class Linear(Real):
         return sum(indiv)
 
 
-#==============================================================================
+#=======================================================================
 class Neutral(Real):
-    '''n-dimensional constant value landscape of 1.0. Used mainly for
-    testing drift as fitness is not linked to gene value.
+    '''n-dimensional constant value landscape of 1.0 for algorithm
+    testing. Used mainly for testing drift as fitness is not linked to
+    gene value.
     
     Standard initialisation range of [0, 100]
     Output of f(x) is constant (``mean``), f(x) = 1.0
@@ -207,10 +186,10 @@ class Neutral(Real):
         return self.mean
     
 
-#==============================================================================
+#=======================================================================
 class Stabilising(Real):
-    '''n-dimensional stabilising value landscape. Used for illustrating
-    standard selection pressure effects.
+    '''n-dimensional stabilising value landscape for algorithm testing.
+    Used for illustrating standard selection pressure effects.
     
     Output of f(x) a Cauchy-Lorentz distribution of peak amplitude I,
     centred around the mean x0 (default 50) of the specified range. The
@@ -254,10 +233,10 @@ class Stabilising(Real):
             result += I * (g_sq / ((m-x)**2 + g_sq))
         return result
 
-#==============================================================================
+#=======================================================================
 class Disruptive(Real):
-    '''n-dimensional disruptive value landscape. Used for illustrating
-    standard selection pressure effects.
+    '''n-dimensional disruptive value landscape for algorithm testing.
+    Used for illustrating standard selection pressure effects.
     
     A negative form of the `Stabilising` landscape.
     
@@ -298,14 +277,15 @@ class Disruptive(Real):
             result += I - I * (g_sq / ((m-x)**2 + g_sq))
         return result
 
-#==============================================================================
+#=======================================================================
 # Optimisation Standards
-#==============================================================================
+#=======================================================================
 
 
-#==============================================================================
+#=======================================================================
 class Sphere(Real):
-    '''N-dimensional spherical (parabola or parabolic) landscape.
+    '''n-dimensional spherical (parabola or parabolic) benchmark problem
+    landscape.
     
     A classic benchmark problem also known as De Jong Function 1 (F1)
     (De Jong, 1975) and also used in early ES studies. Originally
@@ -338,9 +318,9 @@ class Sphere(Real):
 Parabola = Sphere
 
 
-#==============================================================================
+#=======================================================================
 class Ellipsoid(Real):
-    '''Ellipsoid problem landscape.
+    '''Ellipsoid benchmark problem landscape.
     
     A simple unimodal surface, also known as the "axis parallel
     ellipsoid function". Essentially the same as the `Sphere` problem,
@@ -368,9 +348,9 @@ class Ellipsoid(Real):
         return sum(((i+1) * x*x) for i, x in enumerate(indiv))
 
 
-#==============================================================================
+#=======================================================================
 class HyperEllipsoid(Real):
-    '''Hyper Ellipsoid problem landscape.
+    '''Hyper Ellipsoid benchmark problem landscape.
     
     A simple convex unimodal surface, also known as the "axis parallel
     hyperellipsoid function". Essentially the same as the Sphere
@@ -396,9 +376,9 @@ class HyperEllipsoid(Real):
         return sum(((i+1)**2 * x*x) for i, x in enumerate(indiv))
 
 
-#==============================================================================
+#=======================================================================
 class Quadric(Real):
-    '''Quadric problem landscape
+    '''Quadric benchmark problem landscape
     
     Similar to the stretched-sphere qualities of the hyperellipsoid
     function and also rotated. This version is also known as "Schwefel's
@@ -434,9 +414,9 @@ class Quadric(Real):
         return total
 RotatedHyperEllipsoid = Quadric
 
-#==============================================================================
+#=======================================================================
 class NoisyQuartic(Real):
-    '''N-dimensional quartic function landscape with added Gaussian
+    '''n-dimensional quartic function landscape with added Gaussian
     noise.
     
     No fixed global optimum due to the noise, but on-average the same as
@@ -464,9 +444,9 @@ class NoisyQuartic(Real):
         return sum((i+1) * x**4 + gauss(0, 1) for i, x in enumerate(indiv))
 
 
-#==============================================================================
+#=======================================================================
 class Easom(Real):
-    '''Easom function landscape
+    '''Easom benchmark function landscape
     
     A very specific 2D problem domain. It distinctive qualities are that
     it contains very little gradient "hints" that would be of use to
@@ -501,9 +481,10 @@ class Easom(Real):
         result = cos(x1) * cos(x2) * exp(-((x1-pi)**2 + (x2-pi)**2))
         return result
 
-#==============================================================================
+#=======================================================================
 class Rosenbrock(Real):
-    '''n-dimensional Rosenbrock function landscape.
+    '''Overlapping n-dimensional Rosenbrock benchmark function
+    landscape.
     
     A very well known classic optimisation problem, with many
     alternative titles including "De Jong Function 2 (F2)",
@@ -541,9 +522,9 @@ class Rosenbrock(Real):
             x = y
         return total
 
-#==============================================================================
+#=======================================================================
 class Rastrigin(Real):
-    '''Rastrigin problem landscape
+    '''Rastrigin benchmark problem landscape
     
     Similar to the Sphere (De Jong F1), however the surface is modulated
     with an additional cosine term to induce multiple local minima, and
@@ -577,9 +558,9 @@ class Rastrigin(Real):
         c = 2*pi
         return 10*len(indiv) + sum( x*x - 10*cos(c*x) for x in indiv)
 
-#==============================================================================
+#=======================================================================
 class Griewangk(Real):
-    '''Griewangk problem landscape
+    '''Griewangk benchmark problem landscape
     
     The surface of this domain is similar to the Rastrigin function, in
     that it creates a sphere-like surface modulated by a cosine based
@@ -617,9 +598,9 @@ class Griewangk(Real):
 
 
 
-#==============================================================================
+#=======================================================================
 class Ackley(Real):
-    '''Ackley problem landscape
+    '''Ackley benchmark problem landscape
     
     Also known as "Ackley's Path". Originally defined for two
     dimensions, later generalised to n. The overall form is an
@@ -662,9 +643,9 @@ class Ackley(Real):
 
 
 
-#==============================================================================
+#=======================================================================
 class Schwefel(Real):
-    '''Schwefel problem landscape (Sine Root)
+    '''Schwefel benchmark problem landscape (Sine Root)
     
     A deceptive multimodal minimisation problem with a single global
     minimum geometrically distant fromt the best known local minimum
@@ -697,9 +678,9 @@ class Schwefel(Real):
         return 418.9829*len(indiv) + sum(x * sin(sqrt(fabs(x))) for x in indiv)
 
 
-#==============================================================================
+#=======================================================================
 class Michalewicz(Real):
-    '''Michalewicz function landscape.
+    '''Michalewicz benchmark function landscape.
     
     A multimodal domain with n! local optima and very little gradient
     information for guided local search methods to take advantage of,
@@ -739,13 +720,13 @@ class Michalewicz(Real):
 
 
 
-#==============================================================================
+#=======================================================================
 # Multimodal Problem Landscape
-#==============================================================================
+#=======================================================================
 
-#==============================================================================
+#=======================================================================
 class MultiPeak1(Real):
-    '''MultiPeak 1: Sinusoidal Multiple Peaks landscape (for Niching)
+    '''Sinusoidal Multiple Peaks landscape (for niching).
     
     Part 1 of a set of four one-dimensional multipeak functions for
     standard niche method testing.
@@ -773,9 +754,9 @@ class MultiPeak1(Real):
         '''
         return sin(5*pi*indiv[0])**6
 
-#==============================================================================
+#=======================================================================
 class MultiPeak2(Real):
-    '''Multipeak2: sinusoidal Multiple Peaks (for Niching)
+    '''Sinusoidal Multiple Peaks (for niching).
     
     Part 2 of a set of four one-dimensional multipeak functions for
     standard niche method testing.
@@ -800,9 +781,9 @@ class MultiPeak2(Real):
         '''
         return sin(5*pi*(indiv[0]**(3.0/4)-0.05))**6
 
-#==============================================================================
+#=======================================================================
 class MultiPeak3(Real):
-    '''Multipeak3: Decreasing Multiple Peaks (for Niching)
+    '''Decreasing Multiple Peaks (for niching).
     
     Part 3 of a set of four one-dimensional multipeak functions for
     standard niche method testing.
@@ -828,9 +809,9 @@ class MultiPeak3(Real):
         x = indiv[0]
         return (exp(-2*log(2)*((x-0.08)/0.854)**2))*sin(5*pi*x)**6
 
-#==============================================================================
+#=======================================================================
 class MultiPeak4(Real):
-    '''Multipeak4: Decreasing Multiple Peaks (for Niching)
+    '''Decreasing Multiple Peaks (for niching).
     
     Part 3 of a set of four one-dimensional multipeak functions for
     standard niche method testing.
@@ -858,9 +839,9 @@ class MultiPeak4(Real):
         return (exp(-2*log(2)*((x-0.08)/0.854)**2))*sin(5*pi*(x**(3.0/4)-0.05))**6
 
 
-#==============================================================================
+#=======================================================================
 class Booth(Real):
-    '''Booth 2D function landscape.
+    '''Booth two-dimensional function landscape.
     
     A simple constrained two-dimensional multimodal (subtle) domain
     containing several local minima and one global minimum.
@@ -887,9 +868,9 @@ class Booth(Real):
         return (x1 + 2*x2 - 7)**2 + (2*x1 + x2 - 5)**2
 
 
-#==============================================================================
+#=======================================================================
 class Himmelblau(Real):
-    '''Himmelblau function (2D)
+    '''Himmelblau two-dimensional function landscape.
     
     A two-dimensional multimodal minimisation problem landscape with
     four near equal optimum (although there are differences at higher
@@ -922,7 +903,7 @@ class Himmelblau(Real):
         return (x1**2 + x2 - 11)**2 + (x1 + x2**2 - 7)**2
 
 
-#==============================================================================
+#=======================================================================
 class SixHumpCamelBack(Real):
     '''Six Hump Camel-back function landscape.
     
@@ -960,9 +941,9 @@ class SixHumpCamelBack(Real):
         result = 4*(x1**2) - 2.1*(x1**4) + (1.0/3.0)*(x1**6) + x1*x2 - 4*(x2**2) + 4*(x2**4)
         return result
 
-#==============================================================================
+#=======================================================================
 class SchafferF6(Real):
-    '''Schaffer's f6 function (2D)
+    '''Schaffer's two-dimensional f6 benchmark function.
     
     A two-dimensional deceptive minimisation problem landscape that is
     mostly flat except near the global minimum.
@@ -991,14 +972,14 @@ class SchafferF6(Real):
         d = x*x+y*y
         return 0.5 + (sin(sqrt(d))**2 - 0.5) / (1 + 0.001*d)**2
 
-#==============================================================================
+#=======================================================================
 # Real-valued Landscape Generators
-#==============================================================================
+#=======================================================================
 
 
-#==============================================================================
+#=======================================================================
 class FMS(Real):
-    '''Frequency Modulation Sounds landscape
+    '''Frequency Modulation Sounds landscape generator.
     
     A highly complex multimodal function with strong epistasis. The
     objective is to determine six real value parameters used in a FM
@@ -1072,4 +1053,76 @@ class FMS(Real):
                            sin(w2*t*theta + a3 * sin(w3*t*theta)))
         '''
         return v[0] * sin(v[1]*theta_t + v[2]*sin(v[3]*theta_t + v[4]*sin(v[5]*theta_t)))
+
+#=======================================================================
+# Multi-objective Landscapes
+#=======================================================================
+
+class SCH(Real):
+    '''Schaffer's simple two-objective benchmark problem.
+    
+    A simple multiobjective landscape given by Schaffer in "Multiple
+    objective optimization with vector evaluated genetic algorithms"
+    (1995)::
+    
+        f1(x) = x ^ 2
+        f2(x) = (x - 2) ^ 2
+    
+    Optimal solutions are found in the interval [0, 2].
+    '''
+    lname = 'SCH'
+    maximise = False
+    default = { 'size': { 'exact': 1 }, 'bounds': { 'lower': -1000, 'upper': 1000 } }
+    
+    test_cfg = ('1','4')
+    
+    def eval(self, indiv):
+        '''f1(x) = \sum\limit_i (x_i^2)
+        f2(x) = \sum\limit_i ((x_i-2)^2)
+        '''
+        if self.invert:
+            return SimpleDominatingFitness(2)([
+                -sum(i**2 for i in indiv),
+                -sum((i-2)**2 for i in indiv)
+            ])
+        else:
+            return SimpleDominatingFitness(2)([
+                sum(i**2 for i in indiv),
+                sum((i-2)**2 for i in indiv)
+            ])
+
+class FON(Real):
+    '''Fonseca and Fleming's two objective benchmark problem.
+    
+    A simple multiobjective landscape given by Fonseca and Fleming in
+    "Multiobjective optimization and multiple constraint handling with
+    evolutionary algorithms" (1998)::
+    
+        f1(x) = 1 - exp( -\sum\limit_i ((x_i - 1/\sqrt(3))^2) )
+        f2(x) = 1 - exp( -\sum\limit_i ((x_i + 1/\sqrt(3))^2) )
+    
+    Optimal solutions are found in the interval [-1/sqrt(3), 1/sqrt(3)].
+    '''
+    lname = 'FON'
+    maximise = False
+    default = { 'size': { 'exact': 3 }, 'bounds': { 'lower': -4, 'upper': 4 } }
+    
+    test_cfg = ('3',)
+    
+    def eval(self, indiv):
+        '''f1(x) = 1 - exp( -\sum\limit_i ((x_i - 1/\sqrt(3))^2) )
+        f2(x) = 1 - exp( -\sum\limit_i ((x_i + 1/\sqrt(3))^2) )
+        '''
+        offset = 1 / sqrt(3)
+        
+        if self.invert:
+            return SimpleDominatingFitness(2)([
+                -sum((i-offset)**2 for i in indiv),
+                -sum((i+offset)**2 for i in indiv)
+            ])
+        else:
+            return SimpleDominatingFitness(2)([
+                sum((i-offset)**2 for i in indiv),
+                sum((i+offset)**2 for i in indiv)
+            ])
 

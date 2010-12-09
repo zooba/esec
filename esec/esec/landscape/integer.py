@@ -2,9 +2,6 @@
 
 The `Integer` base class inherits from `Landscape` for parameter
 validation and support. See `landscape` for details.
-
-.. classtree:: esec.landscape.integer.Integer
-   :dir: right
 '''
 
 from sys import maxsize
@@ -16,7 +13,7 @@ from esec.utils import all_equal
 # Disable: method could be a function, too many lines
 #pylint: disable=R0201,C0302
 
-#==============================================================================
+#=======================================================================
 class Integer(Landscape):
     '''Abstract integer-valued parameter fitness landscape
     '''
@@ -118,9 +115,9 @@ class Integer(Landscape):
                 result.append(" %3d: %10d  %10d" % ((i+1), lower, upper))
         return result
 
-#==============================================================================
+#=======================================================================
 class Nsum(Integer):
-    '''N-dimensional N-sum (integer) landscape
+    '''n-dimensional summing (N-sum) benchmark landscape.
     
     Qualities: maximisation
     '''
@@ -135,40 +132,14 @@ class Nsum(Integer):
         return sum(indiv)
 
 
-#==============================================================================
+#=======================================================================
 class Nmax(Integer):
-    '''N-dimensional N-max (integer) landscape
+    '''n-dimensional maximum value (N-max) benchmark landscape.
     
-    2D example:
-        f(x, y) = -sqrt(x^2 + y^2),
-        max at (1, 1) for x=(0, 1)
+    For example, when n = 2 and x is in [0, 1]::
     
-    Qualities: maximisation (up to zero), unimodal
-    '''
-    lname = 'N-max'
-    
-    test_cfg = ('10 0 31',)
-    test_legal = ([5]*10, [20]*10)
-    test_illegal = ([-1]*10, [40]*10)
-    
-    def _eval(self, indiv):
-        '''Negative root-sum-squared difference between each gene and
-        its maximum value.'''
-        if self.legal(indiv):
-            fitness = 0
-            for expected, actual in izip(self.upper_bounds, indiv):
-                tmp = expected - actual
-                fitness += tmp * tmp
-            return -sqrt(fitness)
-        else:
-            return -1e10000 # -INF
-
-class Nmin(Integer):
-    '''N-dimensional N-min (integer) landscape
-    
-    2D example:
-        f(x, y) = sqrt(x^2 + y^2),
-        min at (0, 0) for x=(0, 1)
+        f(x) = sqrt(x_1^2 + x_2^2)
+        f_max = 0.0, x = (1, 1)
     
     Qualities: minimisation, unimodal
     '''
@@ -183,31 +154,56 @@ class Nmin(Integer):
         '''Negative root-sum-squared difference between each gene and
         its maximum value.'''
         if self.legal(indiv):
-            fitness = 0
-            for expected, actual in izip(self.lower_bounds, indiv):
-                tmp = expected - actual
-                fitness += tmp * tmp
+            fitness = sum((expected - actual) ** 2 for expected, actual in izip(self.upper_bounds, indiv))
+            return sqrt(fitness)
+        else:
+            return 1e10000 # -INF
+
+class Nmin(Integer):
+    '''n-dimensional minimum value (N-min) benchmark landscape.
+    
+    For example, when n = 2 and x is in [0, 1]::
+    
+        f(x) = sqrt(x_1^2 + x_2^2)
+        f_max = 0.0, x = (0, 0)
+    
+    Qualities: minimisation, unimodal
+    '''
+    lname = 'N-max'
+    maximise = False
+    
+    test_cfg = ('10 0 31',)
+    test_legal = ([5]*10, [20]*10)
+    test_illegal = ([-1]*10, [40]*10)
+    
+    def _eval(self, indiv):
+        '''Root-sum-squared difference between each gene and its minimum
+        value.
+        '''
+        if self.legal(indiv):
+            fitness = sum((expected - actual) ** 2 for expected, actual in izip(self.lower_bounds, indiv))
             return sqrt(fitness)
         else:
             return 1e10000 # INF
 
 
-#==============================================================================
+#=======================================================================
 class Nmatch(Integer):
-    '''N-dimensional N-match (integer) landscape
+    '''n-dimensional value find (N-match) landscape.
     
     Like the Nmax function, however optimum is set to centre of the
     value range. (ie. "Match" the center value.)
     
     
-    2D example:
-        f(x, y) = -sqrt((x_avg-x)^2 + (y_avg-y)^2),
-    Best:
-        f(x, y) = 0 = f(0.5, 0.5), for x, y in range of (0, 1)
+    For example, when n = 2 and x is in [0, 1]::
     
-    Qualities: maximisation (up to zero), unimodal
+        f(x) = sqrt(x_1^2 + x_2^2)
+        f_max = 0.0, x = (0.5, 0.5)
+    
+    Qualities: minimisation, unimodal
     '''
     lname = 'N-match'
+    maximise = False
     
     test_cfg = ('10 0 25',)
     test_legal = ([10]*10, [20]*10)
@@ -223,20 +219,21 @@ class Nmatch(Integer):
         '''Like the Nmax function with the optimum set to the range
         center.
         '''
-        fitness = 0
-        for expected, actual in izip(self.target, indiv):
-            tmp = expected - actual
-            fitness += tmp * tmp
-        return -sqrt(fitness)
+        if self.legal(indiv):
+            fitness = sum((expected - actual) ** 2 for expected, actual in izip(self.target, indiv))
+            return sqrt(fitness)
+        else:
+            return 1e10000 # INF
 
 
-#==============================================================================
+#=======================================================================
 class Robbins(Integer):
     '''N-dimensional Robbins (integer) landscape
     
-    Qualities:
+    Qualities: maximisation (default) or minimisation
     '''
     lname = 'Robbins'
+    maximise = True
     
     test_cfg = ('10 -5 5',)
     test_legal = ([0]*10, [5]*10, [-5]*10)

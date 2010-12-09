@@ -102,6 +102,8 @@ rvp_tests = [
     ('RVP.SchafferF6',      std_dialects, [None]),
     ('RVP.SixHumpCamelBack', std_dialects, [None]),
     ('RVP.FMS',             std_dialects, [None]),
+    ('RVP.SCH',             std_dialects, [None]),
+    ('RVP.FON',             std_dialects, [None]),
 ]
 
 tgp_tests = [

@@ -7,8 +7,6 @@ The `GE` base class inherits from `esec.landscape.Landscape` for some
 nice assistive magic. See there for details if you wish to write your
 own new functions.
 
-.. classtree:: esec.landscape.ge.GE
-   :dir: right
 '''
 
 from esec.landscape import Landscape
@@ -66,7 +64,7 @@ class GE(Landscape):
         return indiv.Eval is not None
 
 
-#==============================================================================
+#=======================================================================
 class Multiplexer(GE):
     '''N-address bit multiplexer
     
@@ -149,7 +147,7 @@ class Multiplexer(GE):
 
 
 
-#==============================================================================
+#=======================================================================
 class SymbolicRegression(GE):
     '''Symbolic regression of an arbitrary expression.
     

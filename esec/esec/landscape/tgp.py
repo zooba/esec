@@ -7,9 +7,6 @@ The `TGP` base class inherits from `esec.landscape.Landscape` for some
 nice assistive magic. See there for details if you wish to write your
 own new functions.
 
-.. classtree:: esec.landscape.tgp.TGP
-   :dir: right
-
 '''
 
 from esec.landscape import Landscape
@@ -93,7 +90,7 @@ class TGP(Landscape):
         return True
 
 
-#==============================================================================
+#=======================================================================
 class Multiplexer(TGP):
     '''N-address bit multiplexer.'''
     
@@ -140,7 +137,7 @@ class Multiplexer(TGP):
         return TGPFitness([fitness, cost])
 
 
-#==============================================================================
+#=======================================================================
 class SymbolicRegression(TGP):
     '''Symbolic regression.'''
     
