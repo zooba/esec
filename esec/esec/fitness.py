@@ -60,11 +60,11 @@ class Fitness(object):
     '''
     
     defaults = [0.0]
-    '''A lsit of the defaults of each part of the fitness value.
+    '''A list of the defaults of each part of the fitness value.
     
     Each element specifies one part of the fitness. The matching element
     in `types` specifies the type of this part.
-
+    
     For example::
       
       types    = [float, int ]
@@ -289,6 +289,8 @@ class Fitness(object):
         result = (expected_type(value / other) for expected_type, value in izip(self.types, self.values))
         return type(self)(tuple(result), True)
 
+#=======================================================================
+
 class FitnessMaximise(Fitness):
     '''Represents a simple fitness value where higher values are
     considered to be more fit.
@@ -300,6 +302,8 @@ class FitnessMaximize(FitnessMaximise):
     considered to be more fit.
     '''
     pass
+
+#=======================================================================
 
 class FitnessMinimise(Fitness):
     '''Represents a simple fitness value where lower values are
@@ -336,6 +340,8 @@ class FitnessMinimize(FitnessMinimise):
     considered to be more fit.
     '''
     pass
+
+#=======================================================================
 
 class EmptyFitness(object):
     '''Represents an unspecified multi-stage fitness value.
@@ -401,3 +407,51 @@ class EmptyFitness(object):
     def __mul__(self, other): return self
     def __div__(self, other): return self
     def __truediv__(self, other): return self
+
+#=======================================================================
+
+_dominating_fitness_classes = { }
+
+def _dominating_fitness_gt(self, other):
+    '''Determines whether `self` dominates `other`. To dominate, every
+    fitness value must be greater (more positive) than or equal to the
+    matching value in `other`.
+    
+    A `SimpleDominatingFitness` instance always dominates ``None`` or
+    any object which is not a `SimpleDominatingFitness` with the same
+    number of values.
+    
+    :Parameters:
+      other : `SimpleDominatingFitness`, ``None`` or another object
+        The object to compare this `SimpleDominatingFitness` instance
+        to.
+    
+    :Returns:
+        ``True`` if `self` dominates `other`; otherwise, ``False``.
+    '''
+    assert isinstance(self, Fitness), "_dominating_fitness_gt must be bound to a Fitness class."
+    if not isinstance(other, type(self)): return False
+    return all(i1 >= i2 for i1, i2 in izip(self.values, other.values))
+
+def SimpleDominatingFitness(value_count=2):
+    '''Returns a class suitable for a simple dominating fitness with the
+    specified number of values. A fitness dominates another fitness if
+    every value is greater (more positive) than or equal to the other's.
+    
+    This function caches the classes returned, ensuring that, provided
+    `value_count` is the same, the instances are comparable.
+    
+    Fitness values should be initialised as follows::
+    
+        fitness = SimpleDominatingFitness(2)([objective1, objective2])
+    
+    '''
+    cls = _dominating_fitness_classes.get(value_count, None)
+    if not cls:
+        cls = type('SimpleDominatingFitness%d' % value_count, (Fitness,), dict(Fitness.__dict__))
+        cls.types = [float] * value_count
+        cls.defaults = [0.0] * value_count
+        cls.__gt__ = _dominating_fitness_gt
+        _dominating_fitness_classes[value_count] = cls
+    return cls
+
