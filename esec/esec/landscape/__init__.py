@@ -246,7 +246,10 @@ def _do_import():
                 # Must not be landscape
                 if cls is Landscape: continue
                 # Must have eval methods
-                if not hasattr(cls, '_eval') and not hasattr(cls, '_eval_invert'): continue
+                if (not hasattr(cls, '_eval') and 
+                    not hasattr(cls, '_eval_invert') and
+                    not hasattr(cls, 'eval')):
+                    continue
                 # All good
                 LANDSCAPES.append(cls)
 
