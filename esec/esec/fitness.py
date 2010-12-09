@@ -414,7 +414,7 @@ _dominating_fitness_classes = { }
 
 def _dominating_fitness_gt(self, other):
     '''Determines whether `self` dominates `other`. To dominate, every
-    fitness value must be greater (more positive) than or equal to the
+    fitness value must be less (more negative) than or equal to the
     matching value in `other`.
     
     A `SimpleDominatingFitness` instance always dominates ``None`` or
@@ -430,13 +430,14 @@ def _dominating_fitness_gt(self, other):
         ``True`` if `self` dominates `other`; otherwise, ``False``.
     '''
     assert isinstance(self, Fitness), "_dominating_fitness_gt must be bound to a Fitness class."
+    if isinstance(other, EmptyFitness): return True
     if not isinstance(other, type(self)): return False
-    return all(i1 >= i2 for i1, i2 in izip(self.values, other.values))
+    return all(i1 <= i2 for i1, i2 in izip(self.values, other.values))
 
 def SimpleDominatingFitness(value_count=2):
     '''Returns a class suitable for a simple dominating fitness with the
     specified number of values. A fitness dominates another fitness if
-    every value is greater (more positive) than or equal to the other's.
+    every value is less (more negative) than or equal to the other's.
     
     This function caches the classes returned, ensuring that, provided
     `value_count` is the same, the instances are comparable.
@@ -448,10 +449,11 @@ def SimpleDominatingFitness(value_count=2):
     '''
     cls = _dominating_fitness_classes.get(value_count, None)
     if not cls:
-        cls = type('SimpleDominatingFitness%d' % value_count, (Fitness,), dict(Fitness.__dict__))
-        cls.types = [float] * value_count
-        cls.defaults = [0.0] * value_count
-        cls.__gt__ = _dominating_fitness_gt
+        new_dict = dict(FitnessMinimise.__dict__)
+        new_dict['types'] = [float] * value_count
+        new_dict['defaults'] = [0.0] * value_count
+        new_dict['__gt__'] = _dominating_fitness_gt
+        cls = type('SimpleDominatingFitness%d' % value_count, (FitnessMinimise,), new_dict)
         _dominating_fitness_classes[value_count] = cls
     return cls
 
