@@ -282,10 +282,10 @@ esec.species.include(PSOSpecies)
 #==============================================================================
 
 PSO_DEF = r'''
-FROM random_pso(length=cfg.landscape.size.exact, \
-                lowest=cfg.landscape.lower_bounds,highest=cfg.landscape.upper_bounds, \
-                position_bounds=[cfg.landscape.lower_bounds, cfg.landscape.upper_bounds], \
-                velocity_bounds=[cfg.landscape.lower_bounds, cfg.landscape.upper_bounds]) \
+FROM random_pso(length=config.landscape.size.exact, \
+                lowest=config.landscape.lower_bounds,highest=config.landscape.upper_bounds, \
+                position_bounds=[config.landscape.lower_bounds, config.landscape.upper_bounds], \
+                velocity_bounds=[config.landscape.lower_bounds, config.landscape.upper_bounds]) \
         SELECT (size) population
 FROM population SELECT 1 global_best USING best_only
 FROM population SELECT (size) p_bests
