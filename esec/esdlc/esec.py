@@ -155,7 +155,10 @@ class _born_iter(object):
     
     def write_variable(self, node):
         '''Emits text for variable nodes.'''
-        yield self.safe_variable(node.name)
+        if node.implicit:
+            yield 'globals().get("%s", True)' % self.safe_variable(node.name)
+        else:
+            yield self.safe_variable(node.name)
     
     def write_unknown(self, node):
         '''Emits text for unknown nodes.'''

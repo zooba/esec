@@ -447,11 +447,14 @@ class FunctionNode(NodeBase):
             
             if not token: raise error.ExpectedParameterValueError(tokens[-1])
             if token.tag == 'eos': raise error.ExpectedParameterValueError(token)
-            if token.tag != '=': raise error.ExpectedParameterValueError(token)
             
-            token_i += 1
-            token_i, arg_node = UnknownNode.parse(tokens, token_i)
-            func_args[arg_name] = arg_node
+            if token.tag == '=':
+                token_i += 1
+                token_i, arg_node = UnknownNode.parse(tokens, token_i)
+                func_args[arg_name] = arg_node
+            else:
+                func_args[arg_name] = VariableNode(arg_name, [tokens[token_i-1]])
+                func_args[arg_name].implicit = True
             
             token = _get_token(tokens, token_i)
             if token and token.tag == ',': token_i += 1
@@ -495,7 +498,7 @@ class FunctionNode(NodeBase):
         
         token_i += 1
         return token_i, FunctionNode(func_name, tokens[first_token:token_i], *func_args)
-    
+
 class NameNode(NodeBase):
     '''Represents a node with a name.'''
     tag = 'name'
@@ -566,6 +569,10 @@ class VariableNode(NameNode):
     tag = 'variable'
     def __init__(self, name, tokens):
         super(VariableNode, self).__init__(name, tokens)
+        self.implicit = False
+        '''If ``True``, replace with `ValueNode` rather than raising a
+        warning if the variable does not exist.
+        '''
     
     @classmethod
     def parse(cls, tokens, first_token):
