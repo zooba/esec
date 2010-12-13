@@ -1,11 +1,13 @@
 '''Provides the `TgpSpecies` and `TgpIndividual` classes for tree-based
 genetic programming (Koza-style) genomes.
 '''
-from itertools import izip
+#pylint: disable=C0302
+
+from itertools import chain, islice, izip
+import math
 from esec.species import Species
 from esec.individual import Individual, OnIndividual
 from esec.context import rand, notify
-import math
 
 # Override Individual to provide one that keeps its valid instructions with it
 class TgpIndividual(Individual):
@@ -232,6 +234,7 @@ class TgpSpecies(Species):
         super(TgpSpecies, self).__init__(cfg, eval_default)
         # Make some names public within the execution context
         self.public_context = {
+            'random_tgp': self.init_tgp,
             'boolean_tgp': self.init_boolean_tgp,
             'real_tgp': self.init_real_tgp,
             'integer_tgp': self.init_integer_tgp,
@@ -437,7 +440,76 @@ class TgpSpecies(Species):
             return root
         
         return _rnd(0, adf_index)
-
+    
+    def init_tgp(self, instructions, terminals=0, deepest=10,
+                 adfs=0, 
+                 lowest_constant=None, highest_constant=None,
+                 terminal_prob=0.5):
+        '''Creates tree-based genetic programming (TGP) programs made from
+        `instructions`.
+        
+        .. include:: epydoc_include.txt
+        
+        :Parameters:
+          instructions : iterable(`Instruction`)
+            The instruction set to select instructions from.
+          
+          terminals : int
+            The number of externally provided constants that are
+            available for inclusion in programs.
+          
+          deepest : int
+            The maximum depth program tree that may be created.
+            Some programs may be less deep than this value if they
+            fully terminate before reaching this depth.
+          
+          adfs : int
+            The number of automatically-defined functions to include.
+            This amount of ADFs are always generated, but are not
+            necessarily called from other ADFs or the root program.
+            A root program is always created, regardless of this value.
+          
+          constants : bool
+            ``True`` to allow random constants to be included. Defaults
+            to ``False``.
+          
+          lowest_constant : float
+            The lowest (inclusive) value of constant to create. If
+            ``None`` or greater than `highest_constant`, constants are
+            never created.
+          
+          highest_constant : float
+            The highest (exclusive) value of constant to create. If
+            ``None`` or less than `lowest_constant`, constants are never
+            created.
+          
+          terminal_prob : |prob|
+            The probability of a branch terminating at any particular
+            point. If this is zero, the program tree will be filled to
+            the depth specified by `deepest`.
+        '''
+        instructions = list(instructions)
+        instruction_set = ''.join(instr.name for instr in instructions)
+        if lowest_constant is None or highest_constant is None or lowest_constant > highest_constant:
+            constant_bounds = None
+        else:
+            constant_bounds = (lowest_constant, highest_constant)
+        while True:
+            genes = [self._init_one(instructions,
+                                    terminals,
+                                    deepest,
+                                    adfs,
+                                    i,
+                                    constant_bounds,
+                                    type(constant_bounds[0]) if constant_bounds else None,
+                                    terminal_prob) for i in xrange(adfs+1)]
+            yield TgpIndividual(genes,
+                                self,
+                                instructions,
+                                instruction_set,
+                                terminals,
+                                constant_bounds,
+                                type(constant_bounds[0]) if constant_bounds else None)
     
     def init_boolean_tgp(self, terminals=0, deepest=10, adfs=0, constants=False, terminal_prob=0.5):
         '''Creates tree-based genetic programming (TGP) programs made from
@@ -630,8 +702,9 @@ class TgpSpecies(Species):
                                 int)
     
     def crossover_one(self, _source,
-                      per_pair_rate=None, per_indiv_rate=0.1, per_adf_rate=1.0,
-                      longest_result=None, deepest_result=None):
+                      per_pair_rate=None, per_indiv_rate=1.0, per_adf_rate=1.0,
+                      longest_result=None, deepest_result=None,
+                      terminal_prob=None):
         '''
         :Note: Redirects to `crossover_one_different`. TGP has no sensible
                way in which to cross two individuals at the same point.
@@ -641,11 +714,13 @@ class TgpSpecies(Species):
                                             per_indiv_rate,
                                             per_adf_rate,
                                             longest_result,
-                                            deepest_result)
+                                            deepest_result,
+                                            terminal_prob)
     
     def crossover_one_different(self, _source,
-                                per_pair_rate=None, per_indiv_rate=0.1, per_adf_rate=1.0,
-                                longest_result=None, deepest_result=None):
+                                per_pair_rate=None, per_indiv_rate=1.0, per_adf_rate=1.0,
+                                longest_result=None, deepest_result=None,
+                                terminal_prob=None):
         '''Performs single-point crossover by selecting a random program
         node in each ADF of a pair of individuals and exchanging the
         branches.
@@ -691,6 +766,15 @@ class TgpSpecies(Species):
             discarded and the original individuals are returned. An
             ``'aborted'`` notification is sent to the monitor from
             ``'crossover_one'``.
+          
+          terminal_prob : |prob| [optional]
+            Biases the probability of selecting a terminal as the root
+            of the crossover operation. If provided, and the probability
+            is met, a terminal is guaranteed to be selected. Otherwise, 
+            a non-terminal is guaranteed.
+            
+            If omitted, the distribution of crossover points is not
+            artifically biased.
         '''
         frand = rand.random
         
@@ -715,10 +799,14 @@ class TgpSpecies(Species):
                             i1_post.append(program1)
                             i2_post.append(program2)
                         else:
-                            start1, end1 = self._pick_random_node(program1)
-                            start2, end2 = self._pick_random_node(program2)
-                            new1 = program1[:start1] + program2[start2:end2] + program1[end1:]
-                            new2 = program2[:start2] + program1[start1:end1] + program2[end2:]
+                            start1, end1 = self._pick_random_node(program1, terminal_prob)
+                            start2, end2 = self._pick_random_node(program2, terminal_prob)
+                            new1 = list(chain(islice(program1, 0, start1),
+                                              islice(program2, start2, end2),
+                                              islice(program1, end1, None)))
+                            new2 = list(chain(islice(program2, 0, start2),
+                                              islice(program1, start1, end1),
+                                              islice(program2, end2, None)))
                             if (deepest_result and
                                 (self.depth(new1) > deepest_result or self.depth(new2) > deepest_result)):
                                 stats = { 'i1': i1_pre, 'i2': i2_pre, 'adf': adf, 'deepest_result': deepest_result }
@@ -804,7 +892,9 @@ class TgpSpecies(Species):
                                                  len(indiv.genome) - 1, i,
                                                  indiv.constant_bounds, indiv.constant_type,
                                                  terminal_prob)
-                    new_genes.append(program[:start] + replacement + program[end:])
+                    new_genes.append(list(chain(islice(program, 0, start),
+                                                replacement,
+                                                islice(program, end, None))))
                 else:
                     new_genes.append(program)
             return new_genes
@@ -950,11 +1040,28 @@ class TgpSpecies(Species):
                 yield indiv
     
     @classmethod
-    def _pick_random_node(cls, program):
+    def _pick_random_node(cls, program, terminal_prob=None):
         '''Selects a random branch within the program and returns both its
         starting index and end index (as found with `_find_end`).
         '''
+        if not program:
+            return (0, 0)
+        
         start = rand.randrange(len(program))
+        if terminal_prob is None:
+            pass
+        elif rand.random() < terminal_prob:
+            # find a terminal
+            for start in xrange(start, start + len(program)):
+                if program[start % len(program)].param_count == 0:
+                    break
+            start = start % len(program)    #pylint: disable=W0631
+        else:
+            # find a non-terminal
+            for start in xrange(start, start + len(program)):
+                if program[start % len(program)].param_count > 0:
+                    break
+            start = start % len(program)    #pylint: disable=W0631
         end = cls._find_end(program, start)
         
         return (start, end)

@@ -22,16 +22,21 @@ config = {
     'system': { 
         'definition': r'''
             FROM real_tgp(terminals=1, deepest=4, transcendentals=True, \
-                          lowest_constant=-1.0, highest_constant=1.0) SELECT (size) population
+                          lowest_constant=0.0, highest_constant=1.0 \
+                          ) SELECT (size) population
             YIELD population
 
             BEGIN generation
-                FROM population SELECT (size/10) preserved, (size-size/10) parents USING binary_tournament
-                FROM parents SELECT offspring USING crossover_one(per_pair_rate=0.9, deepest_result=15), \
-                                                    mutate_random(per_indiv_rate=1.0/(size), deepest_result=15), \
-                                                    mutate_permutate(per_indiv_rate=1.0/(size)), \
-                                                    mutate_edit(per_indiv_rate=0.5)
-                FROM preserved, offspring SELECT population
+                FROM population \
+                    SELECT (0.9*size) to_cross, (0.08*size) to_reproduce, (0.02*size) to_mutate \
+                    USING fitness_proportional
+                
+                FROM to_cross SELECT offspring1 USING crossover_one(deepest_result=15, terminal_prob=0.1)
+                FROM to_mutate SELECT offspring2 USING mutate_random(deepest_result=15)
+                
+                FROM offspring1, offspring2, to_reproduce SELECT population \
+                     USING mutate_edit(per_indiv_rate=0.1)
+                
                 YIELD population
             END generation
         ''',
@@ -47,11 +52,7 @@ config = {
     },
 }
 
-settings = ''
-#settings += 'pathbase="";'
-settings += 'csv=False;low_priority=True;'
-
+settings = 'csv=False;low_priority=True;quiet=True;'
 def batch():
     for i in xrange(0, 500):
-        yield ([], "KozaSymbolicRegression", None, "random_seed=%d" % i, None)
-    
+        yield { 'config': config, 'settings': "random_seed=%d" % i }

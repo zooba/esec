@@ -18,7 +18,7 @@ class TGPFitness(Fitness):
     # stage 0 is the score of the solution (higher == better)
     # stage 1 is the cost (lower == better)
     types = [ float, long ]
-    defaults = [ -1.0e9, sys.maxsize ]
+    defaults = [ float('-inf'), sys.maxsize ]
     
     def __gt__(self, other):
         # Handle incomparable types
@@ -38,6 +38,8 @@ class TGPFitness(Fitness):
             score_part = ('% 8.2f' % score)
         elif score > 0:
             score_part = '   +++'
+        elif score <= self.defaults[0]:
+            score_part = '   inf'
         else:
             score_part = '   ---'
         cost_part = (' (%3d)' % cost) if abs(cost) < 100 else ' (---)'
