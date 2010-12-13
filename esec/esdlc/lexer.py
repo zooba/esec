@@ -190,6 +190,8 @@ def tokenise(source):
                 line = []
         elif token.tag == 'continue':
             continuation = True
+        elif token.tag == 'comment':
+            line.append(token)
         else:
             continuation = False
             line.append(token)

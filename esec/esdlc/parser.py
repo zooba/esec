@@ -113,7 +113,9 @@ class AST(object):
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 else:
                     i = 0
-                    while i < len(statement):
+                    previous_i = -1
+                    while i < len(statement) and i != previous_i:
+                        previous_i = i
                         i, node = UnknownNode.parse(statement, i)
                         if node: current_block.children.append(node)
             except error.ESDLSyntaxErrorBase as ex:
