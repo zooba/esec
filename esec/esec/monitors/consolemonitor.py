@@ -3,6 +3,8 @@ object based on prespecified report strings.
 
 See `esec.monitors` for a general overview of monitors.
 '''
+from math import isinf
+
 from esec.fitness import Fitness, EmptyFitness
 from esec.individual import EmptyIndividual
 from esec.monitors import MonitorBase
@@ -519,7 +521,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         for i in group:
             # Accumulate fitness before statistics because i.fitness
             # may increment the 'evals' statistic.
-            fit_sum += i.fitness
+            if not isinf(i.fitness.simple):
+                fit_sum += i.fitness
             if i.fitness > best.fitness: best = i
             if i.fitness < worst.fitness: worst = i
             
@@ -545,8 +548,8 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         pop_min = pop_stat.get('global_min', worst)
         if worst.fitness < pop_min.fitness:
             pop_min = worst
-        pop_sum = pop_stat.get('_global_sum_fitness', EmptyFitness()) + fit_sum
-        pop_cnt = pop_stat.get('_global_cnt_fitness', 0) + float(len(group))
+        pop_sum = fit_sum + pop_stat.get('_global_sum_fitness', EmptyFitness())
+        pop_cnt = float(len(group)) + pop_stat.get('_global_cnt_fitness', 0)
         pop_stat['global_max'] = pop_max
         pop_stat['_global_sum_fitness'] = pop_sum
         pop_stat['_global_cnt_fitness'] = pop_cnt

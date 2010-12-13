@@ -248,8 +248,18 @@ class Fitness(object):
     
     def __add__(self, other):
         if __debug__: self.validate(other)
-        if isinstance(other, EmptyFitness): return NotImplemented
-        values = tuple((value1 + value2 for value1, value2 in izip(self.values, other.values)))
+        if isinstance(other, EmptyFitness):
+            values = tuple(self.values)
+        else:
+            values = tuple((value1 + value2 for value1, value2 in izip(self.values, other.values)))
+        return type(self)(values, True)
+    
+    def __radd__(self, other):
+        if __debug__: self.validate(other)
+        if isinstance(other, EmptyFitness):
+            values = tuple(self.values)
+        else:
+            values = tuple((value1 + value2 for value1, value2 in izip(self.values, other.values)))
         return type(self)(values, True)
     
     def __neg__(self):
@@ -258,20 +268,30 @@ class Fitness(object):
     
     def __sub__(self, other):
         if __debug__: self.validate(other)
-        if isinstance(other, EmptyFitness): return NotImplemented
-        values = tuple((value1 - value2 for value1, value2 in izip(self.values, other.values)))
+        if isinstance(other, EmptyFitness):
+            values = tuple(self.values)
+        else:
+            values = tuple((value1 - value2 for value1, value2 in izip(self.values, other.values)))
+        return type(self)(values, True)
+    
+    def __rsub__(self, other):
+        if __debug__: self.validate(other)
+        if isinstance(other, EmptyFitness):
+            values = tuple((-value for value in self.values))
+        else:
+            values = tuple((value1 - value2 for value1, value2 in izip(self.values, other.values)))
         return type(self)(values, True)
     
     def __iadd__(self, other):
         if __debug__: self.validate(other)
-        if isinstance(other, EmptyFitness): return NotImplemented
-        self.values = tuple((value1 + value2 for value1, value2 in izip(self.values, other.values)))
+        if not isinstance(other, EmptyFitness):
+            self.values = tuple((value1 + value2 for value1, value2 in izip(self.values, other.values)))
         return self
     
     def __isub__(self, other):
         if __debug__: self.validate(other)
-        if isinstance(other, EmptyFitness): return NotImplemented
-        self.values = tuple((value1 - value2 for value1, value2 in izip(self.values, other.values)))
+        if not isinstance(other, EmptyFitness):
+            self.values = tuple((value1 - value2 for value1, value2 in izip(self.values, other.values)))
         return self
     
     def __mul__(self, other):
@@ -383,19 +403,19 @@ class EmptyFitness(object):
     
     def __add__(self, other):
         if type(other) is EmptyFitness: return self
-        else: return type(other)() + other
+        else: return NotImplemented
     
     def __sub__(self, other):
         if type(other) is EmptyFitness: return self
-        else: return type(other)() - other
+        else: return NotImplemented
     
     def __radd__(self, other):
         if type(other) is EmptyFitness: return self
-        else: return other + type(other)()
+        else: return NotImplemented
     
     def __rsub__(self, other):
         if type(other) is EmptyFitness: return self
-        else: return other - type(other)()
+        else: return NotImplemented
     
     def __eq__(self, other): return isinstance(other, EmptyFitness)
     def __ne__(self, other): return not isinstance(other, EmptyFitness)

@@ -6,6 +6,7 @@ which the selectors are executed.
 '''
 
 from itertools import repeat
+from math import isinf
 from warnings import warn
 from esec import esdl_func
 from esec.fitness import Fitness
@@ -418,7 +419,8 @@ def FitnessProportionalNormal(_source, replacement=True, fitness_offset=None):
         within an ESDL system), the first individual is used. If
         omitted, the minimum fitness value in `_source` is used.
     '''
-    group = sorted(_source, key=_key_fitness, reverse=True)
+    group = [indiv for indiv in _source if not isinf(indiv.fitness.simple)]
+    group.sort(key=_key_fitness, reverse=True)
     irand = rand.randrange
     frand = rand.random
     
@@ -478,7 +480,8 @@ def FitnessProportionalSUS(_source, mu=None, fitness_offset=None):
         within an ESDL system), the first individual is used. If
         omitted, the minimum fitness value in `_source` is used.
     '''
-    group = sorted(_source, key=_key_fitness, reverse=True)
+    group = [indiv for indiv in _source if not isinf(indiv.fitness.simple)]
+    group.sort(key=_key_fitness, reverse=True)
     frand = rand.random
     
     if not group: raise StopIteration
@@ -595,7 +598,8 @@ def RankProportionalNormal(_source, replacement=True, expectation=1.1, neta=None
         individuals; otherwise, ``True`` to give the highest
         probabilities to the least fit individuals.
     '''
-    group = sorted(_source, key=_key_fitness, reverse=not invert)
+    group = [indiv for indiv in _source if not isinf(indiv.fitness.simple)]
+    group.sort(key=_key_fitness, reverse=not invert)
     irand = rand.randrange
     frand = rand.random
     
@@ -661,7 +665,8 @@ def RankProportionalSUS(_source, mu=None, expectation=1.1, neta=None, invert=Fal
         The number of selections being made when using SUS. If not
         provided, the total number of individuals in `_source` is used.
     '''
-    group = sorted(_source, key=_key_fitness, reverse=not invert)
+    group = [indiv for indiv in _source if not isinf(indiv.fitness.simple)]
+    group.sort(key=_key_fitness, reverse=not invert)
     frand = rand.random
     
     if not group: raise StopIteration
