@@ -16,12 +16,10 @@ class AST(object):
         self.globals = set()
         self.variables = set()
         self.constants = set()
-        self.external_variables = set()
         self.init_block = None
         self.blocks = { }
         self.source_lines = []
         self._errors = []
-        self.uninitialised = []
         self.filters = []
     
     @property
@@ -34,18 +32,9 @@ class AST(object):
         '''Gets a list of warnings found in the syntax tree.'''
         return self.get_warnings()
     
-    def get_warnings(self, include_uninitialised=True):
+    def get_warnings(self):
         '''Gets a list of warnings found in the syntax tree.'''
-        if include_uninitialised:
-            return [e for e in self._errors if e.iswarning]
-        else:
-            return [e for e in self._errors if e.iswarning and
-                e.code not in (
-                    error.UninitialisedGlobalError.code,
-                    error.UninitialisedConstantError.code,
-                    error.UninitialisedVariableError.code
-                )
-            ]
+        return [e for e in self._errors if e.iswarning]
     
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
@@ -113,7 +102,9 @@ class AST(object):
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 else:
                     i = 0
-                    while i < len(statement):
+                    previous_i = -1
+                    while i < len(statement) and i != previous_i:
+                        previous_i = i
                         i, node = UnknownNode.parse(statement, i)
                         if node: current_block.children.append(node)
             except error.ESDLSyntaxErrorBase as ex:

@@ -282,6 +282,9 @@ class _born_iter(object):
             yield self.INDENT + ', '.join(local_groups) + ' = ' + ', '.join('[]' for _ in local_groups)
         
         for child in node.children:
+            if child.tag in ('variable', 'comment'):
+                continue
+            
             for line in self.write(child):
                 yield self.INDENT + line
         yield self.INDENT + 'return ' + returned

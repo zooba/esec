@@ -5,6 +5,7 @@
 #pylint: disable=R0903,C0302
 
 from __future__ import absolute_import
+from esdlc.lexer import Token
 import esdlc.errors as error
 
 def _get_token(tokens, token_i):
@@ -19,25 +20,6 @@ def _get_token(tokens, token_i):
         return token
     else:
         return None
-
-def _add(dest, src):
-    '''Appends the passed items to an existing entry or creates
-    a new entry.
-    '''
-    for key, value in src.iteritems():
-        if key in dest:
-            if isinstance(value, list): dest[key].extend(value)
-            else: dest[key].append(value)
-        else:
-            if isinstance(value, list): dest[key] = value
-            else: dest[key] = [value]
-
-def _diff(src1, src2):
-    '''Returns a dictionary containing items from `src1` that do
-    not appear in `src2`.
-    '''
-    return dict((key, value) for key, value in src1.iteritems() if key not in src2)
-
 
 class NodeBase(object):
     '''The base class of all AST nodes.'''
@@ -299,38 +281,6 @@ class FunctionNode(NodeBase):
         self.arguments = dict((key.lower(), value) for key, value in named_arguments.iteritems())
         for i, value in enumerate(positional_arguments):
             self.arguments['#%d' % i] = value
-        
-        self.variables_in = { }
-        self.variables_out = { }
-        args = self.arguments.itervalues()
-        if self.name == '_assign':
-            dest = self.arguments['destination']
-            if dest.tag != 'variable': raise error.InvalidAssignmentError(min(dest.tokens))
-            
-            _add(self.variables_out, { dest.name: dest })
-            args = (value for key, value in self.arguments.iteritems() if key != 'destination')
-        
-        for value in args:
-            assert value is not None, ("All arguments must contain a node\n" + 
-                                       '\n'.join('%s=%s' % item for item in self.arguments.iteritems()))
-            if value.tag == 'variable':
-                _add(self.variables_in, { value.name: value })
-            elif value.tag == 'group':
-                _add(self.variables_in, { value.group.name: value.group })
-            elif value.tag == 'fromsource':
-                for var in value.sources:
-                    if var.tag == 'group':
-                        _add(self.variables_in, { var.group.name: var.group })
-                    elif var.tag in 'function':
-                        _add(self.variables_in, var.variables_in)
-                        _add(self.variables_out, var.variables_out)
-                    else:
-                        assert False, "fromsource should not contain " + repr(var)
-            elif value.tag == 'joinsource':
-                _add(self.variables_in, dict((var.group.name, var.group) for var in value.sources))
-            elif hasattr(value, 'variables_in') and hasattr(value, 'variables_out'):
-                _add(self.variables_in, value.variables_in)
-                _add(self.variables_out, value.variables_out)
     
     def __str__(self):
         if self.name == '_assign':
@@ -498,7 +448,7 @@ class FunctionNode(NodeBase):
         
         token_i += 1
         return token_i, FunctionNode(func_name, tokens[first_token:token_i], *func_args)
-
+    
 class NameNode(NodeBase):
     '''Represents a node with a name.'''
     tag = 'name'
@@ -573,6 +523,8 @@ class VariableNode(NameNode):
         '''If ``True``, replace with `ValueNode` rather than raising a
         warning if the variable does not exist.
         '''
+        self.external = False
+        '''If ``True``, assume it is already initialised.'''
     
     @classmethod
     def parse(cls, tokens, first_token):
@@ -589,7 +541,21 @@ class VariableNode(NameNode):
         token_i += 1
         return token_i, VariableNode(var_name, tokens[first_token:token_i])
     
-    def __str__(self): return '$' + super(VariableNode, self).__str__()
+    @classmethod
+    def define_external(cls, name):
+        '''Creates an external `VariableNode` from a string.'''
+        tokens = [Token('name', name, 0, 0)]
+        node = VariableNode(name, tokens)
+        node.external = True
+        return node
+    
+    def __str__(self):
+        if self.external:
+            return '$!' + super(VariableNode, self).__str__()
+        elif self.implicit:
+            return '$?' + super(VariableNode, self).__str__()
+        else:
+            return '$' + super(VariableNode, self).__str__()
 
 class BacktickNode(TextNode):
     '''Represents a line of code that began with a backtick.'''
