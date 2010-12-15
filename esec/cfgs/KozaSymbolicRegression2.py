@@ -75,7 +75,7 @@ def symbolic_regression(indiv):
         error += (test_expression(x) - indiv.evaluate(indiv, [x])) ** 2
     score = -sqrt(error / n)
     
-    return TgpFitness([score, len(indiv[0])])
+    return TGPFitness([score, len(indiv[0])])
 
 # Define the instruction set using esec.species.tgp.Instruction
 instructions = [
