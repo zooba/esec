@@ -28,13 +28,13 @@ config = {
 
             BEGIN generation
                 FROM population \
-                    SELECT (0.9*size) to_cross, (0.08*size) to_reproduce, (0.02*size) to_mutate \
+                    SELECT (0.9*size) to_cross, (0.02*size) to_mutate, (size) to_reproduce \
                     USING fitness_proportional
                 
                 FROM to_cross SELECT offspring1 USING crossover_one(deepest_result=15, terminal_prob=0.1)
                 FROM to_mutate SELECT offspring2 USING mutate_random(deepest_result=15)
                 
-                FROM offspring1, offspring2, to_reproduce SELECT population \
+                FROM offspring1, offspring2, to_reproduce SELECT (size) population \
                      USING mutate_edit(per_indiv_rate=0.1)
                 
                 YIELD population
@@ -43,7 +43,7 @@ config = {
         'size': 300
     },
     'monitor': {
-        'report': 'gen+births+best+local+best_length+time_delta',
+        'report': 'gen+births+best+local+best_length+time_delta+sizes',
         'summary': 'status+best+best_length+best_phenome',
         'limits': {
             'generations': 100,
