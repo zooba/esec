@@ -184,7 +184,7 @@ class BinaryRealSpecies(BinarySpecies):
             yield res * sum(gene) + low
     
     
-    def _init(self, length, bits_per_value, lowest, highest, resolution, offset,
+    def _init(self, length, bits_per_value, lowest, highest,
               ones_complement, twos_complement, gray_code, counted, encoding,   #pylint: disable=W0613
               _gen):
         '''All parameters have the same meaning as for `init_random_real`.'''
@@ -212,21 +212,17 @@ class BinaryRealSpecies(BinarySpecies):
         else:
             bits_per_value = [int(bits_per_value)] * length
         
-        if offset is not None and resolution is not None:
-            lowest = [float(offset)] * length
-            highest = [float(resolution) * i for i in bits_per_value]
+        assert lowest is not None, "lowest must be specified"
+        assert highest is not None, "highest must be specified"
+        
+        if hasattr(lowest, '__iter__'):
+            lowest = [float(i) for i in lowest]
         else:
-            assert lowest is not None, "lowest must be specified"
-            assert highest is not None, "highest must be specified"
-            
-            if hasattr(lowest, '__iter__'):
-                lowest = [float(i) for i in lowest]
-            else:
-                lowest = [float(lowest)] * length
-            if hasattr(highest, '__iter__'):
-                highest = [float(i) for i in highest]
-            else:
-                highest = [float(highest)] * length
+            lowest = [float(lowest)] * length
+        if hasattr(highest, '__iter__'):
+            highest = [float(i) for i in highest]
+        else:
+            highest = [float(highest)] * length
         
         indiv_len = sum(bits_per_value)
         
@@ -243,7 +239,6 @@ class BinaryRealSpecies(BinarySpecies):
                          length=None,
                          bits_per_value=8,
                          lowest=0.0, highest=1.0,
-                         resolution=None, offset=None,
                          ones_complement=False, twos_complement=False,
                          gray_code=False, counted=False,
                          encoding=None):
@@ -264,26 +259,9 @@ class BinaryRealSpecies(BinarySpecies):
           
           lowest : float or iterable(float) [default 0.0]
             The lowest real value to map to.
-            
-            If `resolution` and `offset` are provided, these values are
-            used instead of `lowest` and `highest`.
           
           highest : float or iterable(float) [default 1.0]
-            The exclusive highest real value to map to. This value will
-            never be produced
-            
-            If `resolution` and `offset` are provided, these values are
-            used instead of `lowest` and `highest`.
-          
-          resolution : float [optional]
-            The amount each ``1`` bit contributes to its phenome value.
-            
-            `resolution` is ignored unless `offset` is also specified.
-          
-          offset : float [optional]
-            The lowest real value to map to.
-            
-            `offset` is ignored unless `resolution` is also specified.
+            The highest real value to map to.
           
           ones_complement : bool
             If ``True``, ones-complement encoding is used.
@@ -318,7 +296,7 @@ class BinaryRealSpecies(BinarySpecies):
             `ones_complement`, `twos_complement`, `gray_code` and
             `counted` parameters.
         '''
-        return self._init(length, bits_per_value, lowest, highest, resolution, offset,
+        return self._init(length, bits_per_value, lowest, highest,
                           ones_complement, twos_complement, gray_code, counted, encoding,
                           lambda _: 0 if rand.random() < 0.5 else 1)
     
@@ -326,7 +304,6 @@ class BinaryRealSpecies(BinarySpecies):
                          length=None,
                          bits_per_value=8,
                          lowest=0.0, highest=1.0,
-                         resolution=None, offset=None,
                          ones_complement=False, twos_complement=False,
                          gray_code=False, counted=False,
                          encoding=None):
@@ -334,7 +311,7 @@ class BinaryRealSpecies(BinarySpecies):
         
         Parameters are the same as for `init_random_real`.
         '''
-        return self._init(length, bits_per_value, lowest, highest, resolution, offset,
+        return self._init(length, bits_per_value, lowest, highest,
                           ones_complement, twos_complement, gray_code, counted, encoding,
                           lambda _: 0)
     
@@ -342,7 +319,6 @@ class BinaryRealSpecies(BinarySpecies):
                          length=None,
                          bits_per_value=8,
                          lowest=0.0, highest=1.0,
-                         resolution=None, offset=None,
                          ones_complement=False, twos_complement=False,
                          gray_code=False, counted=False,
                          encoding=None):
@@ -350,6 +326,6 @@ class BinaryRealSpecies(BinarySpecies):
         
         Parameters are the same as for `init_random_real`.
         '''
-        return self._init(length, bits_per_value, lowest, highest, resolution, offset,
+        return self._init(length, bits_per_value, lowest, highest,
                           ones_complement, twos_complement, gray_code, counted, encoding,
                           lambda _: 1)
