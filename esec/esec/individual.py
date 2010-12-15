@@ -357,10 +357,13 @@ class OnIndividual(object):
         passing all of `_source` as a parameter along with any other
         parameters.
         '''
-        first = next(_source)
-        target = getattr(first, self.target, self.default)
-        assert target, "Method %s does not exist on %s" % (self.target , type(first))
-        return target(_source=chain((first,), _source), *params, **named)
+        try:
+            first = next(_source)
+            target = getattr(first, self.target, self.default)
+            assert target, "Method %s does not exist on %s" % (self.target , type(first))
+            return target(_source=chain((first,), _source), *params, **named)
+        except StopIteration:
+            return iter([])
     
     def __repr__(self):
         if self.default:
