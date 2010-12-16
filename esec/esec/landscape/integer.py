@@ -169,7 +169,7 @@ class Nmin(Integer):
     
     Qualities: minimisation, unimodal
     '''
-    lname = 'N-max'
+    lname = 'N-min'
     maximise = False
     
     test_cfg = ('10 0 31',)
@@ -213,7 +213,7 @@ class Nmatch(Integer):
     def __init__(self, cfg=None, **other_cfg):
         super(Nmatch, self).__init__(cfg, **other_cfg)
         # specialised setup - target[i] in middle range for each indiv[i].
-        self.target = [(upper-lower) // 2 for upper, lower in izip(self.lower_bounds, self.upper_bounds)]
+        self.target = [(upper-lower) // 2 + lower for upper, lower in izip(self.lower_bounds, self.upper_bounds)]
     
     def _eval(self, indiv):
         '''Like the Nmax function with the optimum set to the range

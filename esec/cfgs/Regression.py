@@ -65,12 +65,30 @@ bvp_tests = [
 ]
 
 std_dialects = ['GA', 'SSGA'] + ['binary_int_map_%d' % i for i in xrange(3)]
+ivp_landscape_settings = [
+{
+    'landscape': {
+        'size': { 'exact': 20 },
+        'lower_bounds': -1024,
+        'upper_bounds': 1024
+    }
+}
+,
+{
+    'landscape': {
+        'size': { 'min': 10, 'max': 50 },
+        'lower_bounds': -1024,
+        'upper_bounds': 1024
+    },
+}
+]
+
 ivp_tests = [
-    ('IVP.Nsum',        std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
-    ('IVP.Nmax',        std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
-    ('IVP.Nmin',        std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
-    ('IVP.Nmatch',      std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
-    ('IVP.Robbins',     std_dialects, [{ 'landscape': { 'size': { 'exact': 20 } } }, { 'landscape': { 'size': { 'min': 10, 'max': 50 } } }]),
+    ('IVP.Nsum',        std_dialects, ivp_landscape_settings),
+    ('IVP.Nmax',        std_dialects, ivp_landscape_settings),
+    ('IVP.Nmin',        std_dialects, ivp_landscape_settings),
+    ('IVP.Nmatch',      std_dialects, ivp_landscape_settings),
+    ('IVP.Robbins',     std_dialects, ivp_landscape_settings),
 ]
 
 std_dialects = (['GA', 'SSGA', 'EP', 'ES'] + ['binary_real_map_%d' % i for i in xrange(3)])
@@ -162,7 +180,7 @@ END generation
 '''
 
 configs = { }
-for i in xrange(3):
+for i in xrange(4):
     configs['binary_real_map_%d' % i] = {
         'system': {
             'definition': REAL_MAP_DEF,
