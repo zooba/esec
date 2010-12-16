@@ -68,19 +68,25 @@ Multiple "batch" configuration model with logging of results
 
 __docformat__ = 'restructuredtext'
 
+import collections
+import optparse
+import os
+import sys
+import time
+from itertools import islice
+from StringIO import StringIO
+from warnings import warn
+
+from esec import Experiment
+from esec.landscape import LANDSCAPES
+from esec.monitors import ConsoleMonitor, CSVMonitor, MultiMonitor, MultiTarget
 from esec.utils import ConfigDict, settings_split, is_ironpython
 from esec.utils.exceptions import ExceptionGroup
-from esec import Experiment
-from esec.monitors import ConsoleMonitor, CSVMonitor, MultiMonitor, MultiTarget
-from esec.landscape import LANDSCAPES
-from warnings import warn
-import time, optparse, sys, os, collections
 import dialects
-from StringIO import StringIO
 
 HR = '-' * 120 + '\n'# Horizontal rule
 
-#==============================================================================
+#=======================================================================
 
 default = {
     'random_seed': 12345,
@@ -140,29 +146,66 @@ _import_landscapes()
 default.update(dialects.default)
 configs.update(dialects.configs)
 
-#==============================================================================
+#=======================================================================
 
 def _load_module(folder, mod_name):
-    '''Loads a module. Modules are loaded using ``exec`` rather than
-    ``__import__`` to allow errors in the module to appear naturally
-    rather than as an ``ImportError``.
+    '''Loads a module. A module may be either a configuration or a
+    plugin.
+    
+    If either the file ``<folder>\<mod_name.replace('.', '\')>.py`` or 
+    ``<folder>\<mod_name.replace('.', '\')>\__init__.py`` exist, the
+    ``__import__`` function is used to load the module.
+    
+    Otherwise, if the file ``<folder>\<mod_name>.py`` exists, the
+    ``exec`` statement is used to load the module.
+    
+    In either case, all exceptions are passed to the caller.
+    
+    :Parameters:
+      folder : string
+        The name of the folder to look in. This is normally either
+        ``'cfgs'`` or ``'plugins'``. It may not include periods.
+      
+      mod_name : string
+        The name of the module to load. This may include periods if the
+        module is nested within multiple packages.
+    
+    :Returns:
+        A dictionary containing elements for ``batch``, ``config``,
+        ``configs``, ``defaults`` and ``settings``, with ``None`` as the
+        value if the variable does not exist in the imported module.
+        
+        Returns ``None`` if the module cannot be found.
     '''
-    py_source = os.path.join(folder, mod_name + '.py')
-    if os.path.exists(py_source):
-        # This is a standard plugin file
-        
-        with open(py_source) as source:
-            code_object = compile(source.read(), mod_name, 'exec')
-        
-        items = {}
-        exec code_object in items   #pylint: disable=W0122
+    mod_file = os.path.join(*mod_name.split('.')) if '.' in mod_name else mod_name
+    py_import = os.path.join(folder, mod_file + '.py')
+    init_import = os.path.join(folder, mod_file, '__init__.py')
+    py_file = os.path.join(folder, mod_name + '.py')
+    
+    if os.path.exists(py_import) or os.path.exists(init_import):
+        source = folder + '.' + mod_name
+        mod = __import__(source)
+        for bit in mod_name.split('.'):
+            mod = getattr(mod, bit)
         
         return {
-            'batch': items.get('batch', None),
-            'config': items.get('config', None),
-            'configs': items.get('configs', None),
-            'defaults': items.get('defaults', None),
-            'settings': items.get('settings', None),
+            'batch': getattr(mod, 'batch', None),
+            'config': getattr(mod, 'config', None),
+            'configs': getattr(mod, 'configs', None),
+            'defaults': getattr(mod, 'defaults', None),
+            'settings': getattr(mod, 'settings', None),
+        }
+    elif os.path.exists(py_file):
+        mod = { }
+        with open(py_file) as source:
+            exec source.read() in mod
+        
+        return {
+            'batch': mod.get('batch', None),
+            'config': mod.get('config', None),
+            'configs': mod.get('configs', None),
+            'defaults': mod.get('defaults', None),
+            'settings': mod.get('settings', None),
         }
     else:
         return None
@@ -209,9 +252,9 @@ def _set_low_priority():
     else:
         warn("Don't know how to set low priority for " + sys.platform)
 
-#==============================================================================
+#=======================================================================
 # Run a single configuration
-#==============================================================================
+#=======================================================================
 def esec_run(options):
     '''Load a system configuration with results sent directly to the
     console or automatically named CSV files in results/.
@@ -287,9 +330,9 @@ def esec_run(options):
     print '->> DONE <<- in ', (time.clock() - start_time)
 
 
-#==============================================================================
+#=======================================================================
 # Batch processing...
-#==============================================================================
+#=======================================================================
 batch_settings_syntax = {
     'dry_run': bool,
     'start_at': int,
@@ -635,9 +678,9 @@ def esec_batch(options):
         tags_file.close()
         print 'Tag Run done!'
 
-#==============================================================================
+#=======================================================================
 # Entry point
-#==============================================================================
+#=======================================================================
 
 def main():
     '''The main entry point for ``run.py``.
