@@ -48,7 +48,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         'local_header':     [ ' Local:  ', '         ', None ],
         'repro_header':     [ ' Repro:  ', '         ', None ],
         
-        'best_bday':        [ ' b-date   ', ' %9d ', 'stats.global_max.birthday' ],
+        'best_bday':        [ ' b-date   ', '%9d ', 'stats.global_max.birthday' ],
         'best_fit_int':     [ '  fitness        ', '%16d ',   'stats.global_max.fitness.simple' ],
         'best_fit_float':   [ '  fitness        ', '%16.3e ', 'stats.global_max.fitness.simple' ],
         'best_fit':         [ '  fitness        ', '%16s ', 'stats.global_max.fitness' ],
