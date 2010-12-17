@@ -469,10 +469,6 @@ class TgpSpecies(Species):
             necessarily called from other ADFs or the root program.
             A root program is always created, regardless of this value.
           
-          constants : bool
-            ``True`` to allow random constants to be included. Defaults
-            to ``False``.
-          
           lowest_constant : float
             The lowest (inclusive) value of constant to create. If
             ``None`` or greater than `highest_constant`, constants are
