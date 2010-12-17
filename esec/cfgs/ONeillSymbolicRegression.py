@@ -18,39 +18,41 @@ from esec.landscape import ge
 config = {
     'landscape': {
         'class': ge.SymbolicRegression,
+        'size': { 'min': 4, 'max': 100 },
         'expr': 'X**4+X**3+X**2+X',
         'size_penalty_square_factor': 0.0,
         'size_penalty_linear_factor': 0.0,
     },
     'system': {
         'definition': r'''
-            FROM random_ge(grammar=default_grammar,defines=default_defines) SELECT (size) population
-            YIELD population
+FROM random_ge(grammar=default_grammar,defines=default_defines) SELECT (size) population
+YIELD population
 
-            BEGIN generation
-                REPEAT (size)
-                    FROM population SELECT 2 parents USING binary_tournament
-                    FROM parents    SELECT offspring USING crossover_one_different(per_pair_rate=0.9,longest_result=100), \
-                                                           mutate_random(per_gene_rate=0.01)
-                    
-                    FROM offspring      SELECT 1 replacer       USING best
-                    FROM population     SELECT 1 replacee, rest USING uniform_shuffle
-                    FROM replacer, rest SELECT population
-                END REPEAT
-                
-                YIELD population
-            END generation
-        ''',
+BEGIN generation
+    REPEAT (size)
+        FROM population SELECT 2 parents USING binary_tournament
+        FROM parents    SELECT 1 offspring \
+            USING crossover_one_different(per_pair_rate=0.9,longest_result=config.landscape.size.max), \
+                  mutate_insert(per_indiv_rate=0.1, longest_result=config.landscape.size.max), \
+                  mutate_random(per_gene_rate=0.01), \
+                  best
+        
+        FROM population      SELECT 1 replacee, rest USING uniform_shuffle
+        FROM offspring, rest SELECT population
+    END REPEAT
+    
+    YIELD population
+END generation''',
         'size': 500,
         'default_defines': ge.SymbolicRegression.defines,
         'default_grammar': ge.SymbolicRegression.rules,
     },
     'monitor': {
-        'report': 'brief+local_float+best_length+time',
+        'report': 'brief+local+best_length+time',
         'summary': 'status+brief+best_phenome',
         'limits': {
             'generations': 10000,
-            'fitness': -0.2,
+            'fitness': 0.2,
             'stable': 100,
         }
     },

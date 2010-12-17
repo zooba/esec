@@ -9,6 +9,7 @@ own new functions.
 
 '''
 
+from math import sqrt
 from esec.landscape import Landscape
 
 class GE(Landscape):
@@ -71,6 +72,7 @@ class Multiplexer(GE):
     '''
     
     lname = 'Boolean multiplexer'
+    maximise = True
     
     complex_rules = {
         '*': [ '"def Eval(T,V):" NEWLINE INC_INDENT Body Return DEC_INDENT' ],
@@ -123,7 +125,7 @@ class Multiplexer(GE):
             return inputs[addr + self.bits]
         
         self.test_cases = []
-        for i in xrange(2**self.bits):
+        for i in xrange(2**self.terminals):
             case = [(True if i & (1 << d) else False) for d in xrange(self.terminals)]
             self.test_cases += [(case, _eval(case))]
     
@@ -156,6 +158,7 @@ class SymbolicRegression(GE):
     '''
     
     lname = 'Symbolic Regression'
+    maximise = False
     
     defines = '''import math
 class F(float):
@@ -221,21 +224,25 @@ F1 = F(1.0)
         fitness = 0
         Eval = indiv.Eval       #pylint: disable=C0103
         
-        if Eval is None: return -1000.0
+        inf = float('inf')
+        if Eval is None: return inf
         
         for case in self.test_cases:
             try:
                 result = Eval(case[0])
-                if result is None: return -1000.0
-                fitness += abs(result - case[1])
+                if result is None: return inf
+                fitness += (result - case[1]) ** 2
             except KeyboardInterrupt:
                 raise
             except OverflowError:
-                return -1000.0
+                return inf
             except ValueError:
-                return -1000.0
+                return inf
         
         fitness += self._size_penalty(indiv)
         
-        return max(-fitness, -1000.0)
+        # Not worth reporting the fitness above this value
+        if fitness > 1.0e10: fitness = inf
+        
+        return sqrt(fitness)
 

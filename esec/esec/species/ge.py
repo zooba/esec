@@ -223,7 +223,7 @@ class GESpecies(IntegerSpecies):
         wrap_count = int(wrap_count)
         
         for indiv in self.init_random(length, shortest, longest, lowest, highest):
-            yield GEIndividual(indiv.genome,            #pyli nt: disable=W0212
+            yield GEIndividual(indiv.genome,
                                parent=self,
                                lower_bounds=indiv.lower_bounds,
                                upper_bounds=indiv.upper_bounds,
