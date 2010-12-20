@@ -49,6 +49,7 @@ class TGPFitness(Fitness):
 class TGP(Landscape):
     '''Abstract TGP fitness landscape'''
     ltype = 'TGP' # subclasses shouldn't change this
+    ltype_name = 'Genetic Programming'
     size_equals_parameters = False
     
     # this is universal - should not be changed by subclasses

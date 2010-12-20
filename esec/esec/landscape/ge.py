@@ -16,6 +16,7 @@ class GE(Landscape):
     '''Abstract GE fitness landscape
     '''
     ltype = 'GE' # subclasses shouldn't change this
+    ltype_name = 'Grammatical Evolution'
     size_equals_parameters = False
     
     # this is universal - should not be changed by subclasses

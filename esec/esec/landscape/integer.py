@@ -18,6 +18,7 @@ class Integer(Landscape):
     '''Abstract integer-valued parameter fitness landscape
     '''
     ltype = 'IVP' # subclasses shouldn't change this
+    ltype_name = 'Integer'
     
     # This is universal for Integer problems
     syntax = {

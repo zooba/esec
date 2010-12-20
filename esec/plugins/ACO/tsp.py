@@ -185,6 +185,7 @@ class Landscape(landscape.Landscape):
     '''TSP fitness landscape.
     '''
     ltype = 'ACO'
+    ltype_name = 'Ant Colony Optimisation'
     lname = 'TSP'
     maximise = False
     

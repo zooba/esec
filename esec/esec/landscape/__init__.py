@@ -88,6 +88,7 @@ class Landscape(object):
     '''
 
     ltype = '--base--' # problem type base classes should set this
+    ltype_name = 'Underived'    # pretty name for landscape types
     lname = '--none--' # problem type subclasses should overwrite this
     
     maximise = True # is the default objective maximise? (ie fitness)

@@ -19,6 +19,7 @@ class Real(Landscape):
     '''Abstract real-valued parameter fitness landscape
     '''
     ltype = 'RVP' # subclasses shouldn't change this
+    ltype_name = 'Real-value'
     
     # This is universal for Real problems
     syntax = {

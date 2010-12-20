@@ -31,6 +31,7 @@ class Binary(Landscape):
     '''Abstract binary (Boolean) string fitness landscape
     '''
     ltype = 'BVP' # subclasses shouldn't change this
+    ltype_name = 'Binary'
     
     syntax = { }
     default = { }
