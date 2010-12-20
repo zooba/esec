@@ -65,6 +65,11 @@ class System(object):
             'rand': rand,
             'notify': notify,
         }
+        
+        self.definition = self.cfg.system.definition
+        compiler = Compiler(self.definition)
+        compiler.externals.extend(context.iterkeys())
+        
         overrides = self.cfg.system.as_dict()
         for key, value in overrides.iteritems():
             if isinstance(key, str):
@@ -72,6 +77,7 @@ class System(object):
                 if key_lower in context:
                     warn("Overriding variable/function '%s'" % key_lower)
                 context[key_lower] = value
+                compiler.externals.append(key_lower)
             else:
                 warn('System dictionary contains non-string key %r' % key)
         
@@ -80,8 +86,6 @@ class System(object):
             if hasattr(inst, 'public_context'):
                 context.update(inst.public_context)
         
-        self.definition = self.cfg.system.definition
-        compiler = Compiler(self.definition)
         compiler.compile()
         
         global_context.context = context
@@ -96,9 +100,6 @@ class System(object):
         self.selector_current = iter(self.selector)
         context['_on_yield'] = lambda name, group: self.monitor.on_yield(self, name, group)
         
-        for var in compiler.uninit:
-            if var not in context:
-                warn("Variable '%s' is not initialised." % var)
         for func in compiler.filters:
             if func not in context:
                 context[func] = OnIndividual(func)

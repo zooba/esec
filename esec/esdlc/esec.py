@@ -155,7 +155,10 @@ class _born_iter(object):
     
     def write_variable(self, node):
         '''Emits text for variable nodes.'''
-        yield self.safe_variable(node.name)
+        if node.implicit:
+            yield 'globals().get("%s", True)' % self.safe_variable(node.name)
+        else:
+            yield self.safe_variable(node.name)
     
     def write_unknown(self, node):
         '''Emits text for unknown nodes.'''
@@ -263,7 +266,10 @@ class _born_iter(object):
     def write_block(self, node):
         '''Emits code for an entire named block.'''
         parameters = sorted(self.safe_argument(n) for n in node.variables_in.iterkeys())
-        returned = sorted(self.safe_argument(n) for n in set(node.variables_out) & set(self.ast.globals.iterkeys()))
+        
+        vars_out = [key for key, value in node.variables_out.iteritems() 
+                    if not all(v.tag == 'variable' and v.external for v in value)]
+        returned = sorted(self.safe_argument(n) for n in set(vars_out) & set(self.ast.globals.iterkeys()))
         global_vars = sorted(self.safe_variable(n) for n in returned) # variable is stricter than argument
         arguments = ['_copy(' + n + ')' if n in global_vars else n for n in parameters]
         
@@ -279,6 +285,9 @@ class _born_iter(object):
             yield self.INDENT + ', '.join(local_groups) + ' = ' + ', '.join('[]' for _ in local_groups)
         
         for child in node.children:
+            if child.tag in ('variable', 'comment'):
+                continue
+            
             for line in self.write(child):
                 yield self.INDENT + line
         yield self.INDENT + 'return ' + returned

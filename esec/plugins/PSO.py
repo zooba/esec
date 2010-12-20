@@ -295,7 +295,7 @@ BEGIN GENERATION
     JOIN population, p_bests INTO pairs USING tuples
     
     FROM pairs SELECT population USING \
-         update_velocity(global_best=global_best, w=inertia, c1=c1, c2=c2, constriction=True), \
+         update_velocity(global_best, w=inertia, c1, c2, constriction), \
          update_position_clamp
     
     JOIN population, p_bests INTO pairs USING tuples

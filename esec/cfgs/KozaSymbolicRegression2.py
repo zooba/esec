@@ -100,8 +100,8 @@ config = {
                     SELECT (0.9*size) to_cross, (0.02*size) to_mutate, (size) to_reproduce \
                     USING fitness_proportional
                 
-                FROM to_cross SELECT offspring1 USING crossover_one(deepest_result=15, terminal_prob=0.1)
-                FROM to_mutate SELECT offspring2 USING mutate_random(deepest_result=15)
+                FROM to_cross SELECT offspring1 USING crossover_one(deepest_result, terminal_prob=0.1)
+                FROM to_mutate SELECT offspring2 USING mutate_random(deepest_result)
                 
                 FROM offspring1, offspring2, to_reproduce SELECT (size) population \
                      USING mutate_edit(per_indiv_rate=0.1)
@@ -109,13 +109,14 @@ config = {
                 YIELD population
             END generation
         ''',
-        'size': 300
+        'size': 300,
+        'deepest_result': 15,
     },
     'monitor': {
         'report': 'gen+births+best+local+best_length+time_delta',
         'summary': 'status+best+best_length+best_phenome',
         'limits': {
-            'generations': 100,
+            'iterations': 100,
             'fitness': TGPFitness([-0.1, 7]),
         }
     },

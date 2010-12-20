@@ -31,12 +31,14 @@ class Compiler(object):
         
         self.blocks = None
         '''A list of blocks in the order they were specified.'''
-        self.uninit = None
-        '''A list of uninitialised variables that need to be provided
-        externally.
-        '''
         self.filters = None
         '''A list of filters required by the system.'''
+        self.externals = [ ]
+        '''A list of variables that are initialised externally. This
+        should be extended by the caller prior to calling `compile` to
+        avoid uninitialised variable warnings and to properly handle
+        implicit parameters.
+        '''
         self.code = None
         '''Compiled Python code implementing `source_code`.'''
     
@@ -48,12 +50,11 @@ class Compiler(object):
         `source_code`. Further errors may be raised when executing the
         code produced.
         '''
-        ast = compileESDL(self.source_code)
+        ast = compileESDL(self.source_code, self.externals)
         if ast.errors:
             raise ExceptionGroup("Compiler", ast.errors)
-        for warning in ast.get_warnings(False):
+        for warning in ast.get_warnings():
             warn(str(warning))
-        self.uninit = ast.uninitialised
         
         self.blocks = [block.name for block in sorted(ast.blocks.itervalues(), key=lambda i: i.index)]
         self.filters = ast.filters

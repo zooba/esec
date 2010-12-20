@@ -100,6 +100,10 @@ def test_BacktickNode_parse():
 
 def test_GroupNode_parse():
     def _v(n): return VariableNode(n, None)
+    def _vi(n):
+        v = VariableNode(n, None)
+        v.implicit = True
+        return v
     def _f(n, **kw): return FunctionNode(n, None, **kw)
     def _p(s): return UnknownNode.parse(list(_tokenise(s)), 0)[1]
     
@@ -120,6 +124,7 @@ def test_GroupNode_parse():
         ("var 1", _v("var"), None),
         # using a _list for size is caught by Verifier
         ("[1,2] v", _v("v"), _f("_list", **{"#0": _p("1"), "#1": _p("2")})),
+        ("var (group)", _f("var", group=_vi("group")), None),  # group is an implicit parameter
         ]:
         yield check_Node_parse, source, GroupNode, GroupNode(expect_group, expect_size, None)
     
@@ -128,7 +133,6 @@ def test_GroupNode_parse():
         ("-1", error.ExpectedGroupError),   # _uop_- is not a generator
         ("1+1", error.ExpectedGroupError),  # _op_+ is not a generator
         ("v=1", error.ExpectedGroupError),  # _assign is not a generator
-        ("var (group)", error.ExpectedParameterValueError),  # var (group) is a bad function call
         ]:
         yield check_Node_parse_fail, source, GroupNode, expect
 
