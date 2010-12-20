@@ -19,13 +19,22 @@ class ESDLSyntaxErrorBase(BaseException):
     code = "E0000"
     default_message = "Unspecified error"
     
-    def __init__(self, token, *args, **kwargs):
+    def __init__(self, tokens, *args, **kwargs):
         super(ESDLSyntaxErrorBase, self).__init__()
         self.message = kwargs.get('message', self.default_message)
         if ('%' in self.message) and args:
             try: self.message = self.message % args
             except TypeError: pass
-        self.line, self.col = token.line, token.col
+        if isinstance(tokens, list):
+            self.text = text = ''
+            tokens = sorted(tokens)
+            self.line, self.col = tokens[0].line, tokens[0].col
+            self.length = tokens[-1].col + len(tokens[-1].value) - tokens[0].col
+            for token in tokens:
+                text += token.value
+        else:
+            self.line, self.col = tokens.line, tokens.col
+            self.text, self.length = tokens.value, len(tokens.value)
         self.as_tuple = (self.line, self.col, self.code, self.message)
     
     @property

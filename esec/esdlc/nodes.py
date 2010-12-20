@@ -588,12 +588,12 @@ class GroupNode(NodeBase):
         assert not size or isinstance(size, NodeBase), "size must be an AST node (" + repr(type(size)) + ")"
         
         if group.tag not in ('function', 'variable'):
-            raise error.ExpectedGroupError(min(group.tokens))
+            raise error.ExpectedGroupError(group.tokens)
         
         self.tag = 'group'
         if group.tag == 'function':
             if group.name.startswith(('_op_', '_uop_', '_assign', '_list', '_getattr', '_getitem', '_call')):
-                raise error.ExpectedGroupError(min(group.tokens))
+                raise error.ExpectedGroupError(group.tokens)
             self.tag = 'generator'
         self.group = group
         self.size = size
@@ -699,8 +699,8 @@ class FromNode(NodeBase):
         if not dest_list: raise error.ExpectedGroupError(token or tokens[-1])
         for dest in dest_list:
             if not dest.group: raise error.ExpectedGroupError(token or tokens[-1])
-            if dest.tag == 'generator': raise error.GeneratorAsDestinationError(dest.group.tokens[0])
-            elif dest.tag != 'group': raise error.ExpectedGroupError(dest.group.tokens[0])
+            if dest.tag == 'generator': raise error.GeneratorAsDestinationError(dest.group.tokens)
+            elif dest.tag != 'group': raise error.ExpectedGroupError(dest.group.tokens)
         
         if not token:
             return token_i, FromNode(source_list, dest_list, using, tokens[first_token:token_i])
@@ -798,8 +798,8 @@ class JoinNode(NodeBase):
         if not dest_list: raise error.ExpectedGroupError(token or tokens[-1])
         for dest in dest_list:
             if not dest.group: raise error.ExpectedGroupError(token or tokens[-1])
-            if dest.tag == 'generator': raise error.GeneratorAsDestinationError(dest.group.tokens[0])
-            elif dest.tag != 'group': raise error.ExpectedGroupError(dest.group.tokens[0])
+            if dest.tag == 'generator': raise error.GeneratorAsDestinationError(dest.group.tokens)
+            elif dest.tag != 'group': raise error.ExpectedGroupError(dest.group.tokens)
         
         if not token:
             return token_i, JoinNode(source_list, dest_list, using, tokens[first_token:token_i])
@@ -867,7 +867,7 @@ class EvalNode(NodeBase):
         if not source_list: raise error.ExpectedGroupError(token)
         for src in source_list:
             if not src.group: raise error.ExpectedGroupError(token)
-            if src.group.tag != 'variable': raise error.ExpectedGroupError(src.group.tokens[0])
+            if src.group.tag != 'variable': raise error.ExpectedGroupError(src.group.tokens)
         
         using_list = []
         token_i += 1

@@ -2,7 +2,7 @@
 '''
 from __future__ import absolute_import
 import esdlc.errors as error
-from esdlc.nodes import ValueNode
+from esdlc.nodes import NodeBase, ValueNode
 
 # ======================================================================
 # Helper functions.
@@ -270,10 +270,11 @@ class Verifier(object):
         must be retained between blocks.
         '''
         
-        ast.globals = global_vars = dict(ast.init_block.variables_out)
+        ast.globals = global_vars = dict(ast.init_block.variables_in)
+        _add(global_vars, ast.init_block.variables_out)
         
         for block in ast.blocks.itervalues():
-            global_vars.update(block.variables_in)
+            _add(global_vars, block.variables_in)
         
         return []
     
@@ -393,7 +394,7 @@ class Verifier(object):
             for var in block.variables_out:
                 if var in ast.blocks: error_ambiguous.add(var)
         
-        return [error.AmbiguousVariableBlockNameError(min(ast.blocks[name].tokens), name)
+        return [error.AmbiguousVariableBlockNameError(ast.blocks[name].tokens, name)
                 for name in error_ambiguous]
     
     # ==================================================================
@@ -419,7 +420,7 @@ class Verifier(object):
                             distinct_dests.remove(dest.group.name)
                         else:
                             duplicate_dests.append(dest)
-                    errors.extend(error.RepeatedDestinationGroupError(min(dest.tokens), dest.group.name)
+                    errors.extend(error.RepeatedDestinationGroupError(dest.group.tokens, dest.group.name)
                                   for dest in duplicate_dests)
                 
                 # Detect groups appearing after an unbounded group
@@ -428,19 +429,19 @@ class Verifier(object):
                     if all_bounded:
                         if dest.size is None: all_bounded = False
                     else:
-                        errors.append(error.UnusedGroupError(min(dest.tokens), dest.group.name))
+                        errors.append(error.UnusedGroupError(dest.group.tokens, dest.group.name))
                 
                 # Detect group sizes specified as a list
-                errors.extend(error.InvalidGroupSizeError(min(dest.tokens), dest.group.name)
+                errors.extend(error.InvalidGroupSizeError(dest.size.tokens, dest.group.name)
                               for dest in dests
                               if dest.size and dest.size.tag == 'function' and dest.size.name == '_list')
                 
                 sources = node.sources
                 
                 # Detect sizes specified on source groups
-                errors.extend(error.UnexpectedGroupSizeError(min(src.tokens), src.group.name)
+                errors.extend(error.UnexpectedGroupSizeError(src.tokens, src.group.name)
                               for src in sources
-                              if getattr(src, 'size', None))
+                              if isinstance(getattr(src, 'size', None), NodeBase))
             
             elif node.tag in ('block', 'repeat'):
                 errors.extend(cls._verify_groups(ast, node))

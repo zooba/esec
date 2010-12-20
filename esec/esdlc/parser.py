@@ -21,6 +21,7 @@ class AST(object):
         self.source_lines = []
         self._errors = []
         self.filters = []
+        self.uninitialised = None
     
     @property
     def errors(self):
@@ -82,7 +83,7 @@ class AST(object):
                     
                     name = statement[1].value.lower()
                     block_index += 1
-                    self.blocks[name] = current_block = BlockNode(name, block_index, [token])
+                    self.blocks[name] = current_block = BlockNode(name, block_index, statement)
                     block_stack.append(current_block)
                 
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
