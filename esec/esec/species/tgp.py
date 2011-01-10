@@ -153,11 +153,21 @@ class Instruction(object):
         self.func = func
         self.param_count = param_count
         self.name = name
-    def __call__(self, *params):    return self.func(*params)
-    def __str__(self):              return self.name
-    def __repr__(self):             return "%s(%s)" % (self.name, ','.join('*' * self.param_count))
-    def __eq__(self, other):        return isinstance(other, Instruction) and other.func == self.func
-    def __ne__(self, other):        return not self.__eq__(other)
+    
+    def __call__(self, state, *params):
+        return self.func(*params)
+    
+    def __str__(self):       return self.name
+    def __repr__(self):      return "%s(%s)" % (self.name, ','.join('*' * self.param_count))
+    def __eq__(self, other): return isinstance(other, Instruction) and other.func == self.func
+    def __ne__(self, other): return not self.__eq__(other)
+
+class InstructionWithState(Instruction):
+    '''Represents instruction nodes where the first parameter of 
+    ``func`` receives a state object global to the execution.
+    '''
+    def __call__(self, state, *params):
+        return self.func(state, *params)
 
 class Terminal(object):
     '''Represents terminal nodes providing constant values.'''
@@ -173,11 +183,14 @@ class Terminal(object):
         '''
         self.index = index
         self.param_count = 0
-    def __call__(self, terminals):  return terminals[self.index]
-    def __str__(self):              return 'T%02d' % self.index
-    def __repr__(self):             return "Terminal(%d)" % self.index
-    def __eq__(self, other):        return isinstance(other, Terminal) and other.index == self.index
-    def __ne__(self, other):        return not self.__eq__(other)
+    
+    def __call__(self, state, terminals):
+        return terminals[self.index]
+    
+    def __str__(self):       return 'T%02d' % self.index
+    def __repr__(self):      return "Terminal(%d)" % self.index
+    def __eq__(self, other): return isinstance(other, Terminal) and other.index == self.index
+    def __ne__(self, other): return not self.__eq__(other)
 
 class CallAdf(object):
     '''Represents terminal nodes referencing the result of an ADF.'''
@@ -193,6 +206,10 @@ class CallAdf(object):
         '''
         self.index = index
         self.param_count = 0
+    
+    def __call__(self, state, *params):
+        assert False, "CallAdf objects should not be called directly."
+    
     def __str__(self):              return 'ADF%d' % self.index
     def __repr__(self):             return "CallAdf(%d)" % self.index
     def __eq__(self, other):        return isinstance(other, CallAdf) and other.index == self.index
@@ -209,7 +226,10 @@ class Constant(object):
         '''
         self.value = value
         self.param_count = 0
-    def __call__(self, *params):    return self.value
+    
+    def __call__(self, state, *params):
+        return self.value
+    
     def __str__(self):              return str(self.value)
     def __repr__(self):             return repr(self.value)
     def __eq__(self, other):        return isinstance(other, Constant) and other.value == self.value
@@ -244,7 +264,7 @@ class TgpSpecies(Species):
             'mutate_edit': OnIndividual('mutate_edit'),
         }
     
-    def evaluate(self, indiv, terminals, adf_index=0):
+    def evaluate(self, indiv, state=None, terminals=None, adf_index=0):
         '''Evaluates the given individual against the specified set of terminals
         and returns the result.
         
@@ -254,6 +274,10 @@ class TgpSpecies(Species):
           indiv : `TgpIndividual`
             A particular individual to evaluate. The entire individual is
             required to allow any referenced ADFs to be evaluated.
+          
+          state : anything
+            A caller-specified object that is passed directly to every
+            `InstructionWithSideEffects` object.
           
           terminals : list/tuple
             A list of terminal values to use. Terminals are references by
@@ -265,6 +289,7 @@ class TgpSpecies(Species):
             This parameter is used internally for `CallAdf` instructions.
         '''
         assert isinstance(indiv, TgpIndividual), "individual must be TgpIndividual"
+        if terminals is None: terminals = []
         assert isinstance(terminals, (list, tuple)), "terminals must be list/tuple type"
         assert len(terminals) >= indiv.terminals, "terminals does not have enough values"
         
@@ -277,12 +302,12 @@ class TgpSpecies(Species):
                 op_stack.append([op])   # not extend
             elif isinstance(op, (Terminal, Constant)):
                 # Add this terminal or constant to the topmost instruction
-                val = op(terminals)
+                val = op(state, terminals)
                 if op_stack: op_stack[-1].append(val)
                 else: return val
             elif isinstance(op, CallAdf):
                 # Add the result of this ADF to the topmost instruction
-                val = self.evaluate(indiv, terminals, op.index)
+                val = self.evaluate(indiv, state, terminals, op.index)
                 if op_stack: op_stack[-1].append(val)
                 else: return val
             
@@ -290,9 +315,9 @@ class TgpSpecies(Species):
             while op_stack and (len(op_stack[-1]) == op_stack[-1][0].param_count + 1):
                 item = op_stack.pop()
                 if op_stack:
-                    op_stack[-1].append(item[0](*item[1:]))
+                    op_stack[-1].append(item[0](state, *item[1:]))
                 else:
-                    return item[0](*item[1:])
+                    return item[0](state, *item[1:])
     
     def depth(self, program):   #pylint: disable=R0201
         '''Returns the depth of a given program.

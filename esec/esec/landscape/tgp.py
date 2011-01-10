@@ -132,7 +132,7 @@ class Multiplexer(TGP):
         assert indiv.terminals >= self.terminals, "At least %d terminals required" % self.terminals
         fitness = 0
         for case in self.test_cases:
-            result = indiv.evaluate(indiv, case[0])
+            result = indiv.evaluate(indiv, terminals=case[0])
             fitness += 1 if (result == case[1]) else 0
         
         cost = self._size_penalty(indiv)
@@ -177,7 +177,7 @@ class SymbolicRegression(TGP):
         fitness = 0
         for case in self.test_cases:
             try:
-                result = indiv.evaluate(indiv, case[0])
+                result = indiv.evaluate(indiv, terminals=case[0])
                 fitness -= abs(result - case[1])
             except KeyboardInterrupt:
                 raise

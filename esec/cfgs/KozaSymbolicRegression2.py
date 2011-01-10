@@ -72,7 +72,9 @@ def symbolic_regression(indiv):
     n = 20
     for _ in xrange(n):
         x = rand.random()
-        error += (test_expression(x) - indiv.evaluate(indiv, [x])) ** 2
+        expected = test_expression(x)
+        actual = indiv.evaluate(indiv, terminals=[x])
+        error += (expected - actual) ** 2
     score = -sqrt(error / n)
     
     return TGPFitness([score, len(indiv[0])])
