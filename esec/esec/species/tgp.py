@@ -97,11 +97,11 @@ class TgpIndividual(Individual):
                 for op in program:
                     if done: break
                     
-                    if isinstance(op, Instruction):
+                    if isinstance(op, Instruction) and op.param_count:
                         # Add a new item for this instruction
                         result += '  ' * len(op_stack) + '( ' + str(op) + '\n'
                         op_stack.append([op])   # not extend
-                    elif isinstance(op, (Terminal, CallAdf, Constant)):
+                    else:
                         # Add this terminal/call to the topmost instruction
                         result += '  ' * len(op_stack) + str(op) + '\n'
                         if op_stack: op_stack[-1].append(op)
@@ -168,6 +168,40 @@ class InstructionWithState(Instruction):
     '''
     def __call__(self, state, *params):
         return self.func(state, *params)
+
+class DecisionInstruction(Instruction):
+    '''Represents instruction nodes that select one of their parameters
+    to evaluate. No parameter is evaluated before selection, and the
+    results are not available prior to selection.
+    
+    The ``func`` function must return an index between 1 and
+    ``param_count``, inclusive, identifying the sub-tree to execute.
+    '''
+    def __call__(self, state):
+        return self.func()
+
+class DecisionInstructionWithState(DecisionInstruction):
+    '''Represents instruction nodes that select one of their parameters
+    to evaluate. No parameter is evaluated before selection, and the
+    results are not available prior to selection.
+    
+    The ``func`` function must return an index between 1 and
+    ``param_count``, inclusive, identifying the sub-tree to execute.
+    '''
+    def __call__(self, state):
+        return self.func(state)
+
+class ListInstruction(Instruction):
+    '''Represents a combining instruction that evaluates all its
+    parameters in order and returns them in a list.
+    '''
+    def __init__(self, param_count, name):
+        super(ListInstruction, self).__init__(self._combine, param_count, name)
+    
+    def _combine(self, state, *params):
+        '''Returns all the parameters as a list.
+        '''
+        return list(params)
 
 class Terminal(object):
     '''Represents terminal nodes providing constant values.'''
@@ -294,10 +328,45 @@ class TgpSpecies(Species):
         assert len(terminals) >= indiv.terminals, "terminals does not have enough values"
         
         op_stack = []
+        
+        # These are used to skip trees not evaluated due to a
+        # DecisionInstruction.
+        skip_1 = []  # nodes to skip before
+        take_1 = []  # nodes to take during
+        skip_2 = []  # nodes to skip after
+        
         assert 0 <= adf_index < len(indiv.genome), \
                "ADF index %d is not valid (must be [0, %d))" % (adf_index, len(indiv.genome))
-        for op in indiv.genome[adf_index]:
-            if isinstance(op, Instruction):
+        current_program = indiv.genome[adf_index]
+        
+        for op_i, op in enumerate(current_program):
+            # Skip instructions if we need to
+            if skip_1 and skip_1[-1]:
+                skip_1[-1] -= 1
+                continue
+            elif take_1 and take_1[-1]:
+                take_1[-1] -= 1
+            elif skip_2 and skip_2[-1]:
+                skip_2[-1] -= 1
+                continue
+            if take_1 and take_1[-1] == 0 and skip_2 and skip_2[-1] == 0:
+                skip_1.pop()
+                take_1.pop()
+                skip_2.pop()
+            
+            
+            if isinstance(op, DecisionInstruction):
+                # Determine how many instructions to skip
+                selection = op(state) - 1
+                spans = [(op_i + 1, self._find_end(current_program, op_i + 1))]
+                for i in xrange(1, op.param_count):
+                    start = spans[-1][1]
+                    spans.append((start, self._find_end(current_program, start)))
+                skip_1.append(spans[selection][0] - spans[0][0])
+                take_1.append(spans[selection][1] - spans[selection][0])
+                skip_2.append(spans[-1][1] - spans[selection][1])
+                
+            elif isinstance(op, Instruction):
                 # Add a new item for this instruction
                 op_stack.append([op])   # not extend
             elif isinstance(op, (Terminal, Constant)):
@@ -333,7 +402,7 @@ class TgpSpecies(Species):
         op_stack = []
         max_depth = 1
         for op in program:
-            if isinstance(op, Instruction):
+            if isinstance(op, Instruction) and op.param_count:
                 # Add the parameter count for this instruction
                 op_stack.append(op.param_count)
                 if len(op_stack) > max_depth: max_depth = len(op_stack)
@@ -385,8 +454,8 @@ class TgpSpecies(Species):
           instructions : list(`Instruction`)
             The instruction set to select instructions from.
           
-          terminals : int |ge| 0
-            The number of terminals to allow for.
+          terminals : list
+            The terminals that may be selected.
           
           deepest : int > 0
             The deepest tree to allow.
@@ -434,6 +503,8 @@ class TgpSpecies(Species):
         frand = rand.random
         choice = rand.choice
         terminals = int(terminals or 0)
+        terminal_set = [Terminal(i) for i in xrange(terminals)] + [i for i in instructions if not i.param_count]
+        terminals = len(terminal_set)
         deepest = int(deepest or 0)
         adfs = int(adfs or 0)
         adf_index = int(adf_index or 0)
@@ -456,7 +527,7 @@ class TgpSpecies(Species):
                         value = frand() * (constant_bounds[1] - constant_bounds[0]) + constant_bounds[0]
                         root = [Constant(constant_type(value))]
                 else:
-                    root = [Terminal(i - constants)]
+                    root = [terminal_set[i - constants]]
             else:
                 root = [choice(instructions)]
                 for _ in xrange(root[0].param_count):
@@ -550,6 +621,9 @@ class TgpSpecies(Species):
             constant_bounds = None
         else:
             constant_bounds = (lowest_constant, highest_constant)
+        
+        instructions_list = [i for i in instructions if i.param_count]
+        terminals_list = terminals
         
         while True:
             genes = [self._init_one(instructions,
