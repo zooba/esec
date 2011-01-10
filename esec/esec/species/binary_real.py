@@ -5,8 +5,8 @@ from esec.individual import Individual
 from esec.context import rand
 from esec.species.binary import BinarySpecies
 
-# Disabled: method could be a function, too many parameters
-#pylint: disable=R0201,R0913
+# Disabled: method could be a function, too many parameters, too many public methods
+#pylint: disable=R0201,R0913,R0904
 
 # Override Individual to provide a binary individual with a real-valued phenotype.
 class BinaryRealIndividual(Individual):
@@ -119,6 +119,11 @@ class BinaryRealSpecies(BinarySpecies):
         # disable length-varying commands
         self.mutate_insert = None
         self.mutate_delete = None
+    
+    def legal(self, indiv):
+        '''Determines whether `indiv` is legal.'''
+        assert isinstance(indiv, BinaryRealIndividual), "Expected BinaryRealIndividual"
+        return all(p in (0, 1) for p in indiv)
     
     @classmethod
     def ones_complement_mapping(cls, genes, lowest, highest):

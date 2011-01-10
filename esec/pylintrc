@@ -21,7 +21,8 @@ load-plugins=
 # W0704: Except doesn't do anything Used when an except clause does nothing but "pass" 
 #        and there is no "else" clause.
 # I0011: Locally disabling (message)
-disable=C0321,W0105,W0142,W0704,I0011
+# R0921: Abstract class not referenced
+disable=C0321,W0105,W0142,W0704,I0011,R0921
 
 [REPORTS]
 

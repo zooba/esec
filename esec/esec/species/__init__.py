@@ -13,8 +13,18 @@ A species determines the type and range of gene values contained in
    :style: UML
 '''
 
+from itertools import chain, islice, izip
 from esec.context import notify, rand
 from esec.utils import merge_cls_dicts, cfg_validate, ConfigDict
+
+def _pairs(source):
+    '''Returns pairs of values from `source`.
+    
+    Equivalent to ``zip(source[::2], source[1::2])`` but doesn't
+    require `source` to be a list.
+    '''
+    while True:
+        yield next(source), next(source)
 
 class Species(object):
     '''Abstract base class for species descriptors.
@@ -85,8 +95,22 @@ class Species(object):
         :see: Individual.statistic
         '''
     
+    def legal(self, indiv): #pylint: disable=W0613,R0201
+        '''Determines whether the specified individual is legal.
+        
+        By default, this function always returns ``True``. Subclasses
+        may override this to perform range or bounds checking or other
+        verification appropriate to the species.
+        
+        :See: esec.individual.Individual.legal
+        '''
+        return True
+    
     #pylint: disable=R0201
-    def mutate_insert(self, _source, per_indiv_rate=0.1, length=None, shortest=1, longest=10, longest_result=20):
+    def mutate_insert(self, _source,
+                      per_indiv_rate=0.1,
+                      length=None, shortest=1, longest=10,
+                      longest_result=20):
         '''Mutates a group of individuals by inserting random gene
         sequences.
         
@@ -163,7 +187,10 @@ class Species(object):
                 yield indiv
     
     #pylint: disable=R0201
-    def mutate_delete(self, _source, per_indiv_rate=0.1, length=None, shortest=1, longest=10, shortest_result=1):
+    def mutate_delete(self, _source,
+                      per_indiv_rate=0.1,
+                      length=None, shortest=1, longest=10,
+                      shortest_result=1):
         '''Mutates a group of individuals by deleting random gene
         sequences.
         
@@ -240,11 +267,507 @@ class Species(object):
                         yield indiv
             else:
                 yield indiv
+    
+    def crossover_uniform(self, _source,
+                          per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5,
+                          discrete=False,
+                          one_child=False, two_children=None):
+        '''Performs uniform crossover by selecting genes at random from
+        one of two individuals.
+        
+        Returns a sequence of crossed individuals based on the individuals
+        in `_source`.
+        
+        If `one_child` is ``True`` (or `two_children` is ``False``), the
+        number of individuals returned is half the number of individuals in
+        `_source`, rounded towards zero.
+        
+        If `one_child` is ``False`` (or `two_children` is ``True``), the
+        number of individuals returned is the largest even number less than
+        or equal to the number of individuals in `_source`.
+        
+        .. include:: epydoc_include.txt
+        
+        :Parameters:
+          _source : iterable(`Individual`)
+            A sequence of individuals. Individuals are taken two at a time
+            from this sequence, recombined to produce two new individuals,
+            and yielded separately.
+          
+          per_pair_rate : |prob|
+            The probability of any particular pair of individuals being
+            recombined. If two individuals are not recombined, they are
+            returned unmodified. If this is ``None``, the value of
+            `per_indiv_rate` is used.
+          
+          per_indiv_rate : |prob|
+            A synonym for `per_pair_rate`.
+          
+          per_gene_rate : |prob|
+            The probability of any particular pair of genes being swapped.
+          
+          discrete : bool
+            If ``True``, uses discrete recombination, where source genes
+            may be copied rather than exchanged, resulting in the same
+            value appearing in both offspring.
+          
+          one_child : bool
+            If ``True``, only one child is returned from each crossover
+            operation.
+            
+            If `two_children` is specified, its value is used instead of
+            this.
+          
+          two_children : bool
+            If ``True``, both children are returned from each crossover
+            operation. If ``False``, only one is.
+            
+            If ``None``, the value of `one_child` is used instead (with the
+            opposite meaning to `two_children`).
+        '''
+        if per_pair_rate is None: per_pair_rate = per_indiv_rate
+        if two_children is not None: one_child = not two_children
+        if per_pair_rate <= 0.0 or per_gene_rate <= 0.0:
+            if one_child:
+                skip = True
+                for indiv in _source:
+                    if not skip: yield indiv
+                    skip = not skip
+            else:
+                for indiv in _source:
+                    yield indiv
+            raise StopIteration
+        
+        do_all_pairs = (per_pair_rate >= 1.0)
+        do_all_genes = (per_gene_rate >= 1.0)
+        
+        frand = rand.random
+        
+        for i1, i2 in _pairs(_source):
+            if do_all_pairs or frand() < per_pair_rate:
+                i1_genome, i2_genome = i1.genome, i2.genome
+                i1_len, i2_len = len(i1_genome), len(i2_genome)
+                
+                new_genes1 = list(i1_genome)
+                new_genes2 = list(i2_genome)
+                for i in xrange(i1_len if i1_len < i2_len else i2_len):
+                    if do_all_genes or frand() < per_gene_rate:
+                        if discrete:
+                            new_genes1[i] = i1_genome[i] if frand() < 0.5 else i2_genome[i]
+                            new_genes2[i] = i1_genome[i] if frand() < 0.5 else i2_genome[i]
+                        else:
+                            new_genes1[i] = i2_genome[i]
+                            new_genes2[i] = i1_genome[i]
+                
+                i1 = type(i1)(new_genes1, i1, statistic={ 'recombined': 1 })
+                i2 = type(i2)(new_genes2, i2, statistic={ 'recombined': 1 })
+            
+            if one_child:
+                yield i1 if frand() < 0.5 else i2
+            else:
+                yield i1
+                yield i2
 
-JoinedSpecies = Species({ }, None)      #pylint: disable=C0103
-'''Placeholder class for joined individuals. (Joined individuals do
-not have a species.)
-'''
+    def crossover_discrete(self, _source,
+                           per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=1.0,
+                           one_child=False, two_children=None):
+        '''A specialisation of `crossover_uniform` for discrete
+        crossover.
+        
+        Note that `crossover_discrete` has a different default value for
+        `per_gene_rate` to `crossover_uniform`.
+        '''
+        return self.crossover_uniform(
+            _source=_source,
+            per_pair_rate=per_pair_rate, per_indiv_rate=per_indiv_rate,
+            per_gene_rate=per_gene_rate,
+            discrete=True,
+            one_child=one_child, two_children=two_children)
+    
+    def crossover(self, _source,
+                  points=1,
+                  per_pair_rate=None, per_indiv_rate=1.0,
+                  one_child=False, two_children=None):
+        '''Performs crossover by selecting a `points` points common to
+        both individuals and exchanging the sequences of genes to the
+        right (including the selection).
+        
+        Returns a sequence of crossed individuals based on the
+        individuals in `_source`.
+        
+        If `one_child` is ``True`` (or `two_children` is ``False``), the
+        number of individuals returned is half the number of individuals
+        in `_source`, rounded towards zero.
+        
+        If `one_child` is ``False`` (or `two_children` is ``True``), the
+        number of individuals returned is the largest even number less
+        than or equal to the number of individuals in `_source`.
+        
+        .. include:: epydoc_include.txt
+        
+        :Parameters:
+          _source : iterable(`Individual`)
+            A sequence of individuals. Individuals are taken two at a
+            time from this sequence, recombined to produce two new
+            individuals, and yielded separately.
+          
+          points : int |ge| 1
+            The number of points to cross at. If zero, individuals are
+            returned unmodified (respecting the setting of
+            `one_child`/`two_children`). If greater than the length of
+            the individual, every gene will be exchanged.
+          
+          per_pair_rate : |prob|
+            The probability of any particular pair of individuals being
+            recombined. If two individuals are not recombined, they are
+            returned unmodified. If this is ``None``, the value of
+            `per_indiv_rate` is used.
+          
+          per_indiv_rate : |prob|
+            A synonym for `per_pair_rate`.
+          
+          one_child : bool
+            If ``True``, only one child is returned from each crossover
+            operation.
+            
+            If `two_children` is specified, its value is used instead of
+            this.
+          
+          two_children : bool
+            If ``True``, both children are returned from each crossover
+            operation. If ``False``, only one is.
+            
+            If ``None``, the value of `one_child` is used instead (with
+            the opposite meaning to `two_children`).
+        '''
+        if per_pair_rate is None: per_pair_rate = per_indiv_rate
+        if two_children is not None: one_child = not two_children
+        if per_pair_rate <= 0.0 or points < 1:
+            if one_child:
+                skip = True
+                for indiv in _source:
+                    if not skip: yield indiv
+                    skip = not skip
+            else:
+                for indiv in _source:
+                    yield indiv
+            raise StopIteration
+        
+        do_all_pairs = (per_pair_rate >= 1.0)
+        points = int(points)
+        
+        frand = rand.random
+        shuffle = rand.shuffle
+        
+        for i1, i2 in _pairs(_source):
+            if do_all_pairs or frand() < per_pair_rate:
+                i1_genome, i2_genome = i1.genome, i2.genome
+                i1_len, i2_len = len(i1_genome), len(i2_genome)
+                
+                if i1_len > points and i2_len > points:
+                    max_len = i1_len if i1_len < i2_len else i2_len
+                    cuts = list(xrange(1, max_len))
+                    shuffle(cuts)
+                    cuts = list(sorted(islice(cuts, points)))
+                    cuts.append(max_len)
+                    
+                    new_genes1 = list(i1_genome)
+                    new_genes2 = list(i2_genome)
+                    
+                    for cut_i, cut_j in _pairs(iter(cuts)):
+                        cut1 = islice(new_genes1, cut_i, cut_j)
+                        cut2 = islice(new_genes2, cut_i, cut_j)
+                        new_genes1 = list(chain(islice(new_genes1, cut_i),
+                                                cut2,
+                                                islice(new_genes1, cut_j, None)))
+                        new_genes2 = list(chain(islice(new_genes2, cut_i),
+                                                cut1,
+                                                islice(new_genes2, cut_j, None)))
+                    
+                    i1 = type(i1)(new_genes1, i1, statistic={ 'recombined': 1 })
+                    i2 = type(i2)(new_genes2, i2, statistic={ 'recombined': 1 })
+            if one_child:
+                yield i1 if frand() < 0.5 else i2
+            else:
+                yield i1
+                yield i2
+    
+    def crossover_one(self, _source,
+                      per_pair_rate=None, per_indiv_rate=1.0,
+                      one_child=False, two_children=None):
+        '''A specialisation of `crossover` for single-point crossover.
+        '''
+        return self.crossover(
+            _source,
+            points=1,
+            per_pair_rate=per_pair_rate, per_indiv_rate=per_indiv_rate,
+            one_child=one_child, two_children=two_children)
+    
+    def crossover_two(self, _source,
+                      per_pair_rate=None, per_indiv_rate=1.0,
+                      one_child=False, two_children=None):
+        '''A specialisation of `crossover` for two-point crossover.'''
+        return self.crossover(
+            _source,
+            points=2,
+            per_pair_rate=per_pair_rate, per_indiv_rate=per_indiv_rate,
+            one_child=one_child, two_children=two_children)
+    
+    def crossover_different(self, _source,  #pylint: disable=R0915
+                            points=1,
+                            per_pair_rate=None, per_indiv_rate=1.0,
+                            longest_result=None,
+                            one_child=False, two_children=None):
+        '''Performs multi-point crossover by selecting a point in each
+        individual and exchanging the sequence of genes to the right
+        (including the selection). The selected points are not
+        necessarily the same in each individual.
+        
+        Returns a sequence of crossed individuals based on the
+        individuals in `_source`.
+        
+        If `one_child` is ``True`` (or `two_children` is ``False``), the
+        number of individuals returned is half the number of individuals
+        in `_source`, rounded towards zero.
+        
+        If `one_child` is ``False`` (or `two_children` is ``True``), the
+        number of individuals returned is the largest even number less
+        than or equal to the number of individuals in `_source`.
+        
+        .. include:: epydoc_include.txt
+        
+        :Parameters:
+          _source : iterable(`Individual`)
+            A sequence of individuals. Individuals are taken two at a
+            time from this sequence, recombined to produce two new
+            individuals, and yielded separately.
+          
+          per_pair_rate : |prob|
+            The probability of any particular pair of individuals being
+            recombined. If two individuals are not recombined, they are
+            returned unmodified. If this is ``None``, the value of
+            `per_indiv_rate` is used.
+          
+          per_indiv_rate : |prob|
+            A synonym for `per_pair_rate`.
+          
+          longest_result : int [optional]
+            The longest new individual to create. The crossover points
+            are deliberately selected to avoid creating individuals
+            longer than this. If there is no way to avoid creating a
+            longer individual, the original individuals are returned and
+            an ``'aborted'`` notification is sent to the monitor from
+            ``'crossover_different'``.
+          
+          one_child : bool
+            If ``True``, only one child is returned from each crossover
+            operation.
+            
+            If `two_children` is specified, its value is used instead of
+            this.
+          
+          two_children : bool
+            If ``True``, both children are returned from each crossover
+            operation. If ``False``, only one is.
+            
+            If ``None``, the value of `one_child` is used instead (with
+            the opposite meaning to `two_children`).
+        '''
+        if per_pair_rate is None: per_pair_rate = per_indiv_rate
+        if two_children is not None: one_child = not two_children
+        if per_pair_rate <= 0.0 or points < 1:
+            if one_child:
+                skip = True
+                for indiv in _source:
+                    if not skip: yield indiv
+                    skip = not skip
+            else:
+                for indiv in _source:
+                    yield indiv
+            raise StopIteration
+        
+        do_all_pairs = (per_pair_rate >= 1.0)
+        points = int(points)
+        longest_result = int(longest_result or 0)
+        
+        frand = rand.random
+        shuffle = rand.shuffle
+        
+        for i1, i2 in _pairs(_source):
+            if do_all_pairs or frand() < per_pair_rate:
+                i1_genome, i2_genome = i1.genome, i2.genome
+                i1_len, i2_len = len(i1_genome), len(i2_genome)
+                
+                if i1_len > points and i2_len > points:
+                    i1_cuts = list(xrange(1, i1_len))
+                    i2_cuts = list(xrange(1, i2_len))
+                    shuffle(i1_cuts)
+                    shuffle(i2_cuts)
+                    i1_cuts = list(sorted(islice(i1_cuts, points)))
+                    i2_cuts = list(sorted(islice(i2_cuts, points)))
+                    i1_cuts.append(i1_len)
+                    i2_cuts.append(i2_len)
+                    
+                    new_genes1 = list(i1_genome)
+                    new_genes2 = list(i2_genome)
+                    
+                    for (i1_cut_i, i1_cut_j), (i2_cut_i, i2_cut_j) in \
+                        izip(_pairs(iter(i1_cuts)), _pairs(iter(i2_cuts))):
+                        
+                        i1_cut = islice(new_genes1, i1_cut_i, i1_cut_j)
+                        i2_cut = islice(new_genes2, i2_cut_i, i2_cut_j)
+                        new_genes1 = list(chain(islice(new_genes1, i1_cut_i),
+                                                i2_cut,
+                                                islice(new_genes1, i1_cut_j, None)))
+                        new_genes2 = list(chain(islice(new_genes2, i2_cut_i),
+                                                i1_cut,
+                                                islice(new_genes2, i2_cut_j, None)))
+                    
+                    i1_len, i2_len = len(new_genes1), len(new_genes2)
+                    if longest_result and i1_len > longest_result:
+                        notify('crossover_different', 'aborted',
+                               { 'longest_result': longest_result, 'i1_len': i1_len })
+                    else:
+                        i1 = type(i1)(new_genes1, i1, statistic={ 'recombined': 1 })
+                    
+                    if longest_result and i2_len > longest_result:
+                        notify('crossover_different', 'aborted',
+                               { 'longest_result': longest_result, 'i2_len': i2_len })
+                    else:
+                        i2 = type(i2)(new_genes2, i2, statistic={ 'recombined': 1 })
+            
+            if one_child:
+                yield i1 if frand() < 0.5 else i2
+            else:
+                yield i1
+                yield i2
+    
+    def crossover_one_different(self, _source,
+                                per_pair_rate=None, per_indiv_rate=1.0,
+                                longest_result=None,
+                                one_child=False, two_children=None):
+        '''A specialisation of `crossover_different` for single-point
+        crossover.
+        '''
+        return self.crossover_different(
+            _source,
+            points=1,
+            per_pair_rate=per_pair_rate, per_indiv_rate=per_indiv_rate,
+            longest_result=longest_result,
+            one_child=one_child, two_children=two_children)
+    
+    def crossover_two_different(self, _source,
+                                per_pair_rate=None, per_indiv_rate=1.0,
+                                longest_result=None,
+                                one_child=False, two_children=None):
+        '''A specialisation of `crossover_different` for two-point
+        crossover.
+        '''
+        return self.crossover_different(
+            _source,
+            points=2,
+            per_pair_rate=per_pair_rate, per_indiv_rate=per_indiv_rate,
+            longest_result=longest_result,
+            one_child=one_child, two_children=two_children)
+    
+    def crossover_segmented(self, _source,
+                            per_pair_rate=None, per_indiv_rate=1.0, switch_rate=0.1,
+                            one_child=False, two_children=None):
+        '''Performs segmented crossover by exchanging random segments
+        between two individuals. The first segment has `switch_rate`
+        probability of being exchanged, while subsequent segments
+        alternate between exchanging and non-exchanging.
+        
+        Returns a sequence of crossed individuals based on the
+        individuals in `_source`.
+        
+        If `one_child` is ``True`` (or `two_children` is ``False``), the
+        number of individuals returned is half the number of individuals
+        in `_source`, rounded towards zero.
+        
+        If `one_child` is ``False`` (or `two_children` is ``True``), the
+        number of individuals returned is the largest even number less
+        than or equal to the number of individuals in `_source`.
+        
+        .. include:: epydoc_include.txt
+        
+        :Parameters:
+          _source : iterable(`Individual`)
+            A sequence of individuals. Individuals are taken two at a
+            time from this sequence, recombined to produce two new
+            individuals, and yielded separately.
+          
+          per_pair_rate : |prob|
+            The probability of any particular pair of individuals being
+            recombined. If two individuals are not recombined, they are
+            returned unmodified. If this is ``None``, the value of
+            `per_indiv_rate` is used.
+          
+          per_indiv_rate : |prob|
+            A synonym for `per_pair_rate`.
+          
+          switch_rate : |prob|
+            The probability of the current segment ending. Exchanged
+            segments are always followed by non-exchanged segments.
+            
+            This is also the probability of the first segment being
+            exchanged. It is reset for each pair of individuals.
+          
+          one_child : bool
+            If ``True``, only one child is returned from each crossover
+            operation.
+            
+            If `two_children` is specified, its value is used instead of
+            this.
+          
+          two_children : bool
+            If ``True``, both children are returned from each crossover
+            operation. If ``False``, only one is.
+            
+            If ``None``, the value of `one_child` is used instead (with
+            the opposite meaning to `two_children`).
+        '''
+        if per_pair_rate is None: per_pair_rate = per_indiv_rate
+        if two_children is not None: one_child = not two_children
+        if per_pair_rate <= 0.0 or not (0.0 < switch_rate < 1.0):
+            if one_child:
+                skip = True
+                for indiv in _source:
+                    if not skip: yield indiv
+                    skip = not skip
+            else:
+                for indiv in _source:
+                    yield indiv
+            raise StopIteration
+        
+        do_all_pairs = (per_pair_rate >= 1.0)
+        
+        frand = rand.random
+        
+        for i1, i2 in _pairs(_source):
+            if do_all_pairs or frand() < per_pair_rate:
+                i1_genome, i2_genome = i1.genome, i2.genome
+                i1_len, i2_len = len(i1_genome), len(i2_genome)
+                
+                new_genes1 = list(i1_genome)
+                new_genes2 = list(i2_genome)
+                exchanging = (frand() < switch_rate)
+                
+                for i in xrange(i1_len if i1_len < i2_len else i2_len):
+                    if exchanging:
+                        new_genes1[i] = i2_genome[i]
+                        new_genes2[i] = i1_genome[i]
+                    if frand() < switch_rate:
+                        exchanging = not exchanging
+                
+                i1 = type(i1)(new_genes1, i1, statistic={ 'recombined': 1 })
+                i2 = type(i2)(new_genes2, i2, statistic={ 'recombined': 1 })
+            
+            if one_child:
+                yield i1 if frand() < 0.5 else i2
+            else:
+                yield i1
+                yield i2
 
 SPECIES = []
 '''An automatically generated list of the available species types.'''

@@ -7,8 +7,8 @@ from esec.species import Species
 from esec.individual import Individual
 from esec.context import rand
 
-# Disabled: method could be a function
-#pylint: disable=R0201
+# Disabled: method could be a function, too many public methods
+#pylint: disable=R0201,R0904
 
 # Override Individual to provide one that keeps its valid bounds with it
 class IntegerIndividual(Individual):
@@ -88,6 +88,13 @@ class IntegerSpecies(Species):
             'integer_increment': self.init_increment,
             'integer_count': self.init_count,
         }
+    
+    def legal(self, indiv):
+        '''Check to see if an individual is legal.'''
+        for lower, i, upper in izip(indiv.lower_bounds, indiv, indiv.upper_bounds):
+            if not (lower <= i <= upper):
+                return False
+        return True
     
     @classmethod
     def _convert_bounds(cls, src, length):

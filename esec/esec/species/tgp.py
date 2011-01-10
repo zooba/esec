@@ -1,7 +1,8 @@
 '''Provides the `TgpSpecies` and `TgpIndividual` classes for tree-based
 genetic programming (Koza-style) genomes.
 '''
-#pylint: disable=C0302
+# Disabled: too many lines, different arguments in override, too many method
+#pylint: disable=C0302,W0221,R0904
 
 from itertools import chain, islice, izip
 import math
@@ -443,10 +444,11 @@ class TgpSpecies(Species):
     
     def init_tgp(self, instructions, terminals=0, deepest=10,
                  adfs=0, 
+                 lowest_int_constant=None, highest_int_constant=None,
                  lowest_constant=None, highest_constant=None,
                  terminal_prob=0.5):
-        '''Creates tree-based genetic programming (TGP) programs made from
-        `instructions`.
+        '''Creates tree-based genetic programming (TGP) programs made
+        from `instructions`.
         
         .. include:: epydoc_include.txt
         
@@ -469,15 +471,37 @@ class TgpSpecies(Species):
             necessarily called from other ADFs or the root program.
             A root program is always created, regardless of this value.
           
+          lowest_int_constant : int
+            The lowest (inclusive) value of integer constant to create.
+            If ``None`` or greater than `highest_constant`, constants
+            are never created. This value cannot be specified with
+            either `lowest_constant` or `highest_constant.`
+          
+          highest_int_constant : int
+            The highest (inclusive) value of integer constant to create.
+            If ``None`` or less than `lowest_int_constant`, constants
+            are never created. This value cannot be specified with
+            either `lowest_constant` or `highest_constant.`
+          
           lowest_constant : float
             The lowest (inclusive) value of constant to create. If
             ``None`` or greater than `highest_constant`, constants are
-            never created.
+            never created. This value cannot be specified with either
+            `lowest_int_constant` or `highest_int_constant.`
+            
+            These constants are real values. To create integer constants
+            specify `lowest_int_constant` and `highest_int_constant`
+            instead.
           
           highest_constant : float
             The highest (exclusive) value of constant to create. If
             ``None`` or less than `lowest_constant`, constants are never
-            created.
+            created. This value cannot be specified with either
+            `lowest_int_constant` or `highest_int_constant.`
+            
+            These constants are real values. To create integer constants
+            specify `lowest_int_constant` and `highest_int_constant`
+            instead.
           
           terminal_prob : |prob|
             The probability of a branch terminating at any particular
@@ -486,10 +510,22 @@ class TgpSpecies(Species):
         '''
         instructions = list(instructions)
         instruction_set = ''.join(instr.name for instr in instructions)
+        
+        assert lowest_constant is None or lowest_int_constant is None, \
+            "Cannot specify both lowest_constant and lowest_int_constant."
+        assert highest_constant is None or highest_int_constant is None, \
+            "Cannot specify both highest_constant and highest_int_constant."
+        
+        if lowest_int_constant is not None:
+            lowest_constant = int(lowest_int_constant)
+        if highest_int_constant is not None:
+            highest_constant = int(highest_int_constant)
+        
         if lowest_constant is None or highest_constant is None or lowest_constant > highest_constant:
             constant_bounds = None
         else:
             constant_bounds = (lowest_constant, highest_constant)
+        
         while True:
             genes = [self._init_one(instructions,
                                     terminals,

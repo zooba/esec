@@ -34,7 +34,6 @@ def test_selectors_min():
     yield check_selectors_RankProportional, population
     yield check_selectors_RankProportionalSUS, population
     yield check_selectors_BestOfTuple, population, make_best_pop_min()
-    
 
 def check_selectors_All(population):
     _gen = selectors.All(_source=iter(population))

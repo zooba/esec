@@ -84,10 +84,11 @@ class Integer(Landscape):
         if not (self.size.min <= len(indiv) <= self.size.max):
             return False
         
-        for lower, i, upper in izip(self.lower_bounds, indiv, self.upper_bounds):
-            if not (lower <= i <= upper):
-                return False
-        return True
+        # Individual values are checked by indiv.legal(). We simply
+        # check here whether the individual has bounds equal to or
+        # within ours.
+        return (all(i1 >= i2 for i1, i2 in izip(indiv.lower_bounds, self.lower_bounds)) and
+                all(i1 <= i2 for i1, i2 in izip(indiv.upper_bounds, self.upper_bounds)))
     
     def info(self, level):
         '''Return landscape info for any integer landscape.'''

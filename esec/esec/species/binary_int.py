@@ -5,8 +5,8 @@ from esec.individual import Individual
 from esec.context import rand
 from esec.species.binary import BinarySpecies
 
-# Disabled: method could be a function
-#pylint: disable=R0201
+# Disabled: method could be a function, too many public methods
+#pylint: disable=R0201,R0904
 
 # Override Individual to provide a binary individual with a integer-valued phenotype.
 class BinaryIntegerIndividual(Individual):
@@ -62,9 +62,21 @@ class BinaryIntegerIndividual(Individual):
         if isinstance(parent, BinaryIntegerIndividual):
             self.bits_per_value = parent.bits_per_value
             self.encoding = parent.encoding
+            self.lower_bounds = parent.lower_bounds
+            self.upper_bounds = parent.upper_bounds
         else:
             self.bits_per_value = bits_per_value
             self.encoding = encoding or self.count_mapping
+            
+            genes = self.genome
+            self._phenome = None
+            self.genome = [0] * len(genes)
+            self.lower_bounds = self.phenome
+            self._phenome = None
+            self.genome = [1] * len(genes)
+            self.upper_bounds = self.phenome
+            self._phenome = None
+            self.genome = genes
         
         assert isinstance(self.bits_per_value, list), "bits_per_value is not a list"
     
@@ -107,6 +119,10 @@ class BinaryIntegerSpecies(BinarySpecies):
         self.mutate_insert = None
         self.mutate_delete = None
     
+    def legal(self, indiv):
+        '''Determines whether `indiv` is legal.'''
+        assert isinstance(indiv, BinaryIntegerIndividual), "Expected BinaryIntegerIndividual"
+        return all(p in (0, 1) for p in indiv)
     
     @classmethod
     def ones_complement_mapping(cls, genes):

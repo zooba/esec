@@ -34,6 +34,11 @@ class BinarySpecies(Species):
             'binary_toggle': self.init_toggle
         }
     
+    def legal(self, indiv):
+        '''Determines whether `indiv` is legal.'''
+        assert isinstance(indiv, BinaryIndividual), "Expected BinaryIndividual"
+        return all(p in (0, 1) for p in indiv)
+    
     def _len(self, length, shortest, longest):
         '''Returns a randomly selected length for a new individual.'''
         

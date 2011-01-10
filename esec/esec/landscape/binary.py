@@ -12,7 +12,7 @@ Most of these binary landscapes are problem generators.
 
 from itertools import izip
 from esec.landscape import Landscape
-from esec.individual import JoinedIndividual
+from esec.species.joined import JoinedIndividual
 
 #=======================================================================
 def inttobin(n, count=24):
@@ -39,11 +39,6 @@ class Binary(Landscape):
     # default testing is no parameters are needed
     test_key = ()
     test_cfg = () # all should be tested...
-    
-    def legal(self, indiv):
-        '''Check to see if the indiv's are legal for any Binary problem.
-        '''
-        return all(p in (0, 1) for p in indiv)
     
     def info(self, level):
         '''Return landscape info for any Binary landscape.'''
@@ -726,7 +721,7 @@ class ECC(Binary):
     def _eval(self, indiv):
         '''Evaluate ECC.'''
         #f(x) = \frac{1}{\sum\limit_{i=1}^M \sum\limit_{j=i, j\neq i}^M d_{ij}^-2  }
-        if self.legal(indiv):
+        if indiv.legal():
             # Sum the distance to other codewords. NOTE: two equal codewords
             # will cause ZeroDivisionError ... so indiv must be legal.
             code = self._splitgenome(indiv)
@@ -1039,7 +1034,7 @@ class MTTP(Binary):
         T_S = [t for t, x in izip(self._tasks, indiv) if x == 0] # x[i]==0
         
         # Quick legal version?
-        if self.legal(indiv):
+        if indiv.legal():
             return sum(i[2] for i in T_S)
         
         # Penalty version for infeasible solutions is used instead
@@ -1139,7 +1134,7 @@ class Graph2c(Binary):
     def _eval(self, indiv):
         '''NxN connectivity matrix. Odd numbered Row constraints
         '''
-        if self.legal(indiv):
+        if indiv.legal():
             fitness = 0
             payoff = self.payoff
             maxpt = self.size.exact - 1
@@ -1197,7 +1192,7 @@ class Graph2r(Binary):
     def _eval(self, indiv):
         '''NxN connectivity matrix. Odd numbered ROW constraints
         '''
-        if self.legal(indiv):
+        if indiv.legal():
             fitness = 0
             payoff = self.payoff
             maxpt = self.size.exact - 1

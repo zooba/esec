@@ -1,6 +1,10 @@
 '''A set of selector generators that return some or all of a group of
 individuals without modification.
 
+These are distinct from `esec.generators.filters` because they typically
+compare individuals against each other (as in ``Best`` or ``Yougest``
+selectors). Selectors usually cannot operate on unbounded groups.
+
 The global variable ``rand`` is made available through the context in
 which the selectors are executed.
 '''
@@ -11,7 +15,7 @@ from warnings import warn
 from esec import esdl_func
 from esec.fitness import Fitness
 from esec.generators import _key_fitness, _key_birthday
-from esec.individual import JoinedIndividual
+from esec.species.joined import JoinedIndividual
 from esec.context import rand
 
 class NoReplacementSelector(object):
@@ -691,25 +695,6 @@ def RankProportionalSUS(_source, mu=None, expectation=1.1, neta=None, invert=Fal
             while i >= size: i -= size
             change_level += wheel[i][0]
         yield wheel[i][1]
-
-@esdl_func('unique')
-def Unique(_source):
-    '''Returns a sequence of the unique individuals based on phenomes.
-    
-    Individuals are compared using their ``phenome_string`` property.
-    
-    :Parameters:
-      _source : iterable(`Individual`)
-        A sequence of individuals. Some or all individuals are returned
-        from this sequence, depending on the selection criteria.
-    '''
-    known = set()
-    
-    for indiv in _source:
-        phenome = indiv.phenome_string
-        if phenome not in known:
-            known.add(phenome)
-            yield indiv
 
 @esdl_func('best_of_tuple')
 def BestOfTuple(_source):

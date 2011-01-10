@@ -7,7 +7,7 @@ which the joiners are executed.
 
 from itertools import product, izip
 from esec import esdl_func
-from esec.individual import JoinedIndividual
+from esec.species.joined import JoinedIndividual
 from esec.generators.selectors import BestOnly
 from esec.context import rand
 

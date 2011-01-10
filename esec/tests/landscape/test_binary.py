@@ -1,8 +1,9 @@
 from random import randrange
 from esec.fitness import Fitness, EmptyFitness
-from esec.individual import JoinedIndividual
-from esec.species import JoinedSpecies
+from esec.species.joined import JoinedIndividual, JoinedSpecies
 import esec.landscape.binary as binary
+from esec.species.binary import BinaryIndividual, BinarySpecies
+species = BinarySpecies({ }, lambda _: 0)
 
 def test_inttobin():
     assert binary.inttobin(1, 4) == '0001' 
@@ -25,12 +26,12 @@ def check_bvp(cls):
     for cfg in cls.test_cfg:
         bvp = cls.by_cfg_str(cfg)
         # create a test individual (random binary list)
-        param = [randrange(2) for _ in xrange(bvp.size.min)]
+        param = BinaryIndividual([randrange(2) for _ in xrange(bvp.size.min)], species)
         # test list of random binary values
         fitness = bvp.eval(param)
         assert isinstance(fitness, Fitness), "Result was not fitness value"
         # create a test individual (random binary list)
-        param = [randrange(2) for _ in xrange(bvp.size.max)]
+        param = BinaryIndividual([randrange(2) for _ in xrange(bvp.size.max)], species)
         # test list of random binary values
         fitness = bvp.eval(param)
         assert isinstance(fitness, Fitness), "Result was not fitness value"
@@ -50,7 +51,7 @@ def test_NKC():
         for _ in xrange(bvp.group):
             param.append([randrange(2) for _ in xrange(bvp.size.exact)])
         # test list of random binary values
-        fitness = bvp.eval(JoinedIndividual(param, [str(i) for i in xrange(bvp.group)], JoinedSpecies))
+        fitness = bvp.eval(JoinedIndividual(param, [str(i) for i in xrange(bvp.group)], JoinedSpecies.instance))
         assert isinstance(fitness, (int, long, float, Fitness, EmptyFitness)), "Result was not fitness value"
     print '\n'.join(bvp.info(5))
     #assert False

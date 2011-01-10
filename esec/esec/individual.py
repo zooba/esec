@@ -24,7 +24,7 @@ potential solution to a problem.
 from esec.fitness import Fitness, EmptyFitness
 from esec.context import notify
 from esec.utils.exceptions import EvaluatorError
-from itertools import chain, izip
+from itertools import chain
 
 class Individual(object):
     '''Represents a single member of the population with some type of
@@ -118,6 +118,17 @@ class Individual(object):
             self._eval.prepare(self)
         
         return self
+    
+    def legal(self):
+        '''Determines whether this individual is legal.
+        
+        This function uses the ``legal`` function on the species and on
+        the current evaluator. If either is not present, its result is
+        assumed to be true. Both functions must return ``True`` for an
+        individual to be considered legal.
+        '''
+        return ((not hasattr(self.species, 'legal') or self.species.legal(self)) and
+                (not hasattr(self._eval, 'legal') or self._eval.legal(self)))
     
     def __getattr__(self, name):
         '''Attempts to locate unknown members on the species descriptor
@@ -227,62 +238,6 @@ class Individual(object):
         '''
         return str(len(self))
 
-
-
-class JoinedIndividual(Individual):
-    '''Represents a set of `Individual` objects which represent one
-    solution.
-    
-    Behaves identically to the `Individual` class with the exception
-    that the genome is now a list of the joined individuals (in the
-    order provided to the initialiser) and individuals may be retrived
-    by the name of the group they were obtained from.
-    '''
-    
-    def __init__(self, members, sources, parent=None):
-        '''Initialises a new individual made up of a set of joined
-        individuals. Each individual can be obtained by the name of the
-        group it came from. If multiple individuals come from the same
-        group, only the first one provided in `members` is accessible by
-        name.
-        
-        :Parameters:
-          members : iterable(`Individual`)
-            The set of individuals joined to create this individual.
-          
-          sources : iterable(string)
-            The names of the group the individuals in `members` were
-            obtained from.
-          
-          parent : `JoinedIndividual` or `Species`
-            Either the `JoinedIndividual` (or derived class) that was
-            used to generate the new individual, or the `Species`
-            descriptor that defines the type of individual.
-            
-            If a `JoinedIndividual` is provided, any derived initialiser
-            should inherit any specific characteristics (such as size or
-            value limits) from the parent.
-        '''
-        if not parent:
-            from esec.species import JoinedSpecies
-            parent = JoinedSpecies
-        super(JoinedIndividual, self).__init__(members, parent)
-        self.sources = { }
-        for source, member in izip(sources, self.genome):
-            if source not in self.sources:
-                self.sources[source] = member
-    
-    def __contains__(self, key):
-        if isinstance(key, str):
-            return key in self.sources
-        else:
-            return super(JoinedIndividual, self).__contains__(key)
-    
-    def __getitem__(self, key):
-        if isinstance(key, str) and key in self.sources:
-            return self.sources[key]
-        else:
-            return super(JoinedIndividual, self).__getitem__(key)
 
 # EmptyIndividual and OnIndividual have no public methods
 #pylint: disable=R0903

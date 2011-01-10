@@ -98,6 +98,13 @@ class RealSpecies(Species):
             'real_toggle': self.init_toggle,
         }
     
+    def legal(self, indiv):
+        '''Check to see if an individual is legal.'''
+        for lower, i, upper in izip(indiv.lower_bounds, indiv, indiv.upper_bounds):
+            if not (lower <= i <= upper):
+                return False
+        return True
+    
     @classmethod
     def _convert_bounds(cls, src, length):
         '''Produces valid upper/lower bounds lists from the provided input.'''

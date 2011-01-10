@@ -4,6 +4,9 @@ Grammatical Evolution (GE) genomes.
 from esec.species.integer import IntegerSpecies, IntegerIndividual
 from esec.utils import ConfigDict
 
+# Disabled: too many public methods
+#pylint: disable=R0904
+
 # Override IntegerIndividual to provide one that ...
 class GEIndividual(IntegerIndividual):
     '''An `Individual` for GE genomes.
@@ -175,6 +178,11 @@ class GESpecies(IntegerSpecies):
         super(GESpecies, self).__init__(cfg, eval_default)
         # Make some names public within the execution context
         self.public_context['random_ge'] = self.init_ge
+    
+    def legal(self, indiv):
+        '''Determines whether `indiv` is legal.'''
+        assert isinstance(indiv, GEIndividual), "Expected GEIndividual"
+        return indiv.Eval is not None
     
     def init_ge(self, grammar, defines=None, length=None,
                       shortest=1, longest=100,

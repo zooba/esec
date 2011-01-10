@@ -192,6 +192,17 @@ class Landscape(object):
         if isinstance(fitness, Fitness): return fitness
         else: return FitnessMinimise(fitness + self.offset)
     
+    def legal(self, indiv): #pylint: disable=W0613,R0201
+        '''Determines whether the specified individual is legal.
+        
+        By default, this function always returns ``True``. Subclasses
+        may override this to perform other verification appropriate to
+        the landscape.
+        
+        :See: esec.individual.Individual.legal
+        '''
+        return True
+    
     @classmethod
     def by_cfg_str(cls, cfg_str):
         '''Used by test framework to initialise a class instance using a

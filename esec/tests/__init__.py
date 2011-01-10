@@ -1,8 +1,7 @@
 from itertools import islice
 
 from esec.species.integer import IntegerSpecies
-from esec.species import JoinedSpecies
-from esec.individual import JoinedIndividual
+from esec.species.joined import JoinedIndividual, JoinedSpecies
 from esec.fitness import FitnessMaximise, FitnessMinimise
 
 from esec.context import _context

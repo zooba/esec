@@ -60,10 +60,6 @@ class GE(Landscape):
         '''
         i = len(indiv)
         return i*i*self.size_penalty_square_factor + i*self.size_penalty_linear_factor
-    
-    def legal(self, indiv):
-        '''Check to see if an individual is legal.'''
-        return indiv.Eval is not None
 
 
 #=======================================================================
