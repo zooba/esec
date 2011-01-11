@@ -677,6 +677,13 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         }
         self.stop_now = False
         self.end_code = None
+        
+        # Get the time values so that the first iteration shows the
+        # correct timing values.
+        self._time(self)
+        self._time_delta(self)
+        self._time_precise(self)
+        self._time_delta_precise(self)
     
     def on_post_reset(self, sender):
         '''Displays the state of the initial population.'''
