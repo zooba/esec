@@ -15,29 +15,28 @@
 from plugins.ACO import *
 
 city_graph = tsp.Landscape(cost_map="cfgs/TSPOliver30.csv")
-print '\n'.join(city_graph.info(0))
 
 config = {
     'system': {
         'alpha': 1.0,
-        'beta': 1.0,
-        'rho': 0.7,
+        'beta': 5.0,
+        'rho': 0.5,
         'Q': 100,
         'colony_size': 30,
         'cost_map': city_graph.cost_map,
         'city_graph': city_graph,
         'definition': r'''
-            pheromone_map = create_pheromone_map(initial=(Q))
+            pheromone_map = create_pheromone_map(initial=(0.1))
             
             BEGIN GENERATION
-                FROM build_tours(cost_map=cost_map, cost_power=(beta), \
-                                 pheromone_map=pheromone_map, pheromone_power=(alpha)) \
+                FROM build_tours(cost_map, cost_power=(beta), \
+                                 pheromone_map, pheromone_power=(alpha)) \
                     SELECT (colony_size) ants
                 
                 EVAL ants USING city_graph
                 YIELD ants
                 
-                pheromone_map.update(source=ants, persistence=(1-rho), strength=(Q), minimisation=True)
+                pheromone_map.update(source=ants, persistence=(rho), strength=(Q), minimisation)
             END GENERATION
         ''',
         'create_pheromone_map': pheromone.PheromoneMap,
@@ -46,7 +45,9 @@ config = {
         'report': 'brief+local_header+local_min+local_ave+local_max+local_unique+|+time',
         'summary': 'status+brief+best_phenome',
         'limits': {
-            'fitness': 424,
+            'fitness': 423.8,
+            'iterations': 2500,     # while NC < 2500
+            'unique': 1,            # stagnation
         },
         'primary': 'ants',
     },
@@ -64,8 +65,8 @@ settings += 'pathbase="%s";' % pathbase
 settings += 'csv=True;low_priority=True;quiet=True'
 
 def batch():
-    del config['monitor']['limits']['fitness']
-    config['monitor']['limits']['iterations'] = 5000
+    config['monitor']['limits'] = { 'iterations': 5000 }
+    config['monitor']['report'] = 'brief+local+time_precise'
     for alpha in [0, 0.5, 1, 2]:
         for i in xrange(10):
             yield (['alpha'], "noseed", config, "system.alpha=%f" % alpha, None)

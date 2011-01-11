@@ -29,7 +29,7 @@ class PheromoneMap(object):
     the `__getitem__` method be retained to retrieve the pheremone value for
     a given phenome component.
     '''
-    def __init__(self, initial=0.0):
+    def __init__(self, initial=0.1):
         '''Initialises a new pheromone map.
         
         :Parameter:
@@ -54,7 +54,7 @@ class PheromoneMap(object):
             A sequence of individuals. The fitness values of these individuals
             are used to increase pheromone levels.
           
-          strength : float [defaults to 1.0]
+          strength : float [defaults to 0.1]
             The multiplier to apply to fitness values when adding to the pheromone value.
             
             Only the first part of the fitness value is used. Multi-part fitnesses should
@@ -77,7 +77,7 @@ class PheromoneMap(object):
         '''
         return self.update(source=source, strength=strength, minimisation=minimisation, minimization=minimization, \
                            persistence=persistence, use_fitness=True)
-
+    
     def update_rank(self, source, strength=0.1, persistence=0.9):
         '''Updates the pheromone map. This method is intended to be called directly
         from a system definition each generation.
@@ -153,7 +153,7 @@ class PheromoneMap(object):
         
         pheromone = self._pheromone
         
-        for key in pheromone.keys():
+        for key in pheromone.iterkeys():
             pheromone[key] *= persistence
 
         # decay our initial value as well
@@ -166,7 +166,7 @@ class PheromoneMap(object):
                     delta = strength / float(indiv.fitness.values[0])
                 else:
                     delta = strength * float(indiv.fitness.values[0])
-            
+                
                 for p in indiv.phenome:
                     pheromone[p] = pheromone.get(p, initial) + delta
         else:
