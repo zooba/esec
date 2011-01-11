@@ -305,7 +305,7 @@ class _born_iter(object):
         '''Emits code for a REPEAT block.'''
         if node.children:
             count = ''.join(self.write(node.count))
-            yield 'for _ in %s(%s):' % (self.RANGE_COMMAND, count)
+            yield 'for _ in %s(int(%s)):' % (self.RANGE_COMMAND, count)
             for child in node.children:
                 for line in self.write(child):
                     yield self.INDENT + line
