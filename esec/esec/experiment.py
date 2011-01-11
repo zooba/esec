@@ -85,7 +85,7 @@ class Experiment(object):
     '''The default values to use for unspecified keys in `syntax`.
     '''
     
-    def _load(self, cfg, key, base):
+    def _load(self, cfg, key, base, attr=None):
         '''Returns the object provided in `key` of `cfg` if it is
         derived from `base`.
         
@@ -111,6 +111,9 @@ class Experiment(object):
             if obj_cls and issubclass(obj_cls, base):
                 # instantiate class with config
                 return obj_cls(obj)
+        elif attr and hasattr(obj, attr):
+            # value is the object
+            return obj
         
         # all failed, return None
         return None
@@ -151,7 +154,7 @@ class Experiment(object):
             self.random_seed = self.cfg.random_seed = random.randrange(0, sys.maxint)
         
         # -- Landscape (of type and name) --
-        self.lscape = self._load(cfg, 'landscape', landscape.Landscape)
+        self.lscape = self._load(cfg, 'landscape', landscape.Landscape, 'eval')
         cfg.landscape = self.lscape
         
         # -- System --

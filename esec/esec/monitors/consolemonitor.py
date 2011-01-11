@@ -588,7 +588,10 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                     self.config_out.flush()
             elif name == 'Landscape':
                 # `value` contains a Landscape
-                info = value.info(level=self.verbose)
+                if hasattr(value, 'info'):
+                    info = value.info(level=self.verbose)
+                else:
+                    info = ['Evaluator: ' + str(value)]
                 if info:
                     print >> self.config_out, '\n'.join(info)
                     print >> self.config_out
