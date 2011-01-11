@@ -162,16 +162,39 @@ class esdl_eval(object):
         provided function.
         '''
         self.eval = func
-        self.prepare = None
+        self._prepare = None
+        self._legal = None
         GLOBAL_ESDL_FUNCTIONS[func.__name__] = self
+    
+    def __str__(self):
+        '''Displays the evaluator using the name of the `eval` method.
+        '''
+        return self.eval.__name__
+    
+    def prepare(self, indiv):
+        '''Prepares the evaluator to potentially evaluate `indiv`.'''
+        if self._prepare: self._prepare(indiv)
+    
+    def legal(self, indiv):
+        '''Determines whether `indiv` is legal for this evaluator.
+        
+        If `indiv` is callable, this is assumed to be being used as a
+        decorator.
+        '''
+        if hasattr(indiv, '__call__'):
+            self._legal = indiv
+            return self
+        elif self._legal:
+            return self._legal(indiv)
+        else:
+            return True
     
     def pre(self, func):
         '''Initialises the ``prepare`` member of the evaluator with the
         provided function.
         '''
-        self.prepare = func
+        self._prepare = func
         return self
-
 
 from esec.experiment import Experiment
 import esec.landscape
