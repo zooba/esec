@@ -130,7 +130,7 @@ class SantaFeState(object):
 # system below.
 @esdl_eval
 def santa_fe_trail(indiv):
-    '''Evaluates the
+    '''Evaluates the individual against the trail.
     '''
     state = SantaFeState()
     
@@ -155,13 +155,13 @@ instructions = [
 ]
 
 config = {
+    'landscape': santa_fe_trail,
     'system': { 
         'instructions': instructions,
         'definition': r'''
             FROM random_tgp(instructions, terminals=0, deepest=4) SELECT (size) population
-            EVAL population USING santa_fe_trail
             YIELD population
-
+            
             BEGIN generation
                 FROM population \
                     SELECT (0.9*size) to_cross, (0.02*size) to_mutate, (size) to_reproduce \
@@ -183,7 +183,7 @@ config = {
         'summary': 'status+best+best_length+best_phenome',
         'limits': {
             'iterations': 100,
-            'fitness': TGPFitness([89, 7]),
+            'fitness': TGPFitness([89, 20]),
         }
     },
 }

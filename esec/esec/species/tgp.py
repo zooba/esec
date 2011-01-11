@@ -1,27 +1,31 @@
 '''Provides the `TgpSpecies` and `TgpIndividual` classes for tree-based
 genetic programming (Koza-style) genomes.
 '''
-# Disabled: too many lines, different arguments in override, too many method
-#pylint: disable=C0302,W0221,R0904
+# Disabled: too many lines, different arguments in override,
+#           too many methods, too many parameters
+#pylint: disable=C0302,W0221,R0904,R0913
 
+from copy import copy
 from itertools import chain, islice, izip
 import math
-from esec.species import Species
+from esec.species import Species, _pairs
 from esec.individual import Individual, OnIndividual
 from esec.context import rand, notify
 
-# Override Individual to provide one that keeps its valid instructions with it
+# Override Individual to provide one that keeps its valid instructions
+# with it
 class TgpIndividual(Individual):
-    '''An `Individual` for TGP genomes. The instruction set and number of
-    terminals is stored with the individual so it may be used during mutation
-    operations without being respecified.
+    '''An `Individual` for TGP genomes. The instruction set and number
+    of terminals is stored with the individual so it may be used during
+    mutation operations without being respecified.
     '''
     def __init__(self, genes, parent,
         instructions=None, instruction_set=None, terminals=2,
-        constant_bounds=None, constant_type=None,
+        constant_bounds=None, constant_type=None, fixed_root=False,
         statistic=None):
         '''Initialises a new `TgpIndividual`. Instances are generally
-        created using the initialisation methods provided by `TgpSpecies`.
+        created using the initialisation methods provided by
+        `TgpSpecies`.
         
         .. include:: epydoc_include.txt
         
@@ -59,9 +63,13 @@ class TgpIndividual(Individual):
             never created.
           
           constant_type : type or function
-            The type of constant values (for example, ``int`` or ``float``)
-            or a function taking a single parameter and returning the value
-            to use as a constant.
+            The type of constant values (for example, ``int`` or
+            ``float``) or a function taking a single parameter and
+            returning the value to use as a constant.
+          
+          fixed_root : bool [optional]
+            ``True`` if the root of the tree is fixed and not permitted
+            to change; otherwise, ``False``.
           
           statistic : dict [optional]
             A set of statistic values associated with this individual.
@@ -74,18 +82,26 @@ class TgpIndividual(Individual):
         self.terminals = int(terminals or 0)
         self.constant_bounds = constant_bounds
         self.constant_type = constant_type
+        self.fixed_root = fixed_root
         if isinstance(parent, TgpIndividual):
             self.instructions = parent.instructions
             self.instruction_set = parent.instruction_set
             self.terminals = parent.terminals
             self.constant_bounds = parent.constant_bounds
             self.constant_type = parent.constant_type
+            self.fixed_root = parent.fixed_root
         
         super(TgpIndividual, self).__init__(genes, parent=parent, statistic=statistic)
     
     @property
+    def root_program(self):
+        '''Returns the root program of this individual.'''
+        return self.genome[0]
+    
+    @property
     def phenome_string(self):
-        '''Returns a string representation of the phenome of this individual.
+        '''Returns a string representation of the phenome of this
+        individual.
         '''
         if not self._phenome_string:
             result = '\n'
@@ -102,12 +118,14 @@ class TgpIndividual(Individual):
                         result += '  ' * len(op_stack) + '( ' + str(op) + '\n'
                         op_stack.append([op])   # not extend
                     else:
-                        # Add this terminal/call to the topmost instruction
+                        # Add this terminal/call to the topmost
+                        # instruction
                         result += '  ' * len(op_stack) + str(op) + '\n'
                         if op_stack: op_stack[-1].append(op)
                         else: done = True
                     
-                    # If the topmost instruction has enough parameters, evaluate it.
+                    # If the topmost instruction has enough parameters,
+                    # evaluate it.
                     while not done and op_stack and (len(op_stack[-1]) == op_stack[-1][0].param_count + 1):
                         item = op_stack.pop()
                         result += '  ' * len(op_stack) + ')\n'
@@ -121,8 +139,8 @@ class TgpIndividual(Individual):
     
     @property
     def length_string(self):
-        '''Returns a string representation of the number of nodes and the depth of
-        the main program.
+        '''Returns a string representation of the number of nodes and
+        the depth of the main program.
         '''
         if self.genome:
             return '%dn %dd' % (len(self.genome[0]), self.depth(self.genome[0]))
@@ -140,15 +158,16 @@ class Instruction(object):
         
         :Parameters:
           func : callable |rArr| ``type(params)``
-            A function that combines its parameters and returns the result.
-            The result is expected to be of the same type as the parameters.
+            A function that combines its parameters and returns the
+            result. The result is expected to be of the same type as the
+            parameters.
           
           param_count : int |ge| 0
             The number of parameters expected by `func`.
           
           name : string
-            The display name of the instruction. This is used for displaying
-            formatted genomes.
+            The display name of the instruction. This is used for
+            displaying formatted genomes.
         '''
         self.func = func
         self.param_count = param_count
@@ -196,9 +215,21 @@ class ListInstruction(Instruction):
     parameters in order and returns them in a list.
     '''
     def __init__(self, param_count, name):
-        super(ListInstruction, self).__init__(self._combine, param_count, name)
+        '''Initialises a `ListInstruction` with `param_count` elements.
+        
+        .. include:: epydoc_include.txt
+        
+        :Parameters:
+          param_count : int |ge| 0
+            The number of parameters to combine into a list.
+          
+          name : string
+            The display name of the instruction. This is used for
+            displaying formatted genomes.
+        '''
+        super(ListInstruction, self).__init__(None, param_count, name)
     
-    def _combine(self, state, *params):
+    def __call__(self, state, *params):
         '''Returns all the parameters as a list.
         '''
         return list(params)
@@ -279,9 +310,10 @@ def _safe_exp(value):
     except OverflowError: return 0.0
 
 class TgpSpecies(Species):
-    '''Provides individuals with genomes of tree-based genetic programming
-    (TGP) programs. The first gene is always the main program, with every
-    other gene representing an automatically-defined function (ADF).
+    '''Provides individuals with genomes of tree-based genetic
+    programming (TGP) programs. The first gene is always the main
+    program, with every other gene representing an automatically-defined
+    function (ADF).
     '''
     name = 'TGP'
     
@@ -299,30 +331,32 @@ class TgpSpecies(Species):
         }
     
     def evaluate(self, indiv, state=None, terminals=None, adf_index=0):
-        '''Evaluates the given individual against the specified set of terminals
-        and returns the result.
+        '''Evaluates the given individual against the specified set of
+        terminals and returns the result.
         
-        The type of the return value depends on the type of program being evaluated.
+        The type of the return value depends on the type of program
+        being evaluated.
         
         :Parameters:
           indiv : `TgpIndividual`
-            A particular individual to evaluate. The entire individual is
-            required to allow any referenced ADFs to be evaluated.
+            A particular individual to evaluate. The entire individual
+            is required to allow any referenced ADFs to be evaluated.
           
           state : anything
             A caller-specified object that is passed directly to every
-            `InstructionWithSideEffects` object.
+            `InstructionWithState` object.
           
           terminals : list/tuple
-            A list of terminal values to use. Terminals are references by
-            index, which is assigned when creating the programs.
+            A list of terminal values to use. Terminals are references
+            by index, which is assigned when creating the programs.
           
           adf_index : int
             Specifies which ADF to evaluate. A value of zero (``0``)
             evaluates the root program.
-            This parameter is used internally for `CallAdf` instructions.
+            This parameter is used internally for `CallAdf`
+            instructions.
         '''
-        assert isinstance(indiv, TgpIndividual), "individual must be TgpIndividual"
+        assert isinstance(indiv, TgpIndividual), "Expected TgpIndividual, not %s" % type(indiv)
         if terminals is None: terminals = []
         assert isinstance(terminals, (list, tuple)), "terminals must be list/tuple type"
         assert len(terminals) >= indiv.terminals, "terminals does not have enough values"
@@ -359,7 +393,7 @@ class TgpSpecies(Species):
                 # Determine how many instructions to skip
                 selection = op(state) - 1
                 spans = [(op_i + 1, self._find_end(current_program, op_i + 1))]
-                for i in xrange(1, op.param_count):
+                for _ in xrange(1, op.param_count):
                     start = spans[-1][1]
                     spans.append((start, self._find_end(current_program, start)))
                 skip_1.append(spans[selection][0] - spans[0][0])
@@ -445,7 +479,8 @@ class TgpSpecies(Species):
     def _init_one(cls, instructions, terminals, deepest,
                   adfs, adf_index,
                   constant_bounds, constant_type,
-                  terminal_prob):
+                  terminal_prob,
+                  fixed_root):
         '''Creates a single TGP genome.
         
         .. include:: epydoc_include.txt
@@ -464,34 +499,39 @@ class TgpSpecies(Species):
             The number of ADFs to allow for.
           
           adf_index : int |ge| 0
-            The index of the ADF being generated. References to ADFs with an
-            equal or lower index are not permitted.
+            The index of the ADF being generated. References to ADFs
+            with an equal or lower index are not permitted.
           
           constant_bounds : tuple or ``None``
             The lowest (inclusive) and highest (exclusive) values that a
-            constant may take. If omitted, no constants are ever created.
+            constant may take. If omitted, no constants are ever
+            created.
           
           constant_type : type or function
-            The type of constant values (for example, ``int`` or ``float``)
-            or a function taking a single parameter and returning the value
-            to use as a constant.
+            The type of constant values (for example, ``int`` or
+            ``float``) or a function taking a single parameter and
+            returning the value to use as a constant.
           
           terminal_prob : |prob|
             The probability of a terminal, constant or ADF call being
             selected rather than an instruction.
             
             Each terminal and ADF greater than `adf_index` has an equal
-            probability of being selected, for example, if `adfs` is two,
-            `adf_index` is one and `terminals` is three, there are 2-1+3=4
-            alternatives, each with an equal probability.
+            probability of being selected, for example, if `adfs` is
+            two, `adf_index` is one and `terminals` is three, there are
+            2-1+3=4 alternatives, each with an equal probability.
             
             Constants are assumed to number as many as `terminals`, that
             is, if `terminals` is five, there are also 'five' constants
             that may be selected (though the value of the constant is
             determined separately). If `terminals` is zero but
             `constant_bounds` is not ``None``, there is 'one' constant
-            available. If `constant_bounds` is ``None``, no constants are
-            ever created.
+            available. If `constant_bounds` is ``None``, no constants
+            are ever created.
+          
+          fixed_root : `Instruction` or ``None``
+            The instruction that must always exist at the root of the
+            tree.
         
         :Returns:
             A list containing instances of `Instruction`, `Terminal`,
@@ -512,8 +552,8 @@ class TgpSpecies(Species):
         assert (adfs - adf_index) + terminals + constants, "No terminals available"
         
         def _rnd(depth, adf_index):
-            '''Recursively creates an instruction and its parameters
-            (if any).
+            '''Recursively creates an instruction and its parameters (if
+            any).
             '''
             if (deepest and depth >= deepest) or frand() < terminal_prob:
                 i = irand(-adfs + adf_index, constants + terminals)
@@ -527,22 +567,30 @@ class TgpSpecies(Species):
                         value = frand() * (constant_bounds[1] - constant_bounds[0]) + constant_bounds[0]
                         root = [Constant(constant_type(value))]
                 else:
-                    root = [terminal_set[i - constants]]
+                    root = [copy(terminal_set[i - constants])]
             else:
-                root = [choice(instructions)]
+                root = [copy(choice(instructions))]
                 for _ in xrange(root[0].param_count):
                     root.extend(_rnd(depth + 1, adf_index))
             root[0].depth = depth
             
             return root
         
-        return _rnd(0, adf_index)
+        if fixed_root:
+            root = [copy(fixed_root)]
+            for _ in xrange(root[0].param_count):
+                root.extend(_rnd(1, adf_index))
+            root[0].depth = 0
+        else:
+            root = _rnd(0, adf_index)
+        
+        return root
     
     def init_tgp(self, instructions, terminals=0, deepest=10,
                  adfs=0, 
                  lowest_int_constant=None, highest_int_constant=None,
                  lowest_constant=None, highest_constant=None,
-                 terminal_prob=0.5):
+                 terminal_prob=0.5, fixed_root=False):
         '''Creates tree-based genetic programming (TGP) programs made
         from `instructions`.
         
@@ -557,9 +605,9 @@ class TgpSpecies(Species):
             available for inclusion in programs.
           
           deepest : int
-            The maximum depth program tree that may be created.
-            Some programs may be less deep than this value if they
-            fully terminate before reaching this depth.
+            The maximum depth program tree that may be created. Some
+            programs may be less deep than this value if they fully
+            terminate before reaching this depth.
           
           adfs : int
             The number of automatically-defined functions to include.
@@ -571,19 +619,19 @@ class TgpSpecies(Species):
             The lowest (inclusive) value of integer constant to create.
             If ``None`` or greater than `highest_constant`, constants
             are never created. This value cannot be specified with
-            either `lowest_constant` or `highest_constant.`
+            either `lowest_constant` or `highest_constant`.
           
           highest_int_constant : int
             The highest (inclusive) value of integer constant to create.
             If ``None`` or less than `lowest_int_constant`, constants
             are never created. This value cannot be specified with
-            either `lowest_constant` or `highest_constant.`
+            either `lowest_constant` or `highest_constant`.
           
           lowest_constant : float
             The lowest (inclusive) value of constant to create. If
             ``None`` or greater than `highest_constant`, constants are
             never created. This value cannot be specified with either
-            `lowest_int_constant` or `highest_int_constant.`
+            `lowest_int_constant` or `highest_int_constant`.
             
             These constants are real values. To create integer constants
             specify `lowest_int_constant` and `highest_int_constant`
@@ -593,7 +641,7 @@ class TgpSpecies(Species):
             The highest (exclusive) value of constant to create. If
             ``None`` or less than `lowest_constant`, constants are never
             created. This value cannot be specified with either
-            `lowest_int_constant` or `highest_int_constant.`
+            `lowest_int_constant` or `highest_int_constant`.
             
             These constants are real values. To create integer constants
             specify `lowest_int_constant` and `highest_int_constant`
@@ -603,6 +651,11 @@ class TgpSpecies(Species):
             The probability of a branch terminating at any particular
             point. If this is zero, the program tree will be filled to
             the depth specified by `deepest`.
+          
+          fixed_root : bool
+            ``True`` to limit the root of all trees to be the first
+            instruction in `instructions`; otherwise, ``False`` to allow
+            any instruction to exist at the root.
         '''
         instructions = list(instructions)
         instruction_set = ''.join(instr.name for instr in instructions)
@@ -622,9 +675,6 @@ class TgpSpecies(Species):
         else:
             constant_bounds = (lowest_constant, highest_constant)
         
-        instructions_list = [i for i in instructions if i.param_count]
-        terminals_list = terminals
-        
         while True:
             genes = [self._init_one(instructions,
                                     terminals,
@@ -633,18 +683,25 @@ class TgpSpecies(Species):
                                     i,
                                     constant_bounds,
                                     type(constant_bounds[0]) if constant_bounds else None,
-                                    terminal_prob) for i in xrange(adfs+1)]
+                                    terminal_prob,
+                                    instructions[0] if fixed_root else None)
+                     for i in xrange(adfs+1)]
             yield TgpIndividual(genes,
                                 self,
                                 instructions,
                                 instruction_set,
                                 terminals,
                                 constant_bounds,
-                                type(constant_bounds[0]) if constant_bounds else None)
+                                type(constant_bounds[0]) if constant_bounds else None,
+                                fixed_root)
     
-    def init_boolean_tgp(self, terminals=0, deepest=10, adfs=0, constants=False, terminal_prob=0.5):
-        '''Creates tree-based genetic programming (TGP) programs made from
-        `boolean_instructions`.
+    def init_boolean_tgp(self,
+                         terminals=0, deepest=10,
+                         adfs=0,
+                         constants=False,
+                         terminal_prob=0.5):
+        '''Creates tree-based genetic programming (TGP) programs made
+        from `boolean_instructions`.
         
         .. include:: epydoc_include.txt
         
@@ -654,9 +711,9 @@ class TgpSpecies(Species):
             available for inclusion in programs.
           
           deepest : int
-            The maximum depth program tree that may be created.
-            Some programs may be less deep than this value if they
-            fully terminate before reaching this depth.
+            The maximum depth program tree that may be created. Some
+            programs may be less deep than this value if they fully
+            terminate before reaching this depth.
           
           adfs : int
             The number of automatically-defined functions to include.
@@ -685,24 +742,27 @@ class TgpSpecies(Species):
                                     i,
                                     constant_bounds,
                                     int,
-                                    terminal_prob) for i in xrange(adfs+1)]
+                                    terminal_prob,
+                                    None)
+                     for i in xrange(adfs+1)]
             yield TgpIndividual(genes,
                                 self,
                                 instructions,
                                 instruction_set,
                                 terminals,
                                 constant_bounds,
-                                int)
+                                int,
+                                False)
     
     def init_real_tgp(self,
-                      terminals=0,
-                      deepest=10,
+                      terminals=0, deepest=10,
                       adfs=0,
                       terminal_prob=0.5,
                       transcendentals=False,
                       lowest_constant=None, highest_constant=None):
-        '''Creates tree-based genetic programming (TGP) programs made from
-        `real_instructions` and, optionally, `transcendental_instructions`.
+        '''Creates tree-based genetic programming (TGP) programs made
+        from `real_instructions` and, optionally,
+        `transcendental_instructions`.
         
         .. include:: epydoc_include.txt
         
@@ -712,9 +772,9 @@ class TgpSpecies(Species):
             available for inclusion in programs.
           
           deepest : int
-            The maximum depth program tree that may be created.
-            Some programs may be less deep than this value if they
-            fully terminate before reaching this depth.
+            The maximum depth program tree that may be created. Some
+            programs may be less deep than this value if they fully
+            terminate before reaching this depth.
           
           adfs : int
             The number of automatically-defined functions to include.
@@ -728,8 +788,8 @@ class TgpSpecies(Species):
             the depth specified by `deepest`.
           
           transcendentals : bool
-            ``True`` to include `transcendental_instructions`; otherwise,
-            ``False``. Defaults to ``False``.
+            ``True`` to include `transcendental_instructions`;
+            otherwise, ``False``. Defaults to ``False``.
           
           lowest_constant : float
             The lowest (inclusive) value of constant to create. If
@@ -758,14 +818,17 @@ class TgpSpecies(Species):
                                     i,
                                     constant_bounds,
                                     float,
-                                    terminal_prob) for i in xrange(adfs+1)]
+                                    terminal_prob,
+                                    None)
+                     for i in xrange(adfs+1)]
             yield TgpIndividual(genes,
                                 self,
                                 instructions,
                                 instruction_set,
                                 terminals,
                                 constant_bounds,
-                                float)
+                                float,
+                                False)
     
     def init_integer_tgp(self,
                          terminals=0,
@@ -773,8 +836,8 @@ class TgpSpecies(Species):
                          adfs=0,
                          terminal_prob=0.5,
                         lowest_constant=None, highest_constant=None):
-        '''Creates tree-based genetic programming (TGP) programs made from
-        `integer_instructions`.
+        '''Creates tree-based genetic programming (TGP) programs made
+        from `integer_instructions`.
         
         .. include:: epydoc_include.txt
         
@@ -784,9 +847,9 @@ class TgpSpecies(Species):
             available for inclusion in programs.
           
           deepest : int
-            The maximum depth program tree that may be created.
-            Some programs may be less deep than this value if they
-            fully terminate before reaching this depth.
+            The maximum depth program tree that may be created. Some
+            programs may be less deep than this value if they fully
+            terminate before reaching this depth.
           
           adfs : int
             The number of automatically-defined functions to include.
@@ -823,22 +886,26 @@ class TgpSpecies(Species):
                                     i,
                                     constant_bounds,
                                     int,
-                                    terminal_prob) for i in xrange(adfs+1)]
+                                    terminal_prob,
+                                    None)
+                     for i in xrange(adfs+1)]
             yield TgpIndividual(genes,
                                 self,
                                 instructions,
                                 instruction_set,
                                 terminals,
                                 constant_bounds,
-                                int)
+                                int,
+                                False)
     
     def crossover_one(self, _source,
                       per_pair_rate=None, per_indiv_rate=1.0, per_adf_rate=1.0,
                       longest_result=None, deepest_result=None,
                       terminal_prob=None):
         '''
-        :Note: Redirects to `crossover_one_different`. TGP has no sensible
-               way in which to cross two individuals at the same point.
+        :Note: This sedirects to `crossover_one_different`. Tree-based
+               Genetic Programming has no sensible way in which to cross
+               two individuals at the same point.
         '''
         return self.crossover_one_different(_source,
                                             per_pair_rate,
@@ -859,18 +926,18 @@ class TgpSpecies(Species):
         ADFs are only recombined with ADFs of equivalent index to ensure
         that circular or recursive references are not introduced.
         
-        Returns a sequence of crossed individuals based on the individuals
-        in `_source`. The resulting sequence will contain as many individuals
-        as `_source` (unless `_source` contains an odd number, in which case
-        one less will be returned).
+        Returns a sequence of crossed individuals based on the
+        individuals in `_source`. The resulting sequence will contain as
+        many individuals as `_source` (unless `_source` contains an odd
+        number, in which case one less will be returned).
         
         .. include:: epydoc_include.txt
         
         :Parameters:
           _source : iterable(`TgpIndividual`)
-            A sequence of individuals. Individuals are taken two at a time
-            from this sequence, recombined to produce two new individuals,
-            and yielded separately.
+            A sequence of individuals. Individuals are taken two at a
+            time from this sequence, recombined to produce two new
+            individuals, and yielded separately.
           
           per_pair_rate : |prob|
             The probability of any particular pair of individuals being
@@ -882,21 +949,22 @@ class TgpSpecies(Species):
             A synonym for `per_pair_rate`.
           
           per_adf_rate : |prob|
-            The probability of each ADF within individuals being recombined.
-            If individuals are not selected for recombination (under
-            `per_indiv_rate`) then no ADFs will be recombined. Otherwise,
-            each ADF within the selected individuals is recombined with a
-            probability of `per_adf_rate`.
+            The probability of each ADF within individuals being
+            recombined. If individuals are not selected for
+            recombination (under `per_indiv_rate`) then no ADFs will be
+            recombined. Otherwise, each ADF within the selected
+            individuals is recombined with a probability of
+            `per_adf_rate`.
           
           longest_result : int > 0
             A direct synonym for `deepest_result`.
           
           deepest_result : int > 0
-            The deepest new program to create. If the crossover operation
-            produces a deeper program or ADF then the offspring are
-            discarded and the original individuals are returned. An
-            ``'aborted'`` notification is sent to the monitor from
-            ``'crossover_one'``.
+            The deepest new program to create. If the crossover
+            operation produces a deeper program or ADF then the
+            offspring are discarded and the original individuals are
+            returned. An ``'aborted'`` notification is sent to the
+            monitor from ``'crossover_one'``.
           
           terminal_prob : |prob| [optional]
             Biases the probability of selecting a terminal as the root
@@ -917,39 +985,45 @@ class TgpSpecies(Species):
         
         deepest_result = int(deepest_result or 0)
         
-        group = list(_source)
-        for i1_pre, i2_pre in izip(group[::2], group[1::2]):
+        for i1_pre, i2_pre in _pairs(_source):
             if do_all_pairs or frand() < per_pair_rate:
                 assert len(i1_pre.genome) == len(i2_pre.genome), "ADF counts are not consistent"
                 i1_post = []
                 i2_post = []
                 
                 for adf, (program1, program2) in enumerate(izip(i1_pre.genome, i2_pre.genome)):
-                    if do_all_adf or frand() < per_adf_rate:
-                        if len(program1) <= 1 or len(program2) <= adf:
-                            i1_post.append(program1)
-                            i2_post.append(program2)
-                        else:
-                            start1, end1 = self._pick_random_node(program1, terminal_prob)
-                            start2, end2 = self._pick_random_node(program2, terminal_prob)
-                            new1 = list(chain(islice(program1, 0, start1),
-                                              islice(program2, start2, end2),
-                                              islice(program1, end1, None)))
-                            new2 = list(chain(islice(program2, 0, start2),
-                                              islice(program1, start1, end1),
-                                              islice(program2, end2, None)))
-                            if (deepest_result and
-                                (self.depth(new1) > deepest_result or self.depth(new2) > deepest_result)):
-                                stats = { 'i1': i1_pre, 'i2': i2_pre, 'adf': adf, 'deepest_result': deepest_result }
+                    new_program1 = program1
+                    new_program2 = program2
+                    
+                    if ((do_all_adf or frand() < per_adf_rate) and
+                        (len(program1) > 1 and len(program2) > 1)):
+                        
+                        can_select_root = (adf > 0 or not i1_pre.fixed_root)
+                        start1, end1 = self._pick_random_node(program1, terminal_prob, can_select_root)
+                        start2, end2 = self._pick_random_node(program2, terminal_prob, can_select_root)
+                        
+                        if start1 < end1 and start2 < end2:
+                            new_program1 = list(chain(islice(program1, 0, start1),
+                                                      islice(program2, start2, end2),
+                                                      islice(program1, end1, None)))
+                            new_program2 = list(chain(islice(program2, 0, start2),
+                                                      islice(program1, start1, end1),
+                                                      islice(program2, end2, None)))
+                            
+                            if (deepest_result and self.depth(new_program1) > deepest_result or 
+                                deepest_result and self.depth(new_program2) > deepest_result):
+                                stats = { 
+                                    'i1': i1_pre,
+                                    'i2': i2_pre,
+                                    'adf': adf,
+                                    'deepest_result': deepest_result
+                                }
                                 notify('crossover_one', 'aborted', stats)
-                                i1_post.append(program1)
-                                i2_post.append(program2)
-                            else:
-                                i1_post.append(new1)
-                                i2_post.append(new2)
-                    else:
-                        i1_post.append(i1_pre.genome[adf])
-                        i2_post.append(i2_pre.genome[adf])
+                                new_program1 = program1
+                                new_program2 = program2
+                    
+                    i1_post.append(new_program1)
+                    i2_post.append(new_program2)
                 
                 if i1_post and i2_post:
                     yield type(i1_pre)(i1_post, i1_pre, statistic={ 'recombined': 1 })
@@ -1009,25 +1083,27 @@ class TgpSpecies(Species):
         do_all_adf = (per_adf_rate >= 1.0)
         
         deepest_result = int(deepest_result or 0)
-        
         def _mutate(indiv):
             '''Returns a potentially mutated individual.'''
             assert isinstance(indiv, TgpIndividual), "Want `TgpIndividual`, not `%s`" % type(indiv)
             
             new_genes = []
-            for i, program in enumerate(indiv.genome):
+            for adf, program in enumerate(indiv.genome):
+                new_program = program
+                
                 if do_all_adf or frand() < per_adf_rate:
-                    start, end = self._pick_random_node(program)
-                    depth_limit = (deepest_result - self.depth(program[:start])) if deepest_result else None
-                    replacement = self._init_one(indiv.instructions, indiv.terminals, depth_limit,
-                                                 len(indiv.genome) - 1, i,
-                                                 indiv.constant_bounds, indiv.constant_type,
-                                                 terminal_prob)
-                    new_genes.append(list(chain(islice(program, 0, start),
-                                                replacement,
-                                                islice(program, end, None))))
-                else:
-                    new_genes.append(program)
+                    start, end = self._pick_random_node(program, allow_root=(adf > 0 or not indiv.fixed_root))
+                    if start < end:
+                        depth_limit = (deepest_result - self.depth(program[:start])) if deepest_result else None
+                        replacement = self._init_one(indiv.instructions, indiv.terminals, depth_limit,
+                                                     len(indiv.genome) - 1, adf,
+                                                     indiv.constant_bounds, indiv.constant_type,
+                                                     terminal_prob, False)
+                        new_program = list(chain(islice(program, 0, start),
+                                                 replacement,
+                                                 islice(program, end, None)))
+                
+                new_genes.append(new_program)
             return new_genes
         
         for indiv in _source:
@@ -1070,21 +1146,27 @@ class TgpSpecies(Species):
             assert isinstance(indiv, TgpIndividual), "Want `TgpIndividual`, not `%s`" % type(indiv)
             
             new_genes = []
-            for _, program in enumerate(indiv.genome):
+            for adf, program in enumerate(indiv.genome):
+                new_program = program
+                
                 if do_all_adf or frand() < per_adf_rate:
-                    start, end = self._pick_random_node(program)
-                    params = []
-                    start1 = start + 1
-                    for _ in xrange(program[start].param_count):
-                        end1 = self._find_end(program, start1)
-                        params.append(program[start1:end1])
-                        start1 = end1 + 1
-                    shuffle(params)
-                    replacement = []
-                    for param in params: replacement.extend(param)
-                    new_genes.append(program[:start+1] + replacement + program[end:])
-                else:
-                    new_genes.append(program)
+                    start, end = self._pick_random_node(program, allow_root=(adf > 0 or not indiv.fixed_root))
+                    if start < end:
+                        params = []
+                        start1 = start + 1
+                        for _ in xrange(program[start].param_count):
+                            end1 = self._find_end(program, start1)
+                            params.append(program[start1:end1])
+                            start1 = end1 + 1
+                        shuffle(params)
+                        replacement = []
+                        for param in params:
+                            replacement.extend(param)
+                        new_program = list(chain(islice(program, start+1),
+                                                 replacement,
+                                                 islice(program, end, None)))
+                
+                new_genes.append(new_program)
             return new_genes
         
         for indiv in _source:
@@ -1171,27 +1253,33 @@ class TgpSpecies(Species):
                 yield indiv
     
     @classmethod
-    def _pick_random_node(cls, program, terminal_prob=None):
+    def _pick_random_node(cls, program, terminal_prob=None, allow_root=True):
         '''Selects a random branch within the program and returns both its
         starting index and end index (as found with `_find_end`).
         '''
         if not program:
             return (0, 0)
         
-        start = rand.randrange(len(program))
+        start = rand.randrange(0 if allow_root else 1, len(program))
         if terminal_prob is None:
             pass
         elif rand.random() < terminal_prob:
             # find a terminal
             for start in xrange(start, start + len(program)):
                 if program[start % len(program)].param_count == 0:
-                    break
+                    if allow_root or start % len(program):
+                        break
+            else:
+                return (0, 0)
             start = start % len(program)    #pylint: disable=W0631
         else:
             # find a non-terminal
             for start in xrange(start, start + len(program)):
                 if program[start % len(program)].param_count > 0:
-                    break
+                    if allow_root or start % len(program):
+                        break
+            else:
+                return (0, 0)
             start = start % len(program)    #pylint: disable=W0631
         end = cls._find_end(program, start)
         
