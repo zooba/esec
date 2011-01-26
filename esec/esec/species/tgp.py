@@ -555,7 +555,7 @@ class TgpSpecies(Species):
             '''Recursively creates an instruction and its parameters (if
             any).
             '''
-            if (deepest and depth >= deepest) or frand() < terminal_prob:
+            if (deepest is not None and depth >= deepest) or frand() < terminal_prob:
                 i = irand(-adfs + adf_index, constants + terminals)
                 if i < 0:
                     root = [CallAdf(-i + adf_index)]
