@@ -180,7 +180,7 @@ class TourSpecies(IntegerSpecies):
             pheromone_power = 0
             pher_list = ((i, 1) for i in options)
         
-        prob_list = sorted([(i, (c ** -cost_power) * (p ** pheromone_power)) \
+        prob_list = sorted([(i, (c ** -cost_power if c else 1) * (p ** pheromone_power if p else 1)) \
                             for (i, c), (i2, p) in izip(cost_list, pher_list) if i == i2],
                            key=lambda i: i[1],
                            reverse=True)
