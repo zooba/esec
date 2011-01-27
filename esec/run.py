@@ -688,7 +688,7 @@ def main():
     # Banner
     print HR,
     print ' esec: EcoSystem Evolutionary Computation'
-    print ' Copyright (c) Clinton Woodward and Steve Dower 2007-2010'
+    print ' Copyright (c) Clinton Woodward and Steve Dower 2010-2011'
     print HR
     
     # Check for arguments
