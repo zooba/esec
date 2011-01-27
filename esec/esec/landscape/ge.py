@@ -163,6 +163,7 @@ class F(float):
     def __sub__(self, v): return F(float.__sub__(self, v))
     def __mul__(self, v): return F(float.__mul__(self, v))
     def __div__(self, v): return F(0 if not v else float.__div__(self, v))
+    def __truediv__(self, v): return F(0 if not v else float.__truediv__(self, v))
     def __rdiv__(self, v): return F(0 if not self else float.__rdiv__(self, v))
 
 def sin(x): return F(math.sin(x))
