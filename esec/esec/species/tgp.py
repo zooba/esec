@@ -539,9 +539,16 @@ class TgpSpecies(Species):
             instruction is followed by its parameters, also known as
             Polish notation).
         '''
+        assert instructions is not True, "instructions has no value"
+        assert terminals is not True, "terminals has no value"
+        assert deepest is not True, "deepest has no value"
+        assert adfs is not True, "adfs has no value"
+        assert terminal_prob is not True, "terminal_prob has no value"
+        
         irand = rand.randrange
         frand = rand.random
         choice = rand.choice
+        
         terminals = int(terminals or 0)
         terminal_set = [Terminal(i) for i in xrange(terminals)] + [i for i in instructions if not i.param_count]
         terminals = len(terminal_set)
@@ -657,6 +664,11 @@ class TgpSpecies(Species):
             instruction in `instructions`; otherwise, ``False`` to allow
             any instruction to exist at the root.
         '''
+        assert lowest_int_constant is not True, "lowest_int_constant has no value"
+        assert highest_int_constant is not True, "highest_int_constant has no value"
+        assert lowest_constant is not True, "lowest_constant has no value"
+        assert highest_constant is not True, "highest_constant has no value"
+        
         instructions = list(instructions)
         instruction_set = ''.join(instr.name for instr in instructions)
         
@@ -698,7 +710,7 @@ class TgpSpecies(Species):
     def init_boolean_tgp(self,
                          terminals=0, deepest=10,
                          adfs=0,
-                         constants=False,
+                         constants=False, no_constants=False,
                          terminal_prob=0.5):
         '''Creates tree-based genetic programming (TGP) programs made
         from `boolean_instructions`.
@@ -722,8 +734,13 @@ class TgpSpecies(Species):
             A root program is always created, regardless of this value.
           
           constants : bool
-            ``True`` to allow random constants to be included. Defaults
-            to ``False``.
+            ``True`` to allow random constants to be included. If
+            neither `constants` nor `no_constants` are specified,
+            `no_constants` is the default.
+          
+          no_constants : bool
+            ``True`` to prevent random constants to be included. This is
+            the default.
           
           terminal_prob : |prob|
             The probability of a branch terminating at any particular
@@ -801,6 +818,9 @@ class TgpSpecies(Species):
             ``None`` or less than `lowest_constant`, constants are never
             created.
         '''
+        assert lowest_constant is not True, "lowest_constant has no value"
+        assert highest_constant is not True, "highest_constant has no value"
+        
         instructions = TgpSpecies.real_instructions
         instruction_set = 'real'
         if lowest_constant is None or highest_constant is None or lowest_constant > highest_constant:
@@ -872,6 +892,9 @@ class TgpSpecies(Species):
             ``None``, less than or equal to `lowest_constant`,
             constants are never created.
         '''
+        assert lowest_constant is not True, "lowest_constant has no value"
+        assert highest_constant is not True, "highest_constant has no value"
+        
         instructions = TgpSpecies.integer_instructions
         instruction_set = 'integer'
         if lowest_constant is None or highest_constant is None or lowest_constant > highest_constant:
@@ -975,6 +998,13 @@ class TgpSpecies(Species):
             If omitted, the distribution of crossover points is not
             artifically biased.
         '''
+        assert per_pair_rate is not True, "per_pair_rate has no value"
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert per_adf_rate is not True, "per_adf_rate has no value"
+        assert longest_result is not True, "longest_result has no value"
+        assert deepest_result is not True, "deepest_result has no value"
+        assert terminal_prob is not True, "terminal_prob has no value"
+        
         frand = rand.random
         
         if per_pair_rate is None: per_pair_rate = per_indiv_rate
@@ -1076,6 +1106,11 @@ class TgpSpecies(Species):
             point. If this is zero, the program tree will be filled to
             the depth specified by `deepest_result`.
         '''
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert per_adf_rate is not True, "per_adf_rate has no value"
+        assert deepest_result is not True, "deepest_result has no value"
+        assert terminal_prob is not True, "terminal_prob has no value"
+        
         frand = rand.random
         
         if per_gene_rate is not None: per_adf_rate = per_gene_rate
@@ -1135,6 +1170,9 @@ class TgpSpecies(Species):
             each ADF within the selected individuals is mutated with a
             probability of `per_adf_rate`.
         '''
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert per_adf_rate is not True, "per_adf_rate has no value"
+        
         frand = rand.random
         shuffle = rand.shuffle
         
@@ -1199,6 +1237,8 @@ class TgpSpecies(Species):
             each ADF within the selected individuals is mutated with a
             probability of `per_adf_rate`.
         '''
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert per_adf_rate is not True, "per_adf_rate has no value"
         
         frand = rand.random
         

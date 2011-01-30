@@ -184,10 +184,11 @@ class GESpecies(IntegerSpecies):
         assert isinstance(indiv, GEIndividual), "Expected GEIndividual"
         return indiv.Eval is not None
     
-    def init_ge(self, grammar, defines=None, length=None,
-                      shortest=1, longest=100,
-                      lowest=0, highest=255,
-                      wrap_count=0):
+    def init_ge(self,
+                grammar, defines=None, length=None,
+                shortest=1, longest=100,
+                lowest=0, highest=255,
+                wrap_count=0):
         '''Returns instances of `GEIndividual` initialised with random values.
         
         The values of `lowest` and `highest` are stored with the individual and
@@ -226,6 +227,15 @@ class GESpecies(IntegerSpecies):
             The number of times the genome may be reused when mapping
             to a phenome.
         '''
+        assert grammar is not True, "grammar has no value"
+        assert defines is not True, "defines has no value"
+        assert length is not True, "length has no value"
+        assert shortest is not True, "shortest has no value"
+        assert longest is not True, "longest has no value"
+        assert lowest is not True, "lowest has no value"
+        assert highest is not True, "highest has no value"
+        assert wrap_count is not True, "wrap_count has no value"
+        
         lowest = int(lowest)
         highest = int(highest)
         wrap_count = int(wrap_count)

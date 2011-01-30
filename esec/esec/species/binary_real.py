@@ -193,6 +193,11 @@ class BinaryRealSpecies(BinarySpecies):
               ones_complement, twos_complement, gray_code, counted, encoding,   #pylint: disable=W0613
               _gen):
         '''All parameters have the same meaning as for `init_random_real`.'''
+        assert length is not True, "length has no value"
+        assert bits_per_value is not True, "bits_per_value has no value"
+        assert lowest is not True, "lowest has no value"
+        assert highest is not True, "highest has no value"
+        assert encoding is not True, "encoding has no value"
         
         if hasattr(length, 'get'): length = length.get('exact', length.get('max'))
         length = int(length or 0)
@@ -306,12 +311,12 @@ class BinaryRealSpecies(BinarySpecies):
                           lambda _: 0 if rand.random() < 0.5 else 1)
     
     def init_zero_real(self,
-                         length=None,
-                         bits_per_value=8,
-                         lowest=0.0, highest=1.0,
-                         ones_complement=False, twos_complement=False,
-                         gray_code=False, counted=False,
-                         encoding=None):
+                       length=None,
+                       bits_per_value=8,
+                       lowest=0.0, highest=1.0,
+                       ones_complement=False, twos_complement=False,
+                       gray_code=False, counted=False,
+                       encoding=None):
         '''Returns instances of `BinaryRealIndividual` initialised with zeros.
         
         Parameters are the same as for `init_random_real`.
@@ -321,12 +326,12 @@ class BinaryRealSpecies(BinarySpecies):
                           lambda _: 0)
     
     def init_one_real(self,
-                         length=None,
-                         bits_per_value=8,
-                         lowest=0.0, highest=1.0,
-                         ones_complement=False, twos_complement=False,
-                         gray_code=False, counted=False,
-                         encoding=None):
+                      length=None,
+                      bits_per_value=8,
+                      lowest=0.0, highest=1.0,
+                      ones_complement=False, twos_complement=False,
+                      gray_code=False, counted=False,
+                      encoding=None):
         '''Returns instances of `BinaryRealIndividual` initialised with ones.
         
         Parameters are the same as for `init_random_real`.

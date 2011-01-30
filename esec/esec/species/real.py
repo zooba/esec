@@ -118,6 +118,14 @@ class RealSpecies(Species):
         '''Returns instances of `RealIndividual` initialised using the function in
         `_gen`.
         '''
+        assert length is not True, "length has no value"
+        assert shortest is not True, "shortest has no value"
+        assert longest is not True, "longest has no value"
+        assert lowest is not True, "lowest has no value"
+        assert highest is not True, "highest has no value"
+        assert lower_bounds is not True, "lower_bounds has no value"
+        assert upper_bounds is not True, "upper_bounds has no value"
+        
         if hasattr(length, 'get'):
             shortest = length.get('min', 0)
             longest = length.get('max', 0)
@@ -281,6 +289,10 @@ class RealSpecies(Species):
             The exact number of genes to mutate. If `None`, `per_gene_rate` is
             used instead.
         '''
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert per_gene_rate is not True, "per_gene_rate has no value"
+        assert genes is not True, "genes has no value"
+        
         frand = rand.random
         shuffle = rand.shuffle
         
@@ -344,6 +356,12 @@ class RealSpecies(Species):
             The probability of `step_size` being added to the gene value.
             Otherwise, `step_size` is subtracted.
         '''
+        assert step_size is not True, "step_size has no value"
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert per_gene_rate is not True, "per_gene_rate has no value"
+        assert genes is not True, "genes has no value"
+        assert positive_rate is not True, "positive_rate has no value"
+        
         frand = rand.random
         shuffle = rand.shuffle
         
@@ -413,6 +431,12 @@ class RealSpecies(Species):
             The exact number of genes to mutate. If `None`, `per_gene_rate` is
             used instead.
         '''
+        assert step_size is not True, "step_size has no value"
+        assert sigma is not True, "sigma has no value"
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert per_gene_rate is not True, "per_gene_rate has no value"
+        assert genes is not True, "genes has no value"
+        
         sigma = sigma or (step_size * 1.253)
         frand = rand.random
         shuffle = rand.shuffle

@@ -42,6 +42,10 @@ class BinarySpecies(Species):
     def _len(self, length, shortest, longest):
         '''Returns a randomly selected length for a new individual.'''
         
+        assert length is not True, "length has no value"
+        assert shortest is not True, "shortest has no value"
+        assert longest is not True, "longest has no value"
+        
         if hasattr(length, 'get'):
             shortest = length.get('min', 0)
             longest = length.get('max', 0)
@@ -169,6 +173,10 @@ class BinarySpecies(Species):
             The exact number of genes to mutate. If `None`, `per_gene_rate` is
             used instead.
         '''
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert per_gene_rate is not True, "per_gene_rate has no value"
+        assert genes is not True, "genes has no value"
+        
         frand = rand.random
         shuffle = rand.shuffle
         
@@ -220,6 +228,10 @@ class BinarySpecies(Species):
             The exact number of genes to mutate. If `None`, `per_gene_rate` is
             used instead.
         '''
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert per_gene_rate is not True, "per_gene_rate has no value"
+        assert genes is not True, "genes has no value"
+        
         frand = rand.random
         shuffle = rand.shuffle
         
@@ -263,6 +275,8 @@ class BinarySpecies(Species):
             The probability of any individual being mutated. If an individual
             is not mutated, it is returned unmodified.
         '''
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        
         frand = rand.random
         
         do_all_indiv = (per_indiv_rate >= 1.0)
@@ -304,6 +318,8 @@ class BinarySpecies(Species):
             The largest number of genes that may be inverted at any
             mutation.
         '''
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        
         len_ = self._len(length, shortest, longest)
         
         frand = rand.random

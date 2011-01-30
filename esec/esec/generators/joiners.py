@@ -25,6 +25,7 @@ def BestWithAll(_source, best_from=0):
     '''
     _source, names = _source
     _source = list(_source)
+    assert best_from is not True, "best_from has not value."
     best_from = int(best_from)
     best_group = _source[best_from]
     best = (next(BestOnly(best_group)),)  # make it a tuple

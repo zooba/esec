@@ -205,7 +205,10 @@ def OldestOnly(_source):
     return Oldest(_source, True)
 
 @esdl_func('tournament')
-def Tournament(_source, k=2, replacement=True, greediness=1.0):
+def Tournament(_source, k=2,
+               replacement=True,   # for back-compat
+               with_replacement=False, without_replacement=False,
+               greediness=1.0):
     '''Returns a sequence of individuals selected using tournament
     selection. `k` individuals are selected at random and the individual
     with the best fitness is returned.
@@ -221,23 +224,39 @@ def Tournament(_source, k=2, replacement=True, greediness=1.0):
         The number of individuals competing in each tournament.
       
       replacement : bool
+        For backwards compatibility. Use either `with_replacement` or
+        `without_replacement`.
+      
+      with_replacement : bool
         ``False`` to remove individuals from contention once they have
         been returned. The generator terminates when no individuals
         remain and the total number of individuals is equal to the
         number in `_source`. If ``True``, the generator will never
         terminate.
+        
+        If both `with_replacement` and `without_replacement` are
+        ``False``, `with_replacement` is the default.
+      
+      without_replacement : bool
+        ``True`` to remove individuals from contention once they have
+        been returned.
+        
+        If both `with_replacement` and `without_replacement` are
+        ``False``, `with_replacement` is the default.
       
       greediness : |prob|
         The probability of the most fit individual being selected. If
         this does not occur, one of the remaining individuals is
         selected at random.
     '''
+    assert k is not True, "k has no value"
+    assert greediness is not True, "greediness has no value"
     k = int(k)
     assert k >= 2, "k must be at least 2"
     irand = rand.randrange
     frand = rand.random
-    # WITH REPLACEMENT
-    if replacement:
+    # WITH REPLACEMENT (replacement test is for back-compat)
+    if replacement and not without_replacement:
         def _iter(_src):
             '''Performs tournaments on `_src` forever.'''
             size = len(_src)
@@ -270,7 +289,10 @@ def Tournament(_source, k=2, replacement=True, greediness=1.0):
         return NoReplacementSelector(_source, _func)
 
 @esdl_func('binary_tournament')
-def BinaryTournament(_source, replacement=True, greediness=1.0):
+def BinaryTournament(_source,
+                     replacement=True,
+                     with_replacement=False, without_replacement=False,
+                     greediness=1.0):
     '''Returns a sequence of individuals selected using binary
     tournament selection. Two individuals are selected at random and the
     individual with the best fitness is returned.
@@ -283,21 +305,40 @@ def BinaryTournament(_source, replacement=True, greediness=1.0):
         from this sequence, depending on the selection criteria.
       
       replacement : bool
+        For backwards compatibility. Use either `with_replacement` or
+        `without_replacement`.
+      
+      with_replacement : bool
         ``False`` to remove individuals from contention once they have
         been returned. The generator terminates when no individuals
         remain and the total number of individuals is equal to the
         number in `_source`. If ``True``, the generator will never
         terminate.
+        
+        If both `with_replacement` and `without_replacement` are
+        ``False``, `with_replacement` is the default.
+      
+      without_replacement : bool
+        ``True`` to remove individuals from contention once they have
+        been returned.
+        
+        If both `with_replacement` and `without_replacement` are
+        ``False``, `with_replacement` is the default.
       
       greediness : |prob|
         The probability of the most fit individual being selected. If
         this does not occur, one of the remaining individuals is
         selected at random.
     '''
-    return Tournament(_source, 2, replacement, greediness)
+    return Tournament(_source, k=2,
+        replacement=replacement,
+        with_replacement=with_replacement, without_replacement=without_replacement,
+        greediness=greediness)
 
 @esdl_func('uniform_random')
-def UniformRandom(_source, replacement=True):
+def UniformRandom(_source,
+                  replacement=True,     # for back-compat
+                  with_replacement=False, without_replacement=False):
     '''Returns a sequence of individuals selected randomly, without
     regard to their fitness.
     
@@ -307,15 +348,29 @@ def UniformRandom(_source, replacement=True):
         from this sequence, depending on the selection criteria.
       
       replacement : bool
+        For backwards compatibility. Use either `with_replacement` or
+        `without_replacement`.
+      
+      with_replacement : bool
         ``False`` to remove individuals from contention once they have
         been returned. The generator terminates when no individuals
         remain and the total number of individuals is equal to the
         number in `_source`. If ``True``, the generator will never
         terminate.
+        
+        If both `with_replacement` and `without_replacement` are
+        ``False``, `with_replacement` is the default.
+      
+      without_replacement : bool
+        ``True`` to remove individuals from contention once they have
+        been returned.
+        
+        If both `with_replacement` and `without_replacement` are
+        ``False``, `with_replacement` is the default.
     '''
     irand = rand.randrange
     # WITH REPLACEMENT
-    if replacement:
+    if replacement and not without_replacement:
         def _iter(_src):
             '''Returns random selections forever.'''
             size = len(_src)
@@ -338,10 +393,12 @@ def UniformRandomWithoutReplacement(_source):
         A sequence of individuals. Some or all individuals are returned
         from this sequence, depending on the selection criteria.
     '''
-    return UniformRandom(_source, replacement=False)
+    return UniformRandom(_source, without_replacement=True)
 
 @esdl_func('fitness_proportional')
-def FitnessProportional(_source, replacement=True,
+def FitnessProportional(_source,
+                        replacement=True,   # for back-compat
+                        with_replacement=False, without_replacement=False,
                         sus=False, mu=None,
                         fitness_offset=None):
     '''Returns a sequence of individuals selected in proportion to their
@@ -354,31 +411,57 @@ def FitnessProportional(_source, replacement=True,
         from this sequence, depending on the selection criteria.
       
       replacement : bool
+        For backwards compatibility. Use either `with_replacement` or
+        `without_replacement`.
+      
+      with_replacement : bool
         ``False`` to remove individuals from contention once they have
         been returned. The generator terminates when no individuals
         remain and the total number of individuals is equal to the
         number in `_source`. If ``True``, the generator will never
         terminate.
         
-        If `sus` is ``True``, `replacement` is ignored.
+        If both `with_replacement` and `without_replacement` are
+        ``False``, `with_replacement` is the default.
+        
+        If `sus` is ``True``, replacement is not relevant.
+      
+      without_replacement : bool
+        ``True`` to remove individuals from contention once they have
+        been returned.
+        
+        If both `with_replacement` and `without_replacement` are
+        ``False``, `with_replacement` is the default.
+        
+        If `sus` is ``True``, replacement is not relevant.
       
       sus : bool
         ``True`` to use stochastic universal sampling (SUS). SUS equally
         spaces selections based on `mu`, resulting in a wider sample
         distribution.
         
-        If `sus` is ``True``, `replacement` is ignored.
+        If `sus` is ``True``, replacement is not relevant.
       
       mu : int [optional]
         The number of selections being made when using SUS. If not
         provided, the total number of individuals in `_source` is used.
         
         If `sus` is ``False``, `mu` is ignored.
+      
+      fitness_offset : `Fitness`, `Individual` or iterable(`Individual`)
+        The offset to apply to fitness values. If an
+        iterable(`Individual`) is passed (for example, a group from
+        within an ESDL system), the first individual is used. If
+        omitted, the minimum fitness value in `_source` is used.
     '''
+    assert fitness_offset is not True, "fitness_offset has no value"
+    assert mu is not True, "mu has no value"
     if sus:
         return FitnessProportionalSUS(_source, mu, fitness_offset)
     else:
-        return FitnessProportionalNormal(_source, replacement, fitness_offset)
+        return FitnessProportionalNormal(_source,
+            replacement=(replacement and not without_replacement),
+            fitness_offset=fitness_offset)
 
 def _GetMinimumFitness(fitness1, fitness2):
     '''Returns the minimum of two fitness values.
@@ -484,6 +567,9 @@ def FitnessProportionalSUS(_source, mu=None, fitness_offset=None):
         within an ESDL system), the first individual is used. If
         omitted, the minimum fitness value in `_source` is used.
     '''
+    assert mu is not True, "mu has no value"
+    assert fitness_offset is not True, "fitness_offset has no value"
+    
     group = [indiv for indiv in _source if not isinf(indiv.fitness.simple)]
     group.sort(key=_key_fitness, reverse=True)
     frand = rand.random
@@ -515,7 +601,9 @@ def FitnessProportionalSUS(_source, mu=None, fitness_offset=None):
         yield wheel[i][1]
 
 @esdl_func('rank_proportional')
-def RankProportional(_source, replacement=True,
+def RankProportional(_source,
+                     replacement=True,  # for back-compat
+                     with_replacement=False, without_replacement=False,
                      expectation=1.1, neta=None,
                      invert=False,
                      sus=False, mu=None):
@@ -530,13 +618,29 @@ def RankProportional(_source, replacement=True,
         from this sequence, depending on the selection criteria.
       
       replacement : bool
+        For backwards compatibility. Use either `with_replacement` or
+        `without_replacement`.
+      
+      with_replacement : bool
         ``False`` to remove individuals from contention once they have
         been returned. The generator terminates when no individuals
         remain and the total number of individuals is equal to the
         number in `_source`. If ``True``, the generator will never
         terminate.
         
-        If `sus` is ``True``, `replacement` is ignored.
+        If both `with_replacement` and `without_replacement` are
+        ``False``, `with_replacement` is the default.
+        
+        If `sus` is ``True``, replacement is ignored.
+      
+      without_replacement : bool
+        ``True`` to remove individuals from contention once they have
+        been returned.
+        
+        If both `with_replacement` and `without_replacement` are
+        ``False``, `with_replacement` is the default.
+        
+        If `sus` is ``True``, replacement is ignored.
       
       expectation : float |isin| [1.0, 2.0]
         The relative probability of selecting the highest ranked
@@ -557,7 +661,7 @@ def RankProportional(_source, replacement=True,
         spaces selections based on `mu`, resulting in a wider sample
         distribution.
         
-        If `sus` is ``True``, `replacement` is ignored.
+        If `sus` is ``True``, replacement is ignored.
       
       mu : int [optional]
         The number of selections being made when using SUS. If not
@@ -565,10 +669,15 @@ def RankProportional(_source, replacement=True,
         
         If `sus` is ``False``, `mu` is ignored.
     '''
+    assert expectation is not True, "expectation has no value"
+    assert neta is not True, "neta has no value"
+    assert mu is not True, "mu has no value"
     if sus:
         return RankProportionalSUS(_source, mu, expectation, neta, invert)
     else:
-        return RankProportionalNormal(_source, replacement, expectation, neta, invert)
+        return RankProportionalNormal(_source,
+            replacement=(replacement and not without_replacement),
+            expectation=expectation, neta=neta, invert=invert)
 
 def RankProportionalNormal(_source, replacement=True, expectation=1.1, neta=None, invert=False):
     '''Returns a sequence of individuals selected in proportion to their
@@ -669,6 +778,9 @@ def RankProportionalSUS(_source, mu=None, expectation=1.1, neta=None, invert=Fal
         The number of selections being made when using SUS. If not
         provided, the total number of individuals in `_source` is used.
     '''
+    assert mu is not True, "mu has no value"
+    assert expectation is not True, "expectation has no value"
+    assert neta is not True, "neta has no value"
     group = [indiv for indiv in _source if not isinf(indiv.fitness.simple)]
     group.sort(key=_key_fitness, reverse=not invert)
     frand = rand.random

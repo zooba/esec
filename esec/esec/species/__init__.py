@@ -155,6 +155,12 @@ class Species(object):
             is returned and an ``'aborted'`` notification is sent to
             the monitor from ``'mutate_insert'``.
         '''
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert length is not True, "length has no value"
+        assert shortest is not True, "shortest has no value"
+        assert longest is not True, "longest has no value"
+        assert longest_result is not True, "longest_result has no value"
+        
         if length is not None: shortest = longest = length
         
         shortest = int(shortest)
@@ -233,6 +239,12 @@ class Species(object):
             individual is this length or shorter, it is returned
             unmodified.
         '''
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert length is not True, "length has no value"
+        assert shortest is not True, "shortest has no value"
+        assert longest is not True, "longest has no value"
+        assert shortest_result is not True, "shortest_result has no value"
+        
         if length is not None: shortest = longest = length
         
         shortest = int(shortest)
@@ -271,20 +283,18 @@ class Species(object):
     def crossover_uniform(self, _source,
                           per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5,
                           discrete=False,
-                          one_child=False, two_children=None):
+                          one_child=False, two_children=False):
         '''Performs uniform crossover by selecting genes at random from
         one of two individuals.
         
         Returns a sequence of crossed individuals based on the individuals
         in `_source`.
         
-        If `one_child` is ``True`` (or `two_children` is ``False``), the
-        number of individuals returned is half the number of individuals in
-        `_source`, rounded towards zero.
-        
-        If `one_child` is ``False`` (or `two_children` is ``True``), the
-        number of individuals returned is the largest even number less than
-        or equal to the number of individuals in `_source`.
+        If `one_child` is ``True`` the number of individuals returned is
+        half the number of individuals in `_source`, rounded towards
+        zero. Otherwise, the number of individuals returned is the
+        largest even number less than or equal to the number of
+        individuals in `_source`.
         
         .. include:: epydoc_include.txt
         
@@ -313,20 +323,19 @@ class Species(object):
           
           one_child : bool
             If ``True``, only one child is returned from each crossover
-            operation.
-            
-            If `two_children` is specified, its value is used instead of
-            this.
+            operation. `two_children` is the default.
           
           two_children : bool
             If ``True``, both children are returned from each crossover
-            operation. If ``False``, only one is.
-            
-            If ``None``, the value of `one_child` is used instead (with the
-            opposite meaning to `two_children`).
+            operation. If ``False``, only one is. If neither `one_child`
+            nor `two_children` are specified, `two_children` is the
+            default.
         '''
+        assert per_pair_rate is not True, "per_pair_rate has no value"
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert per_gene_rate is not True, "per_gene_rate has no value"
+        
         if per_pair_rate is None: per_pair_rate = per_indiv_rate
-        if two_children is not None: one_child = not two_children
         if per_pair_rate <= 0.0 or per_gene_rate <= 0.0:
             if one_child:
                 skip = True
@@ -370,7 +379,7 @@ class Species(object):
 
     def crossover_discrete(self, _source,
                            per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=1.0,
-                           one_child=False, two_children=None):
+                           one_child=False, two_children=False):
         '''A specialisation of `crossover_uniform` for discrete
         crossover.
         
@@ -387,7 +396,7 @@ class Species(object):
     def crossover(self, _source,
                   points=1,
                   per_pair_rate=None, per_indiv_rate=1.0,
-                  one_child=False, two_children=None):
+                  one_child=False, two_children=False):
         '''Performs crossover by selecting a `points` points common to
         both individuals and exchanging the sequences of genes to the
         right (including the selection).
@@ -395,13 +404,11 @@ class Species(object):
         Returns a sequence of crossed individuals based on the
         individuals in `_source`.
         
-        If `one_child` is ``True`` (or `two_children` is ``False``), the
-        number of individuals returned is half the number of individuals
-        in `_source`, rounded towards zero.
-        
-        If `one_child` is ``False`` (or `two_children` is ``True``), the
-        number of individuals returned is the largest even number less
-        than or equal to the number of individuals in `_source`.
+        If `one_child` is ``True`` the number of individuals returned is
+        half the number of individuals in `_source`, rounded towards
+        zero. Otherwise, the number of individuals returned is the
+        largest even number less than or equal to the number of
+        individuals in `_source`.
         
         .. include:: epydoc_include.txt
         
@@ -428,20 +435,19 @@ class Species(object):
           
           one_child : bool
             If ``True``, only one child is returned from each crossover
-            operation.
-            
-            If `two_children` is specified, its value is used instead of
-            this.
+            operation. `two_children` is the default.
           
           two_children : bool
             If ``True``, both children are returned from each crossover
-            operation. If ``False``, only one is.
-            
-            If ``None``, the value of `one_child` is used instead (with
-            the opposite meaning to `two_children`).
+            operation. If ``False``, only one is. If neither `one_child`
+            nor `two_children` are specified, `two_children` is the
+            default.
         '''
+        assert points is not True, "points has no value"
+        assert per_pair_rate is not True, "per_pair_rate has no value"
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        
         if per_pair_rate is None: per_pair_rate = per_indiv_rate
-        if two_children is not None: one_child = not two_children
         if per_pair_rate <= 0.0 or points < 1:
             if one_child:
                 skip = True
@@ -494,7 +500,7 @@ class Species(object):
     
     def crossover_one(self, _source,
                       per_pair_rate=None, per_indiv_rate=1.0,
-                      one_child=False, two_children=None):
+                      one_child=False, two_children=False):
         '''A specialisation of `crossover` for single-point crossover.
         '''
         return self.crossover(
@@ -505,7 +511,7 @@ class Species(object):
     
     def crossover_two(self, _source,
                       per_pair_rate=None, per_indiv_rate=1.0,
-                      one_child=False, two_children=None):
+                      one_child=False, two_children=False):
         '''A specialisation of `crossover` for two-point crossover.'''
         return self.crossover(
             _source,
@@ -517,7 +523,7 @@ class Species(object):
                             points=1,
                             per_pair_rate=None, per_indiv_rate=1.0,
                             longest_result=None,
-                            one_child=False, two_children=None):
+                            one_child=False, two_children=False):
         '''Performs multi-point crossover by selecting a point in each
         individual and exchanging the sequence of genes to the right
         (including the selection). The selected points are not
@@ -526,13 +532,11 @@ class Species(object):
         Returns a sequence of crossed individuals based on the
         individuals in `_source`.
         
-        If `one_child` is ``True`` (or `two_children` is ``False``), the
-        number of individuals returned is half the number of individuals
-        in `_source`, rounded towards zero.
-        
-        If `one_child` is ``False`` (or `two_children` is ``True``), the
-        number of individuals returned is the largest even number less
-        than or equal to the number of individuals in `_source`.
+        If `one_child` is ``True`` the number of individuals returned is
+        half the number of individuals in `_source`, rounded towards
+        zero. Otherwise, the number of individuals returned is the
+        largest even number less than or equal to the number of
+        individuals in `_source`.
         
         .. include:: epydoc_include.txt
         
@@ -561,20 +565,19 @@ class Species(object):
           
           one_child : bool
             If ``True``, only one child is returned from each crossover
-            operation.
-            
-            If `two_children` is specified, its value is used instead of
-            this.
+            operation. `two_children` is the default.
           
           two_children : bool
             If ``True``, both children are returned from each crossover
-            operation. If ``False``, only one is.
-            
-            If ``None``, the value of `one_child` is used instead (with
-            the opposite meaning to `two_children`).
+            operation. If ``False``, only one is. If neither `one_child`
+            nor `two_children` are specified, `two_children` is the
+            default.
         '''
+        assert per_pair_rate is not True, "per_pair_rate has no value"
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert longest_result is not True, "longest_result has no value"
+        
         if per_pair_rate is None: per_pair_rate = per_indiv_rate
-        if two_children is not None: one_child = not two_children
         if per_pair_rate <= 0.0 or points < 1:
             if one_child:
                 skip = True
@@ -645,7 +648,7 @@ class Species(object):
     def crossover_one_different(self, _source,
                                 per_pair_rate=None, per_indiv_rate=1.0,
                                 longest_result=None,
-                                one_child=False, two_children=None):
+                                one_child=False, two_children=False):
         '''A specialisation of `crossover_different` for single-point
         crossover.
         '''
@@ -659,7 +662,7 @@ class Species(object):
     def crossover_two_different(self, _source,
                                 per_pair_rate=None, per_indiv_rate=1.0,
                                 longest_result=None,
-                                one_child=False, two_children=None):
+                                one_child=False, two_children=False):
         '''A specialisation of `crossover_different` for two-point
         crossover.
         '''
@@ -672,7 +675,7 @@ class Species(object):
     
     def crossover_segmented(self, _source,
                             per_pair_rate=None, per_indiv_rate=1.0, switch_rate=0.1,
-                            one_child=False, two_children=None):
+                            one_child=False, two_children=False):
         '''Performs segmented crossover by exchanging random segments
         between two individuals. The first segment has `switch_rate`
         probability of being exchanged, while subsequent segments
@@ -681,13 +684,11 @@ class Species(object):
         Returns a sequence of crossed individuals based on the
         individuals in `_source`.
         
-        If `one_child` is ``True`` (or `two_children` is ``False``), the
-        number of individuals returned is half the number of individuals
-        in `_source`, rounded towards zero.
-        
-        If `one_child` is ``False`` (or `two_children` is ``True``), the
-        number of individuals returned is the largest even number less
-        than or equal to the number of individuals in `_source`.
+        If `one_child` is ``True`` the number of individuals returned is
+        half the number of individuals in `_source`, rounded towards
+        zero. Otherwise, the number of individuals returned is the
+        largest even number less than or equal to the number of
+        individuals in `_source`.
         
         .. include:: epydoc_include.txt
         
@@ -715,20 +716,19 @@ class Species(object):
           
           one_child : bool
             If ``True``, only one child is returned from each crossover
-            operation.
-            
-            If `two_children` is specified, its value is used instead of
-            this.
+            operation. `two_children` is the default.
           
           two_children : bool
             If ``True``, both children are returned from each crossover
-            operation. If ``False``, only one is.
-            
-            If ``None``, the value of `one_child` is used instead (with
-            the opposite meaning to `two_children`).
+            operation. If ``False``, only one is. If neither `one_child`
+            nor `two_children` are specified, `two_children` is the
+            default.
         '''
+        assert per_pair_rate is not True, "per_pair_rate has no value"
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert switch_rate is not True, "switch_rate has no value"
+        
         if per_pair_rate is None: per_pair_rate = per_indiv_rate
-        if two_children is not None: one_child = not two_children
         if per_pair_rate <= 0.0 or not (0.0 < switch_rate < 1.0):
             if one_child:
                 skip = True
