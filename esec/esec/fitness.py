@@ -147,6 +147,41 @@ class Fitness(object):
             assert self.types == other.types, "Part types do not match between Fitness objects"
             other.validate()
     
+    def should_terminate(self, criteria):
+        '''Determines whether `self` (the best found fitness) is better
+        than or equal to `criteria` for the purposes of ending an
+        experiment.
+        
+        By default, this requires all elements of ``self.values`` to be
+        greater than or equal to the matching elements of
+        ``criteria.values``.
+        
+        :Parameters:
+          criteria : `Fitness` or another object
+            The fitness at which to terminate the run. If `criteria` has
+            a ``values`` attribute (a list), the contents are compared
+            against ``self.values``. Otherwise, `criteria` is compared
+            against ``self.values[0]``.
+        
+        :Returns:
+            ``True`` if `self` is better than or equal to `criteria`;
+            otherwise, ``False``. Assertions are raised if there are
+            incompatibilities between `self` and `criteria`. If
+            `criteria` is ``None`` or an instance of `EmptyFitness`,
+            this method always returns ``False``.
+        
+        :Note:
+            Derivations should only override this method to adjust the
+            sense of the comparison from greater-than to less-than.
+        '''
+        if hasattr(criteria, 'values'):
+            if __debug__: self.validate(criteria)
+            return all(s > c for s, c in izip(self.values, criteria.values))
+        elif isinstance(criteria, EmptyFitness) or criteria is None:
+            return False
+        else:
+            return self.values[0] > criteria
+    
     def __gt__(self, other):
         '''Determines whether `self` is more fit than `other`.
         
@@ -329,6 +364,41 @@ class FitnessMinimise(Fitness):
     '''Represents a simple fitness value where lower values are
     considered to be more fit.
     '''
+    def should_terminate(self, criteria):
+        '''Determines whether `self` (the best found fitness) is better
+        than or equal to `criteria` for the purposes of ending an
+        experiment.
+        
+        For this class, this requires all elements of ``self.values`` to
+        be less than or equal to the matching elements of
+        ``criteria.values``.
+        
+        :Parameters:
+          criteria : `Fitness` or another object
+            The fitness at which to terminate the run. If `criteria` has
+            a ``values`` attribute (a list), the contents are compared
+            against ``self.values``. Otherwise, `criteria` is compared
+            against ``self.values[0]``.
+        
+        :Returns:
+            ``True`` if `self` is better than or equal to `criteria`;
+            otherwise, ``False``. Assertions are raised if there are
+            incompatibilities between `self` and `criteria`. If
+            `criteria` is ``None`` or an instance of `EmptyFitness`,
+            this method always returns ``False``.
+        
+        :Note:
+            Derivations should only override this method to adjust the
+            sense of the comparison from greater-than to less-than.
+        '''
+        if hasattr(criteria, 'values'):
+            if __debug__: self.validate(criteria)
+            return all(s <= c for s, c in izip(self.values, criteria.values))
+        elif isinstance(criteria, EmptyFitness) or criteria is None:
+            return False
+        else:
+            return self.values[0] <= criteria
+    
     def __gt__(self, other):
         '''Determines whether `self` is more fit than `other`.
         
@@ -402,20 +472,24 @@ class EmptyFitness(object):
         return False
     
     def __add__(self, other):
-        if type(other) is EmptyFitness: return self
+        if isinstance(other, EmptyFitness): return self
         else: return NotImplemented
     
     def __sub__(self, other):
-        if type(other) is EmptyFitness: return self
+        if isinstance(other, EmptyFitness): return self
         else: return NotImplemented
     
     def __radd__(self, other):
-        if type(other) is EmptyFitness: return self
+        if isinstance(other, EmptyFitness): return self
         else: return NotImplemented
     
     def __rsub__(self, other):
-        if type(other) is EmptyFitness: return self
+        if isinstance(other, EmptyFitness): return self
         else: return NotImplemented
+    
+    def should_terminate(self, criteria):
+        '''Returns ``False``. See `Fitness.should_terminate`.'''
+        return False
     
     def __eq__(self, other): return isinstance(other, EmptyFitness)
     def __ne__(self, other): return not isinstance(other, EmptyFitness)

@@ -10,7 +10,7 @@ own new functions.
 '''
 
 from esec.landscape import Landscape
-from esec.fitness import Fitness
+from esec.fitness import Fitness, EmptyFitness
 import sys
 
 class TGPFitness(Fitness):
@@ -19,6 +19,15 @@ class TGPFitness(Fitness):
     # stage 1 is the cost (lower == better)
     types = [ float, long ]
     defaults = [ float('-inf'), sys.maxsize ]
+    
+    def should_terminate(self, criteria):
+        if hasattr(criteria, 'values'):
+            return (self.values[0] >= criteria.values[0] and
+                    self.values[1] <= criteria.values[1])
+        elif isinstance(criteria, EmptyFitness) or criteria is None:
+            return False
+        else:
+            return self.values[0] >= criteria
     
     def __gt__(self, other):
         # Handle incomparable types

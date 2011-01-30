@@ -5,7 +5,7 @@ See `esec.monitors` for a general overview of monitors.
 '''
 from math import isinf
 
-from esec.fitness import Fitness, EmptyFitness
+from esec.fitness import EmptyFitness
 from esec.individual import EmptyIndividual
 from esec.monitors import MonitorBase
 from esec.utils import attrdict, ConfigDict, is_ironpython
@@ -245,7 +245,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         Terminate after this many iterations without an improvement in
         the best individual.
       
-      limits.fitness : (`Fitness` [optional])
+      limits.fitness : (`Fitness` or float [optional])
         Terminate when the best individual has a fitness better than
         this.
       
@@ -350,11 +350,6 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         # Load the limits
         
         self.limits = self.cfg.limits
-        
-        # - Ensure limits.fitness is a Fitness object
-        if 'fitness' in self.limits:
-            if not isinstance(self.limits.fitness, Fitness):
-                self.limits.fitness = Fitness(self.limits.fitness)
         
         # - Delete any limits that are set to None
         if self.limits:
@@ -799,7 +794,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             self.end_code = 'ITER_LIMIT'
         elif ('fitness' in self.limits and
               'global_max' in self._stats and
-              self._stats['global_max'].fitness >= self.limits.fitness):
+              self._stats['global_max'].fitness.should_terminate(self.limits.fitness)):
             self.end_code = 'FIT_LIMIT'
         elif ('stable' in self.limits and
               'stable_count' in self._stats and
