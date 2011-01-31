@@ -102,8 +102,9 @@ class UnknownNode(NodeBase):
             token = _get_token(tokens, token_i)
         
         cls._reduce_stack_attributes(stack)
-        cls._reduce_stack_unary_ops(stack)
-        cls._reduce_stack_binary_ops(stack)
+        for op in '~': cls._reduce_stack_unary_ops(stack, op)
+        for op in '^': cls._reduce_stack_binary_ops(stack, op, left_to_right=False)
+        for op in '%/*-+=': cls._reduce_stack_binary_ops(stack, op, left_to_right=True)
         
         if len(stack) == 1:
             return token_i, stack[0]
@@ -226,32 +227,31 @@ class UnknownNode(NodeBase):
                 stack[i-1:i+3] = [FunctionNode('_getattr', op_tokens, source=val1, attr=val2)]
     
     @classmethod
-    def _reduce_stack_unary_ops(cls, stack):
+    def _reduce_stack_unary_ops(cls, stack, op):
         '''Reduces unary operators into `FunctionNode`s where the name
         of the function begins with ``_uop_``.
         '''
-        for op in '~':
-            while op in stack:
-                i = stack.index(op)
-                if not i < len(stack)-2: raise error.InvalidSyntaxError(stack[i+1])
-                op_token, val = stack[i+1:i+3]
-                if isinstance(val, str): raise error.InvalidSyntaxError(stack[i+3])
-                op_tokens = list(val.tokens)
-                op_tokens.append(op_token)
-                stack[i:i+3] = [FunctionNode('_uop_' + op_token.tag, op_tokens, val)]
+        while op in stack:
+            i = stack.index(op)
+            if not i < len(stack)-2: raise error.InvalidSyntaxError(stack[i+1])
+            op_token, val = stack[i+1:i+3]
+            if isinstance(val, str): raise error.InvalidSyntaxError(stack[i+3])
+            op_tokens = list(val.tokens)
+            op_tokens.append(op_token)
+            stack[i:i+3] = [FunctionNode('_uop_' + op_token.tag, op_tokens, val)]
     
     @classmethod
-    def _reduce_stack_binary_ops(cls, stack):
+    def _reduce_stack_binary_ops(cls, stack, op, left_to_right=True):
         '''Reduces binary operators into `FunctionNode`s where the name
         of the function begins with ``_op_``. Assignment operators are
         also reduced and use the function ``_assign``.
         '''
-        for op in '^%/*-+=':
+        if left_to_right:
             while op in stack:
                 i = stack.index(op)
                 if not 0 < i < len(stack) - 2: raise error.InvalidSyntaxError(stack[i+1])
                 val1, _, op_token, val2 = stack[i-1:i+3]
-                if 1 < i and isinstance(stack[i-2], str): raise error.InvalidSyntaxError(op_token)
+                if i >= 2 and isinstance(stack[i-2], str): raise error.InvalidSyntaxError(op_token)
                 if isinstance(val2, str): raise error.InvalidSyntaxError(stack[i+3])
                 op_tokens = val1.tokens + val2.tokens
                 op_tokens.append(op_token)
@@ -259,6 +259,19 @@ class UnknownNode(NodeBase):
                     stack[i-1:i+3] = [FunctionNode('_assign', op_tokens, destination=val1, source=val2)]
                 else:
                     stack[i-1:i+3] = [FunctionNode('_op_' + op_token.tag, op_tokens, *(val1, val2))]
+        
+        else:
+            stack.reverse()
+            while op in stack:
+                i = stack.index(op)
+                if not 2 <= i < len(stack): raise error.InvalidSyntaxError(stack[i-1])
+                val1, _, op_token, val2 = reversed(stack[i-2:i+2])
+                if i < len(stack) - 1 and isinstance(stack[i+1], str): raise error.InvalidSyntaxError(op_token)
+                if isinstance(val2, str): raise error.InvalidSyntaxError(stack[i-3])
+                op_tokens = val1.tokens + val2.tokens
+                op_tokens.append(op_token)
+                stack[i-2:i+2] = [FunctionNode('_op_' + op_token.tag, op_tokens, *(val1, val2))]
+            stack.reverse()
 
 
 class FunctionNode(NodeBase):
