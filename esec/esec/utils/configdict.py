@@ -55,19 +55,23 @@ class ConfigDict(attrdict):     #pylint: disable=R0904
         super(ConfigDict, self).__init__()
         
         if data:
-            if isinstance(data, dict):
-                for key, value in data.items():
-                    if isinstance(value, dict) and all(isinstance(i, str) for i in value.iterkeys()):
-                        value = ConfigDict(value)
-                    elif isinstance(value, ConfigDict):
+            try:
+                items = data.iteritems()
+                bits = None
+            except AttributeError:
+                items = None
+                bits = (bit.strip() for bit in data.split(';') if '=' in bit)
+            
+            if items is not None:
+                for key, value in items:
+                    if (isinstance(value, ConfigDict) or
+                        isinstance(value, dict) and all(isinstance(i, str) for i in value.iterkeys())):
                         value = ConfigDict(value)
                     self[key] = value
-            elif isinstance(data, str):
-                bits = [bit.strip() for bit in data.split(';')]
+            elif bits is not None:
                 for bit in bits:
-                    if len(bit) > 0:
-                        name, value = bit.split('=')
-                        self.set_by_name(name, eval(value))
+                    name, _, value = bit.partition('=')
+                    self.set_by_name(name, eval(value))
     
     
     def validate(self, syntax, scope=''):   #pylint: disable=R0912,R0915
@@ -148,7 +152,7 @@ class ConfigDict(attrdict):     #pylint: disable=R0904
                     # check for simple valid types (int, str, float etc)
                     elif not isinstance(value, valuetype):
                         # check for simple dictionary type (unspecified content)
-                        if valuetype is dict and isinstance(value, (dict, ConfigDict)):
+                        if valuetype is dict and isinstance(value, dict):
                             continue
                         # handle float/int conversions
                         if valuetype is int and isinstance(value, float):

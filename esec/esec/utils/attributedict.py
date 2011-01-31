@@ -26,7 +26,7 @@ class attrdict(dict):
             parts.append(str(key) + ':' + str(value))
         return '{' + ', '.join(parts) + '}'
     
-    def lines(self, prefix='', always_prefix=True):
+    def lines(self, prefix='', always_prefix=True, scope_char='.', value_char=' = '):
         '''Returns a sequence of lines containing the complex contents
         of the dictionary. Nested dictionaries are recursed. Lines are
         sorted by key name.
@@ -40,11 +40,15 @@ class attrdict(dict):
             if isinstance(value, attrdict):
                 if not always_prefix:
                     yield full_key
-                    for line in value.lines(' ' * len(full_key) + '.', always_prefix=always_prefix):
+                    for line in value.lines(' ' * len(full_key) + scope_char,
+                                            always_prefix=always_prefix,
+                                            scope_char=scope_char, value_char=value_char):
                         yield line
                 else:
-                    for line in value.lines(full_key + '.', always_prefix=always_prefix):
+                    for line in value.lines(full_key + scope_char,
+                                            always_prefix=always_prefix,
+                                            scope_char=scope_char, value_char=value_char):
                         yield line
             else:
-                yield full_key + ' = ' + str(value)
+                yield full_key + value_char + str(value)
 
