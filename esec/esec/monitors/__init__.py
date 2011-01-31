@@ -30,6 +30,29 @@ class MonitorBase(object):
         cfg_validate(self.cfg, self.syntax, type(self).__name__, warnings=False)
     
     
+    _required_methods = [
+        'on_yield',
+        'on_notify', 'notify',
+        'on_pre_reset', 'on_post_reset',
+        'on_pre_breed', 'on_post_breed',
+        'on_run_start', 'on_run_end',
+        'on_exception',
+        'should_terminate'
+    ]
+    
+    @classmethod
+    def isinstance(cls, inst):
+        '''Returns ``True`` if `inst` is compatible with `MonitorBase`.
+        
+        An object is considered compatible if it is a subclass of
+        `MonitorBase`, or if it implements the same methods. Methods are
+        not tested for signatures, which may result in errors occurring
+        later in the program.
+        '''
+        if isinstance(inst, cls): return True
+        if inst is None: return False
+        return all(hasattr(inst, method) for method in cls._required_methods)
+    
     def on_yield(self, sender, name, group):
         '''Called for each population YIELDed in the system.
         

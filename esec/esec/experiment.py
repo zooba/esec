@@ -85,7 +85,7 @@ class Experiment(object):
     '''The default values to use for unspecified keys in `syntax`.
     '''
     
-    def _load(self, cfg, key, base, attr=None):
+    def _load(self, cfg, key, base=None, attr=None):
         '''Returns the object provided in `key` of `cfg` if it is
         derived from `base`.
         
@@ -143,15 +143,17 @@ class Experiment(object):
         cfg = self.cfg
         
         # -- Monitor --
-        self.monitor = self._load(cfg, 'monitor', MonitorBase)
-        if not self.monitor: raise ValueError('No monitor provided.')
+        self.monitor = self._load(cfg, 'monitor', MonitorBase, 'should_terminate')
+        if not MonitorBase.isinstance(self.monitor):
+            raise TypeError('No monitor provided.')
         cfg.monitor = self.monitor
         
         # random seed?
-        self.random_seed = cfg.random_seed
-        if not isinstance(self.random_seed, int):
+        try:
+            self.random_seed = int(cfg.random_seed)
+        except TypeError:
             random.seed()
-            self.random_seed = self.cfg.random_seed = random.randrange(0, sys.maxint)
+            self.random_seed = cfg.random_seed = random.randrange(0, sys.maxint)
         
         # -- Landscape (of type and name) --
         self.lscape = self._load(cfg, 'landscape', landscape.Landscape, 'eval')

@@ -3,9 +3,8 @@ based on prespecified report strings in a CSV format.
 
 See `esec.monitors` for a general overview of monitors.
 '''
-from esec.fitness import Fitness
 from esec.monitors.consolemonitor import ConsoleMonitor
-from esec.utils import ConfigDict
+from esec.utils import attrdict, ConfigDict
 
 class CSVMonitor(ConsoleMonitor):
     '''A monitor that displays output using the console or other
@@ -189,13 +188,16 @@ class CSVMonitor(ConsoleMonitor):
                 changes this may need to be updated.
             '''
             for value in values:
-                if isinstance(value, Fitness):
+                try:
                     yield value.comma_separated
-                elif isinstance(value, str):
+                    continue
+                except AttributeError:
+                    pass
+                try:
                     value = value.strip(' \n\r').replace('\n', '\\n').replace('\r', '\\r')
                     if r'\\' in value: value = '"' + value + '"'
                     yield value
-                else:
+                except AttributeError:
                     yield value
     
     def parse_report(self, report): #pylint: disable=C0111
@@ -219,14 +221,17 @@ class CSVMonitor(ConsoleMonitor):
                 # `value` contains the _stats dictionary
                 print >> self.summary_out
                 print >> self.summary_out, 'Statistic,Value'
-                def _disp(source, scope):
-                    '''Displays a dict/`ConfigDict` recursively with
-                    commas separating keys and values.
-                    '''
-                    for key, value in sorted(source.iteritems()):
-                        if isinstance(value, (dict, ConfigDict)): _disp(value, scope + key + '.')
-                        else: print >> self.summary_out, scope + key + ',' + ('%s' % value)
-                _disp(value, '')
+                if not value:
+                    for line in attrdict(self._stats).lines(scope_char='.', value_char=', '):
+                        print >> self.summary_out, line
+                elif isinstance(value, attrdict):
+                    for line in value.lines(scope_char='.', value_char=', '):
+                        print >> self.summary_out, line
+                elif isinstance(value, dict):
+                    for line in attrdict(value).lines(scope_char='.', value_char=', '):
+                        print >> self.summary_out, line
+                else:
+                    print >> self.summary_out, str(value)
                 return
         
         # Unhandled message

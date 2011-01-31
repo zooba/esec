@@ -322,7 +322,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         
         # - Replace filenames with file objects without opening the
         #   same file multiple times
-        opened_files = { }
+        opened_files = { None: NullStream() }
         def _update_opened(filename):
             '''Updates ``opened_files``.'''
             if isinstance(filename, str):
@@ -330,12 +330,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                     opened_files[filename] = _do_open(filename)
         def _get_opened(filename):
             '''Gets the appropriate value from ``opened_files``.'''
-            if isinstance(filename, str):
-                return opened_files.get(filename, None)
-            elif filename is None:
-                return NullStream()
-            else:
-                return filename
+            return opened_files.get(filename, filename)
         
         _update_opened(self.report_out)
         _update_opened(self.summary_out)
@@ -441,10 +436,7 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
                     assert value is not None, 'Statistic %s has no member %s.' % (self.key, '.'.join(self.member))
             if value is None and self.default is not None:
                 value = self.default
-            if isinstance(value, tuple):
-                return value
-            else:
-                return (value,)
+            return value if isinstance(value, tuple) else (value,)
     
     def parse_report(self, report):
         '''Parses the report string provided in `report`.

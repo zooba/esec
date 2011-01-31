@@ -283,7 +283,7 @@ class Species(object):
     def crossover_uniform(self, _source,
                           per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5,
                           discrete=False,
-                          one_child=False, two_children=False):
+                          one_child=False, two_children=False): #pylint: disable=W0613
         '''Performs uniform crossover by selecting genes at random from
         one of two individuals.
         
@@ -396,7 +396,7 @@ class Species(object):
     def crossover(self, _source,
                   points=1,
                   per_pair_rate=None, per_indiv_rate=1.0,
-                  one_child=False, two_children=False):
+                  one_child=False, two_children=False): #pylint: disable=W0613
         '''Performs crossover by selecting a `points` points common to
         both individuals and exchanging the sequences of genes to the
         right (including the selection).
@@ -523,7 +523,7 @@ class Species(object):
                             points=1,
                             per_pair_rate=None, per_indiv_rate=1.0,
                             longest_result=None,
-                            one_child=False, two_children=False):
+                            one_child=False, two_children=False):   #pylint: disable=W0613
         '''Performs multi-point crossover by selecting a point in each
         individual and exchanging the sequence of genes to the right
         (including the selection). The selected points are not
@@ -675,7 +675,7 @@ class Species(object):
     
     def crossover_segmented(self, _source,
                             per_pair_rate=None, per_indiv_rate=1.0, switch_rate=0.1,
-                            one_child=False, two_children=False):
+                            one_child=False, two_children=False):   #pylint: disable=W0613
         '''Performs segmented crossover by exchanging random segments
         between two individuals. The first segment has `switch_rate`
         probability of being exchanged, while subsequent segments

@@ -65,7 +65,7 @@ def cfg_read(cfg, name, die=False, default=None):
     sentinel = object()
     
     # if needed, extract named value from default
-    if isinstance(default, (dict, ConfigDict)):
+    if isinstance(default, dict):
         default = get(default, name, sentinel)
     
     # extract named value from config cfg

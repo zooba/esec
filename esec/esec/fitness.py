@@ -94,21 +94,16 @@ class Fitness(object):
         elif values is None:
             self.values = tuple(self.check(i, *args) for i, args in
                                 enumerate(izip(self.types, self.defaults, self.defaults)))
-        elif isinstance(values, Fitness):
-            if __debug__:
-                self.values = None
-                self.validate(values)
+        elif hasattr(values, '__iter__'):
             self.values = tuple(self.check(i, *args) for i, args in
-                                enumerate(izip(self.types, self.defaults, values.values)))
-        elif isinstance(values, (list, tuple, generator)):
-            self.values = tuple(self.check(i, *args) for i, args in
-                                enumerate(izip(self.types, self.defaults, values)))
-        elif len(self.types) == 1:
-            self.values = (self.check(0, self.types[0], self.defaults[0], values),)
+                                enumerate(izip(self.types, self.defaults, iter(values))))
         else:
-            raise ValueError('Unexpected value %s' % values)
+            self.values = (self.check(0, self.types[0], self.defaults[0], values),)
         assert not isinstance(self.values, generator)
         assert len(self.values) == len(self.types), 'Invalid number of values'
+    
+    def __iter__(self):
+        return iter(self.values)
     
     def __str__(self):
         if __debug__: self.validate()

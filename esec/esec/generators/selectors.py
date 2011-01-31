@@ -207,7 +207,7 @@ def OldestOnly(_source):
 @esdl_func('tournament')
 def Tournament(_source, k=2,
                replacement=True,   # for back-compat
-               with_replacement=False, without_replacement=False,
+               with_replacement=False, without_replacement=False,   #pylint: disable=W0613
                greediness=1.0):
     '''Returns a sequence of individuals selected using tournament
     selection. `k` individuals are selected at random and the individual
@@ -338,7 +338,7 @@ def BinaryTournament(_source,
 @esdl_func('uniform_random')
 def UniformRandom(_source,
                   replacement=True,     # for back-compat
-                  with_replacement=False, without_replacement=False):
+                  with_replacement=False, without_replacement=False):   #pylint: disable=W0613
     '''Returns a sequence of individuals selected randomly, without
     regard to their fitness.
     
@@ -398,7 +398,7 @@ def UniformRandomWithoutReplacement(_source):
 @esdl_func('fitness_proportional')
 def FitnessProportional(_source,
                         replacement=True,   # for back-compat
-                        with_replacement=False, without_replacement=False,
+                        with_replacement=False, without_replacement=False,  #pylint: disable=W0613
                         sus=False, mu=None,
                         fitness_offset=None):
     '''Returns a sequence of individuals selected in proportion to their
@@ -603,7 +603,7 @@ def FitnessProportionalSUS(_source, mu=None, fitness_offset=None):
 @esdl_func('rank_proportional')
 def RankProportional(_source,
                      replacement=True,  # for back-compat
-                     with_replacement=False, without_replacement=False,
+                     with_replacement=False, without_replacement=False, #pylint: disable=W0613
                      expectation=1.1, neta=None,
                      invert=False,
                      sus=False, mu=None):

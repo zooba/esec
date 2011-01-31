@@ -710,7 +710,7 @@ class TgpSpecies(Species):
     def init_boolean_tgp(self,
                          terminals=0, deepest=10,
                          adfs=0,
-                         constants=False, no_constants=False,
+                         constants=False, no_constants=False,   #pylint: disable=W0613
                          terminal_prob=0.5):
         '''Creates tree-based genetic programming (TGP) programs made
         from `boolean_instructions`.

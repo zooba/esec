@@ -53,16 +53,18 @@ class JoinedIndividual(Individual):
                 self.sources[source] = member
     
     def __contains__(self, key):
-        if isinstance(key, str):
-            return key in self.sources
-        else:
-            return super(JoinedIndividual, self).__contains__(key)
+        try:
+            if (key in self.sources): return True
+        except TypeError:
+            pass
+        return super(JoinedIndividual, self).__contains__(key)
     
     def __getitem__(self, key):
-        if isinstance(key, str) and key in self.sources:
+        try:
             return self.sources[key]
-        else:
-            return super(JoinedIndividual, self).__getitem__(key)
+        except (TypeError, KeyError):
+            pass
+        return super(JoinedIndividual, self).__getitem__(key)
 
 
 class JoinedSpecies(Species):
