@@ -55,7 +55,7 @@ class UnknownNode(NodeBase):
     def __str__(self): return '<?> ' + str(self.text) + ' <?>'
     
     @classmethod
-    def parse(cls, tokens, first_token):
+    def parse(cls, tokens, first_token):    #pylint: disable=R0911
         '''Parses an unidentified sequence of tokens.
         
         `tokens` is a list of tokens, `first_token` is the index of the
@@ -295,7 +295,7 @@ class FunctionNode(NodeBase):
         for i, value in enumerate(positional_arguments):
             self.arguments['#%d' % i] = value
     
-    def __str__(self):
+    def __str__(self):  #pylint: disable=R0911
         if self.name == '_assign':
             return '%(destination)s = %(source)s' % self.arguments
         elif self.name == '_getattr':
@@ -517,7 +517,7 @@ class ValueNode(NodeBase):
                 raise error.InvalidNumberError(token, token.value)
         elif token.tag == 'constant':
             token_i += 1
-            value = cls.ConstantMap.get(token.value, token.value)
+            value = cls.ConstantMap.get(token.value.upper(), token.value)
             return token_i, ValueNode(value, [token])
         else:
             raise error.InvalidSyntaxError(token)
@@ -557,7 +557,7 @@ class VariableNode(NameNode):
     @classmethod
     def define_external(cls, name):
         '''Creates an external `VariableNode` from a string.'''
-        tokens = [Token('name', name, 0, 0)]
+        tokens = [Token('name', 'literal', name, 0, 0)]
         node = VariableNode(name, tokens)
         node.external = True
         return node
@@ -584,8 +584,9 @@ class BacktickNode(TextNode):
         if not token: raise error.InvalidSyntaxError(tokens[-1])
         if token.tag != 'backtick': raise error.InvalidSyntaxError(token)
         
+        value = token.value[1:]
         token_i += 1
-        return token_i, BacktickNode(token.value, [token])
+        return token_i, BacktickNode(value, [token])
 
 class GroupNode(NodeBase):
     '''Represents a group. Groups may be specified with a size.'''

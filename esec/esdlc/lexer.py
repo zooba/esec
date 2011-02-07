@@ -2,16 +2,57 @@
 '''
 from __future__ import absolute_import
 
-class Token(object):    #pylint: disable=R0903
+def _re(expr):
+    '''Shortcut for compiling regular expressions.'''
+    import re
+    return re.compile(expr, re.IGNORECASE)
+
+TOKENS = [
+    ("FROM",        'statement', _re(r"from(?![a-z0-9_])")),
+    ("SELECT",      'statement', _re(r"select(?![a-z0-9_])")),
+    ("JOIN",        'statement', _re(r"join(?![a-z0-9_])")),
+    ("INTO",        'statement', _re(r"into(?![a-z0-9_])")),
+    ("USING",       'statement', _re(r"using(?![a-z0-9_])")),
+    ("YIELD",       'statement', _re(r"yield(?![a-z0-9_])")),
+    ("EVAL",        'statement', _re(r"eval(uate)?(?![a-z0-9_])")),
+    ("BEGIN",       'statement', _re(r"begin(?![a-z0-9_])")),
+    ("REPEAT",      'statement', _re(r"repeat(?![a-z0-9_])")),
+    ("END",         'statement', _re(r"end(?![a-z0-9_])")),
+    ("constant",    'literal', _re(r"(true|false|null|none)(?![a-z0-9_])")),
+
+    ("comment",     'comment', _re(r"(#|;|//).*")),
+    ("name",        'literal', _re(r"[a-z_][a-z0-9_]*")),
+    ("number",      'literal', _re(r"([0-9]+\.[0-9]*|[0-9]+|\.[0-9]+)(e[-+]?[0-9]+)?")),
+    (".",           'op', _re(r"\.")),
+    ("(",           'op', _re(r"\(")),
+    (")",           'op', _re(r"\)")),
+    ("[",           'op', _re(r"\[")),
+    ("]",           'op', _re(r"\]")),
+    ("{",           'op', _re(r"\{")),
+    ("}",           'op', _re(r"\}")),
+    ("+",           'op', _re(r"\+")),
+    ("-",           'op', _re(r"-")),
+    ("=",           'op', _re(r"=")),
+    (",",           'op', _re(r"\,")),
+    ("*",           'op', _re(r"\*")),
+    ("/",           'op', _re(r"\/")),
+    ("%",           'op', _re(r"\%")),
+    ("^",           'op', _re(r"\^")),
+    ("backtick",    'special', _re(r"`.*")),
+    ("continue",    'special', _re(r"\\\s*((#|;|//).*)?$")),
+]
+
+class Token(object):
     '''Represents a parsed token from an ESDL definition.'''
-    def __init__(self, tag, value, line, col):
+    def __init__(self, tag, ttype, value, line, col):
         '''Creates a token.
         
         :Parameters:
           tag : string
-            An identifier for the type of token. Typical values include
-            ``'number'``, ``'name'``, ``'constant'``, ``'comment'``. In
-            some cases, the value of `value` may be used as the tag.
+            An identifier for the type of token.
+          
+          ttype : string
+            The general type of the token.
           
           value : string
             The raw text parsed into this token.
@@ -26,6 +67,8 @@ class Token(object):    #pylint: disable=R0903
         '''
         self.tag = tag
         '''A string identifier for the type of the token.'''
+        self.type = ttype
+        '''The general type of the token.'''
         self.value = value
         '''The text parsed into this token.'''
         self.line = line
@@ -43,159 +86,143 @@ class Token(object):    #pylint: disable=R0903
     def __lt__(self, other): return (self.line, self.col) < (other.line, other.col)
     
     def __str__(self):
-        if self.tag == 'eos':
+        if self.type == 'eos':
             return '<eos> (%d:%d)' % (self.line, self.col)
         else:
             return '%s (%d:%d)' % (self.value, self.line, self.col)
     
     def __repr__(self):
-        if self.tag == 'eos':
+        if self.type == 'eos':
             return '<eos> (%d:%d)' % (self.line, self.col)
-        elif self.tag != self.value:
-            return '<%s>%s (%d:%d)' % (self.tag, self.value, self.line, self.col)
         else:
-            return '<%s> (%d:%d)' % (self.tag, self.line, self.col)
+            return '<%s>%s (%d:%d)' % (self.tag, self.value, self.line, self.col)
+    
+    @classmethod
+    def parse(cls, line, lineno, col):
+        '''Parses a single token from a source line.
+        
+        Returns a `Token` instance and the next column to start reading
+        from.
+        
+        :Parameters:
+          line : str
+            The line of text to read from.
+          
+          lineno : int
+            The number of the line to associate with the token. This
+            value is not relevant for parsing.
+          
+          col : int
+            The character position to match at. Whitespace is ignored.
+        '''
+        while col < len(line) and line[col].isspace():
+            col += 1
+        
+        if col >= len(line):
+            return None, col
+        
+        for token_name, token_type, token_regex in TOKENS:
+            match = token_regex.match(line, col)
+            if match:
+                start_col, end_col = match.span()
+                return cls(token_name, token_type, match.group(), lineno+1, start_col+1), end_col
+        
+        return cls('error', 'error', line[col:], lineno+1, col+1), col
 
-def _tokenise(source):  #pylint: disable=R0912,R0915
-    '''Returns a sequence of tokens from a single string.'''
-    
-    if not source or not isinstance(source, str):
-        yield Token('eos', '\n', 1, 1)
-        raise StopIteration
-    
-    mode = ''
-    word = ''
-    
-    line = 1
-    i_start = -1
-    i = 0
-    source = source.strip()
-    while i <= len(source):
-        char = source[i] if i < len(source) else ''
+
+class TokenReader(object):
+    '''Provides safe sequential reading and lookahead of a list of
+    tokens.
+    '''
+    def __init__(self, tokens, skip_comments=False):
+        self.tokens = tokens
+        self.i = 0
+        self.skip_comments = skip_comments
+        self.i_stack = []
         
-        if mode == '':
-            if not char:
-                i += 1
-            elif char.isdigit():
-                mode = 'number'
-            elif char.isalpha() or char == '_':
-                mode = 'name'
-            elif char in '()[]{},+-*%^=':
-                yield Token(char, char, line, i-i_start)
-                i += 1
-            elif char == '.':
-                if i+1 < len(source) and source[i+1].isdigit():
-                    mode = 'number'
-                else:
-                    yield Token(char, char, line, i-i_start)
-                    i += 1
-            elif char in ' \t\v':
-                i += 1
-            elif char in '#;':
-                mode = 'comment'
-            elif char == '`':
-                mode = 'backtick'
-                i += 1
-            elif char == '/':
-                if i+1 < len(source) and source[i+1] == '/':
-                    mode = 'comment'
-                else:
-                    yield Token('/', '/', line, i-i_start)
-                    i += 1
-            elif char == '\\':
-                yield Token('continue', '\\', line, i-i_start)
-                i += 1
-            elif char in '\r\n':
-                yield Token('eos', '\n', line, i-i_start)
-                if source[i:i+2] == '\r\n': i += 1
-                i += 1
-                line += 1
-                i_start = i - 1
-            else:
-                yield Token('error', char, line, i-i_start)
-                i += 1
-        
-        elif mode in ('comment', 'backtick'):
-            if not char:
-                i += 1
-            elif char in '\r\n':
-                yield Token(mode, word, line, i-i_start-len(word))
-                mode = ''
-                word = ''
-            else:
-                word += char
-                i += 1
-        
-        elif mode == 'number':
-            if not char:
-                yield Token(mode, word, line, i-i_start-len(word))
-                mode = ''
-                word = ''
-                i += 1
-            elif char.isdigit() or char in '.eE':
-                word += char
-                i += 1
-            elif char in '+-' and word[-1] in 'eE':
-                word += char
-                i += 1
-            else:
-                yield Token(mode, word, line, i-i_start-len(word))
-                mode = ''
-                word = ''
-        
-        elif mode == 'name':
-            if char and (char.isalpha() or char.isdigit() or char == '_'):
-                word += char
-                i += 1
-            else:
-                word_up = word.upper()
-                if word_up in ('FROM', 'SELECT', 'USING', 'JOIN', 'INTO', 'YIELD', 'BEGIN', 'REPEAT', 'END'):
-                    mode = word_up
-                elif word_up in ('EVAL', 'EVALUATE'):
-                    mode = 'EVAL'
-                elif word_up in ('TRUE', 'FALSE', 'NULL', 'NONE'):
-                    mode = 'constant'
-                    word = word_up
-                yield Token(mode, word, line, i-i_start-len(word))
-                mode = ''
-                word = ''
+        if self.skip_comments:
+            self.i = -1
+            self.move_next()
     
-    if mode in ('comment', 'backtick'):
-        yield Token(mode, word, line, i-i_start-len(word))
-    yield Token('eos', '\n', line, i-i_start)
+    def __nonzero__(self):
+        return 0 <= self.i < len(self.tokens)
+    
+    @property
+    def rest(self):
+        '''Returns a list containing the remaining tokens.'''
+        return self.tokens[self.i:] if self else []
+    
+    @property
+    def current(self):
+        '''Returns the current token or ``None``.'''
+        return self.tokens[self.i] if self else None
+    
+    def move_next(self):
+        '''Advances to the next token. Returns `self` after advancing.
+        If ``skip_comments`` was ``True``, tokens with tags beginning
+        with ``'COMMENT'`` are skipped.
+        '''
+        self.i += 1
+        if self.skip_comments:
+            while self and self.current.tag.startswith('comment'):
+                self.i += 1
+        return self
+    
+    @property
+    def peek(self):
+        '''Returns the next token. Behaves identically to
+        ``self.move_next().current`` without modifying the position.
+        '''
+        self.push_location()
+        tok = self.move_next().current
+        self.pop_location()
+        return tok
+    
+    def push_location(self):
+        '''Stores the current location on a stack.'''
+        self.i_stack.append(self.i)
+    
+    def pop_location(self):
+        '''Restores the topmost location on the stack.'''
+        self.i = self.i_stack.pop()
+    
+    def drop_location(self):
+        '''Forgets the topmost location on the stack.'''
+        self.i_stack.pop()
+
 
 def tokenise(source):
     '''Returns a sequence of lines of tokens from a source file, string
     or list of strings.
     '''
-    if not source: raise ValueError("source must be provided.")
     
-    if not isinstance(source, str) and hasattr(source, '__iter__'):
-        source = iter(source)
-        first_line = next(source)
-        if first_line[-1] in '\r\n':
-            source = first_line + ''.join(source)
-        else:
-            source = first_line + '\n' + '\n'.join(source)
+    if not source:
+        yield [Token('eos', 'end', '\\n', 1, 1)]
+        raise StopIteration
     
-    line = []
-    continuation = False
-    for token in _tokenise(source):
-        if token.tag == 'eos':
-            if continuation:
-                continuation = False
-            else:
-                line.append(token)
-                if line: yield line
-                line = []
-        elif token.tag == 'continue':
-            continuation = True
-        elif token.tag == 'comment':
-            line.append(token)
-        else:
-            continuation = False
-            line.append(token)
-    if line: yield line
+    if isinstance(source, str):
+        source = iter(source.splitlines())
+    
+    if not hasattr(source, '__iter__'):
+        yield [Token('eos', 'end', '\\n', 1, 1)]
+        raise StopIteration
+    
+    tokens = []
+    for lineno, line in enumerate(source):
+        col = 0
+        tok, col = Token.parse(line, lineno, col)
+        while tok:
+            tokens.append(tok)
+            if tok.type == 'error': col += 1
+            tok, col = Token.parse(line, lineno, col)
+        
+        if tokens and tokens[-1].tag == 'continue':
+            tokens.pop()
+            continue
+        
+        tokens.append(Token('eos', 'end', '\\n', lineno, col))
+        yield tokens
+        tokens = []
 
 if __name__ == '__main__':
     code = tokenise(r'''FROM random_real(length=2,lowest=-2.0,highest=2.0) SELECT (size) population

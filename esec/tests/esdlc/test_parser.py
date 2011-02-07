@@ -1,10 +1,15 @@
 from esdlc.parser import AST
-from esdlc.lexer import _tokenise
+from esdlc.lexer import tokenise
 from esdlc.nodes import *
+
+def get_tokens(source):
+    tokens = []
+    for stmt in tokenise(source): tokens.extend(stmt)
+    return tokens
 
 def test_arithmetic():
     source = 'x = (-b + sqrt(value=b^2 - (4 * a) * c)) / (2 * a)'
-    tokens = list(_tokenise(source))
+    tokens = get_tokens(source)
     count, node = UnknownNode.parse(tokens, 0)
     
     print count, len(tokens) - 1
@@ -87,7 +92,7 @@ def test_arithmetic():
     
 def test_function_calls():
     source = 'assign_dest = func_name(arg_name_1=value,arg_name_2=1)'
-    tokens = list(_tokenise(source))
+    tokens = get_tokens(source)
     count1, node1 = UnknownNode.parse(tokens, 0)
     count2, node2 = FunctionNode.parse(tokens, 2)
     

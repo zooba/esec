@@ -26,12 +26,10 @@ class ESDLSyntaxErrorBase(BaseException):
             try: self.message = self.message % args
             except TypeError: pass
         if isinstance(tokens, list):
-            self.text = text = ''
             tokens = sorted(tokens)
             self.line, self.col = tokens[0].line, tokens[0].col
             self.length = tokens[-1].col + len(tokens[-1].value) - tokens[0].col
-            for token in tokens:
-                text += token.value
+            self.text = ''.join(token.value for token in tokens)
         else:
             self.line, self.col = tokens.line, tokens.col
             self.text, self.length = tokens.value, len(tokens.value)

@@ -1,7 +1,12 @@
 from nose.tools import raises, assert_raises
 import esdlc.errors as error
-from esdlc.lexer import _tokenise
+from esdlc.lexer import tokenise
 from esdlc.nodes import *
+
+def get_tokens(source):
+    tokens = []
+    for stmt in tokenise(source): tokens.extend(stmt)
+    return tokens
 
 def test_node_bases():
     assert issubclass(UnknownNode, NodeBase)
@@ -27,7 +32,8 @@ def test_node_bases():
     assert issubclass(RepeatNode, BlockNode)
 
 def check_Node_parse(source, node_type, expected):
-    tokens = list(_tokenise(source))
+    tokens = get_tokens(source)
+    print tokens
     count, node = node_type.parse(tokens, 0)
     
     print repr(node)
@@ -37,10 +43,11 @@ def check_Node_parse(source, node_type, expected):
 
 def check_Node_parse_fail(source, node_type, expect):
     def _test(src):
-        tokens = list(_tokenise(src))
+        tokens = get_tokens(source)
         print tokens
         count, node = node_type.parse(tokens, 0)
         print repr(node)
+        assert count == len(tokens)
     assert_raises(callableObj=_test, excClass=expect, src=source)
 
 def test_ValueNode_parse():
@@ -62,7 +69,7 @@ def test_ValueNode_parse():
         ("-1", error.InvalidSyntaxError),   # - is an operator
         ("name", error.InvalidSyntaxError), # name is a name
         ("+2", error.InvalidSyntaxError),   # + is an operator
-        ("0e+-4", error.InvalidNumberError),# 0e+ cannot be converted to a number
+        ("0e+-4", AssertionError),          # 0e+-4 has multiple tokens
         ]:
         yield check_Node_parse_fail, source, ValueNode, expect
 
@@ -105,7 +112,7 @@ def test_GroupNode_parse():
         v.implicit = True
         return v
     def _f(n, **kw): return FunctionNode(n, None, **kw)
-    def _p(s): return UnknownNode.parse(list(_tokenise(s)), 0)[1]
+    def _p(s): return UnknownNode.parse(get_tokens(s), 0)[1]
     
     for source, expect_group, expect_size in [
         ("population", _v("population"), None),
@@ -137,11 +144,11 @@ def test_GroupNode_parse():
         yield check_Node_parse_fail, source, GroupNode, expect
 
 def test_FromNode_parse():
-    def _g(s): return GroupNode.parse(list(_tokenise(s)), 0)[1]
+    def _g(s): return GroupNode.parse(get_tokens(s), 0)[1]
     def _v(n): return VariableNode(n, None)
     def _f(n, *p, **kw): return FunctionNode(n, None, *p, **kw)
     def _fs(g): return FromSourceNode(g, None)
-    def _p(s): return UnknownNode.parse(list(_tokenise(s)), 0)[1]
+    def _p(s): return UnknownNode.parse(get_tokens(s), 0)[1]
     
     for source, srcs, dests, usings in [
         ("FROM population SELECT offspring", [_g("population")], [_g("offspring")], None),
@@ -176,10 +183,10 @@ def test_FromNode_parse():
         yield check_Node_parse_fail, source, FromNode, expect
 
 def test_JoinNode_parse():
-    def _g(s): return GroupNode.parse(list(_tokenise(s)), 0)[1]
+    def _g(s): return GroupNode.parse(get_tokens(s), 0)[1]
     def _v(n): return VariableNode(n, None)
     def _f(n, *p, **kw): return FunctionNode(n, None, *p, **kw)
-    def _p(s): return UnknownNode.parse(list(_tokenise(s)), 0)[1]
+    def _p(s): return UnknownNode.parse(get_tokens(s), 0)[1]
     
     for source, srcs, dests, usings in [
         ("JOIN population INTO offspring", [_g("population")], [_g("offspring")], None),
@@ -214,10 +221,10 @@ def test_JoinNode_parse():
         yield check_Node_parse_fail, source, JoinNode, expect
 
 def test_EvalNode_parse():
-    def _g(s): return GroupNode.parse(list(_tokenise(s)), 0)[1]
+    def _g(s): return GroupNode.parse(get_tokens(s), 0)[1]
     def _v(n): return VariableNode(n, None)
     def _f(n, *p, **kw): return FunctionNode(n, None, *p, **kw)
-    def _p(s): return UnknownNode.parse(list(_tokenise(s)), 0)[1]
+    def _p(s): return UnknownNode.parse(get_tokens(s), 0)[1]
     
     for source, srcs, usings in [
         ("EVAL population", [_g("population")], None),
@@ -238,10 +245,10 @@ def test_EvalNode_parse():
         yield check_Node_parse_fail, source, EvalNode, expect
 
 def test_YieldNode_parse():
-    def _g(s): return GroupNode.parse(list(_tokenise(s)), 0)[1]
+    def _g(s): return GroupNode.parse(get_tokens(s), 0)[1]
     def _v(n): return VariableNode(n, None)
     def _f(n, *p, **kw): return FunctionNode(n, None, *p, **kw)
-    def _p(s): return UnknownNode.parse(list(_tokenise(s)), 0)[1]
+    def _p(s): return UnknownNode.parse(get_tokens(s), 0)[1]
     
     for source, srcs in [
         ("YIELD population", [_g("population")]),

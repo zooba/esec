@@ -1,8 +1,8 @@
-from esdlc.lexer import Token, _tokenise, tokenise
+from esdlc.lexer import Token, tokenise
 
 def test_Token():
-    t1 = Token('tag', 'value', 1, 2)
-    t2 = Token('tag', 'value', 1, 2)
+    t1 = Token('tag', 'type', 'value', 1, 2)
+    t2 = Token('tag', 'type', 'value', 1, 2)
     
     assert t1 == t2
     
@@ -27,7 +27,8 @@ def test_Token():
 def test_tokenise_number():
     source = "0 0.0 1. 1.2 1e2 2.e1 3.4e7 1e-4 1e+4 3.2e-2 4.4e+3"
     values = [0.0, 0.0, 1.0, 1.2, 100.0, 20.0, 34000000.0, 0.0001, 10000.0, 0.032, 4400.0]
-    tokens = list(_tokenise(source))
+    tokens = []
+    for stmt in tokenise(source): tokens.extend(stmt)
     
     print tokens
     assert tokens[-1].tag == 'eos'
@@ -43,8 +44,9 @@ def test_tokenise_number():
 
 def test_tokenise_constant():
     source = "true TRUE True false FALSE False none NONE None null NULL Null"
-    values = ['TRUE', 'TRUE', 'TRUE', 'FALSE', 'FALSE', 'FALSE', 'NONE', 'NONE', 'NONE', 'NULL', 'NULL', 'NULL']
-    tokens = list(_tokenise(source))
+    values = ['true', 'true', 'true', 'false', 'false', 'false', 'none', 'none', 'none', 'null', 'null', 'null']
+    tokens = []
+    for stmt in tokenise(source): tokens.extend(stmt)
     
     print tokens
     assert tokens[-1].tag == 'eos'
@@ -53,7 +55,7 @@ def test_tokenise_constant():
     assert len(tokens) == len(values)
     assert all(t.tag == 'constant' for t in tokens)
     
-    actual = [t.value for t in tokens]
+    actual = [t.value.lower() for t in tokens]
     print actual
     print values
     assert actual == values
@@ -66,7 +68,8 @@ def test_tokenise_comment():
     ]
     for source in sources:
         comment = source[5:]
-        tokens = list(_tokenise(source))
+        tokens = []
+        for stmt in tokenise(source): tokens.extend(stmt)
         
         print tokens
         assert [t.tag for t in tokens] == ['name', 'comment', 'eos']
@@ -74,7 +77,8 @@ def test_tokenise_comment():
         assert tokens[1].value == comment
 
 def check_tags(source, expect):
-    tokens = list(_tokenise(source))
+    tokens = []
+    for stmt in tokenise(source): tokens.extend(stmt)
     
     print tokens
     assert [t.tag for t in tokens] == expect.split()
@@ -89,7 +93,7 @@ def test_tokenise_commands():
 def test_tokenise_continue():
     yield check_tags, \
         "name 2.3 \\ \n name 4.6", \
-        "name number continue eos name number eos"
+        "name number name number eos"
 
 def test_tokenise_line_ending():
     yield check_tags, \
@@ -184,7 +188,7 @@ CODE_VALUES = [
     'FROM population SELECT ( size ) bases USING fitness_sus ( mu = size )',
     '',
     '# Ensure r0 != r1 != r2, but any may equal i',
-    'JOIN bases , population , population INTO mutators USING random_tuples ( distinct = TRUE )',
+    'JOIN bases , population , population INTO mutators USING random_tuples ( distinct = true )',
     '',
     'FROM mutators SELECT mutants USING mutate_DE ( scale = F )',
     '',
