@@ -181,7 +181,12 @@ class _born_iter(object):
         yield '# ' + str(node)
         
         # using includes the source groups
-        src = '_born_iter(' + ''.join(self.write(node.using)) + ')'
+        src = ''.join(self.write(node.using))
+        if all(d.size for d in node.destinations):
+            src = '(_.born() for _ in ' + src + ')'
+        else:
+            src = '_born_iter(' + src + ')'
+        
         if len(node.destinations) > 1 or node.destinations[0].size:
             yield '_gen = ' + src
             src = '_gen'
@@ -218,10 +223,14 @@ class _born_iter(object):
         yield '# ' + str(node)
         
         # using includes the source groups
+        src = ''.join(self.write(node.using))
         if node.using.tag == 'joinsource':
-            yield '_gen = _born_iter(_default_joiner(' + ''.join(self.write(node.using)) + '))'
+            src = '_default_joiner(' + src + ')'
+        if all(d.size for d in node.destinations):
+            src = '(_.born() for _ in ' + src + ')'
         else:
-            yield '_gen = _born_iter(' + ''.join(self.write(node.using)) + ')'
+            src = '_born_iter(' + src + ')'
+        yield '_gen = ' + src
         
         for group in node.destinations:
             group_name = ''.join(self.write(group.group))
