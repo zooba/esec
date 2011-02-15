@@ -216,13 +216,12 @@ class System(object):
             self._in_step = True
             while self._next_block:
                 # _next_block may be appended to by a callback
-                block = self._next_block[0]
-                del self._next_block[0]
+                block = self._next_block.pop(0)
                 
                 if block:
                     block_name = str(block).lower()
                 elif isinstance(self.selector, list) and len(self.selector) == 1:
-                    # Minor performance optimisation for default single block case
+                    # Performance optimisation for default single block case
                     block_name = str(self.selector[0]).lower()
                 else:
                     block_name = None
@@ -230,13 +229,12 @@ class System(object):
                 try:
                     self.monitor.on_pre_breed(self)
                     
-                    if not block:
-                        block_name = None
-                        while not block_name:
-                            try:
-                                block_name = next(self.selector_current)
-                            except StopIteration:
-                                self.selector_current = iter(self.selector)
+                    if block_name is None:
+                        try:
+                            block_name = next(self.selector_current)
+                        except StopIteration:
+                            self.selector_current = iter(self.selector)
+                            block_name = next(self.selector_current)
                         block_name = str(block_name).lower()
                     
                     try:
