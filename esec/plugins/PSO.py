@@ -17,7 +17,6 @@
 This plugin provides a Particle Swarm Optimisation species and system definition.
 '''
 
-from esec.context import rand
 from esec.species.real import RealIndividual, RealSpecies
 from math import sqrt
 
@@ -90,7 +89,9 @@ class PSOSpecies(RealSpecies):
         }
     
     def init_random(self, length=2, lowest=-1.0, highest=1.0, zero_velocity=True, \
-                    position_bounds=None, velocity_bounds=None, template=None):
+                    position_lower_bound=None, position_upper_bound=None,
+                    velocity_lower_bound=None, velocity_upper_bound=None,
+                    template=None):
         '''Returns instances of `PSOIndividual` initialised with random values.
         
         The value of `bounds` (or `lowest` and `highest`) are stored with the
@@ -124,7 +125,7 @@ class PSOSpecies(RealSpecies):
             ``True`` to set all velocities to zero; otherwise, a random
             value between `lowest` and `highest` (inclusive) is used.
           
-          position_bounds : ``[lower bounds, upper bounds]`` [optional]
+          position_lower_bound : float or iterable(float) [optional]
             The hard position limits to keep with the individual.
             If not specified, no limits are applied. Even if specified,
             the `update_position` operator does not enforce limits.
@@ -134,7 +135,25 @@ class PSOSpecies(RealSpecies):
             The behaviour of particles reaching these limits is
             determined by the operator in use.
           
-          velocity_bounds : ``[lower bounds, upper bounds]`` [optional]
+          position_upper_bound : float or iterable(float) [optional]
+            The hard position limits to keep with the individual.
+            If not specified, no limits are applied. Even if specified,
+            the `update_position` operator does not enforce limits.
+            One of `update_position_clamp`, `update_position_wrap` or
+            `update_position_bounce` must be used to enforce boundaries.
+            
+            The behaviour of particles reaching these limits is
+            determined by the operator in use.
+          
+          velocity_lower_bound : float or iterable(float) [optional]
+            The hard velocity limits to keep with the individual.
+            If not specified, velocity is not limited.
+            
+            The behaviour of particles reaching these limits is
+            determined by the operator in use. The `update_velocity`
+            operator clamps the new velocity value to these extremes.
+          
+          velocity_upper_bound : float or iterable(float) [optional]
             The hard velocity limits to keep with the individual.
             If not specified, velocity is not limited.
             
@@ -146,21 +165,23 @@ class PSOSpecies(RealSpecies):
             If provided, used to determine the values for `lowest`
             and `highest`.
         '''
+        from esec.context import rand
         frand = rand.random
         
         cb = self._convert_bounds
         inf = float('inf')
         length = int(length)
         
-        if position_bounds and velocity_bounds:
-            bounds = [ cb(position_bounds[0], length) + cb(velocity_bounds[0], length), \
-                       cb(position_bounds[1], length) + cb(velocity_bounds[1], length) ]
-        elif position_bounds:
-            bounds = [ cb(position_bounds[0], length) + cb(-inf, length), \
-                       cb(position_bounds[1], length) + cb( inf, length) ]
-        elif velocity_bounds:
-            bounds = [ cb(-inf, length)               + cb(velocity_bounds[0], length), \
-                       cb( inf, length)               + cb(velocity_bounds[1], length) ]
+        if (position_lower_bound is not None and position_upper_bound is not None and
+            velocity_lower_bound is not None and velocity_upper_bound is not None):
+            bounds = [ cb(position_lower_bound, length) + cb(velocity_lower_bound, length), \
+                       cb(position_upper_bound, length) + cb(velocity_upper_bound, length) ]
+        elif position_lower_bound is not None and position_upper_bound is not None:
+            bounds = [ cb(position_lower_bound, length) + cb(-inf, length), \
+                       cb(position_upper_bound, length) + cb( inf, length) ]
+        elif velocity_lower_bound is not None and velocity_upper_bound is not None:
+            bounds = [ cb(-inf, length)               + cb(velocity_lower_bound, length), \
+                       cb( inf, length)               + cb(velocity_upper_bound, length) ]
         else:
             bounds = [ cb(-inf, length)               + cb(-inf, length), \
                        cb( inf, length)               + cb( inf, length) ]
@@ -189,19 +210,20 @@ class PSOSpecies(RealSpecies):
         assert isinstance(global_best[0], PSOIndividual), "Expected PSOIndividual for global_best"
         global_best = global_best[0]
         
+        from esec.context import rand
         frand = rand.random
         
         if inertia != None:
             w = inertia
         if constriction:
             c = c1 + c2
-            k = 2 / abs(2 - c - sqrt(c * (c - 4)))
+            k = 2 / abs(2 - c - sqrt(c * (c - 4))) if c > 4 else 1
             w *= k
             c1 *= k
             c2 *= k
         
         for joined_individual in _source:
-            indiv, indiv_best = joined_individual[:]
+            indiv, indiv_best = joined_individual.genome[:]
             assert isinstance(indiv, PSOIndividual), "Expected PSOIndividual first in each joined individual"
             assert isinstance(indiv_best, PSOIndividual), "Expected PSOIndividual second in each joined individual"
             

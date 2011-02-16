@@ -16,8 +16,8 @@ from plugins.PSO import *
 
 SYSTEM_DEFINITION = r'''
 FROM random_pso(length=(n), lowest=(init_lower), highest=(init_upper), \
-                position_bounds=(-100, 100), \
-                velocity_bounds=(-100, 100)) \
+                position_lower_bound=-100, position_upper_bound=100, \
+                velocity_lower_bound=-100, velocity_upper_bound=100) \
         SELECT (size) population
 EVAL population USING rosenbrock
 FROM population SELECT 1 global_best USING best_only
