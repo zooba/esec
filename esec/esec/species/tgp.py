@@ -8,7 +8,7 @@ genetic programming (Koza-style) genomes.
 from copy import copy
 from itertools import chain, islice, izip
 import math
-from esec.species import Species, _pairs
+from esec.species import Species
 from esec.individual import Individual, OnIndividual
 from esec.context import rand, notify
 
@@ -1015,7 +1015,8 @@ class TgpSpecies(Species):
         
         deepest_result = int(deepest_result or 0)
         
-        for i1_pre, i2_pre in _pairs(_source):
+        import esec.species
+        for i1_pre, i2_pre in esec.species._pairs(_source):
             if do_all_pairs or frand() < per_pair_rate:
                 assert len(i1_pre.genome) == len(i2_pre.genome), "ADF counts are not consistent"
                 i1_post = []
