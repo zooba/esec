@@ -171,11 +171,11 @@ class Fitness(object):
         '''
         if hasattr(criteria, 'values'):
             if __debug__: self.validate(criteria)
-            return all(s > c for s, c in izip(self.values, criteria.values))
+            return all(s >= c for s, c in izip(self.values, criteria.values))
         elif isinstance(criteria, EmptyFitness) or criteria is None:
             return False
         else:
-            return self.values[0] > criteria
+            return self.values[0] >= criteria
     
     def __gt__(self, other):
         '''Determines whether `self` is more fit than `other`.
