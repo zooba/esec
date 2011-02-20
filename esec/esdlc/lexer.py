@@ -86,14 +86,14 @@ class Token(object):
     def __lt__(self, other): return (self.line, self.col) < (other.line, other.col)
     
     def __str__(self):
-        if self.type == 'eos':
-            return '<eos> (%d:%d)' % (self.line, self.col)
+        if self.type == 'end':
+            return '<%s> (%d:%d)' % (self.tag, self.line, self.col)
         else:
             return '%s (%d:%d)' % (self.value, self.line, self.col)
     
     def __repr__(self):
-        if self.type == 'eos':
-            return '<eos> (%d:%d)' % (self.line, self.col)
+        if self.type == 'end':
+            return '<%s> (%d:%d)' % (self.tag, self.line, self.col)
         else:
             return '<%s>%s (%d:%d)' % (self.tag, self.value, self.line, self.col)
     
@@ -197,14 +197,14 @@ def tokenise(source):
     '''
     
     if not source:
-        yield [Token('eos', 'end', '\\n', 1, 1)]
+        yield [Token('eof', 'end', '', 1, 1)]
         raise StopIteration
     
     if isinstance(source, str):
         source = iter(source.splitlines())
     
     if not hasattr(source, '__iter__'):
-        yield [Token('eos', 'end', '\\n', 1, 1)]
+        yield [Token('eof', 'end', '', 1, 1)]
         raise StopIteration
     
     tokens = []
@@ -223,6 +223,9 @@ def tokenise(source):
         tokens.append(Token('eos', 'end', '\\n', lineno, col))
         yield tokens
         tokens = []
+    
+    tokens.append(Token('eof', 'end', '', lineno, col))
+    yield tokens
 
 if __name__ == '__main__':
     code = tokenise(r'''FROM random_real(length=2,lowest=-2.0,highest=2.0) SELECT (size) population

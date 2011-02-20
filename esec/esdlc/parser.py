@@ -70,9 +70,6 @@ class AST(object):
                 if not statement: continue
                 token = statement[0]
                 
-                if current_block is None and token.tag not in ('BEGIN', 'eos'):
-                    raise error.UnexpectedCommandError(token)
-                
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 if token.tag == 'BEGIN':
                     if block_stack:
@@ -101,13 +98,20 @@ class AST(object):
                     block_stack.append(current_block)
                 
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                elif token.type == 'end':
+                    pass
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 else:
+                    if current_block is None and token.type != 'end':
+                        raise error.UnexpectedCommandError(token)
+                    
                     i = 0
                     previous_i = -1
-                    while i < len(statement) and i != previous_i:
-                        previous_i = i
-                        i, node = UnknownNode.parse(statement, i)
-                        if node: current_block.children.append(node)
+                    i, node = UnknownNode.parse(statement, i)
+                    if node: current_block.children.append(node)
+                    if i < len(statement) and statement[i].type != 'end':
+                        raise error.InvalidSyntaxError(statement[i])
+            
             except error.ESDLSyntaxErrorBase as ex:
                 self._errors.append(ex)     #pylint: disable=W0212
         

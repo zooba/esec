@@ -12,8 +12,8 @@ def test_arithmetic():
     tokens = get_tokens(source)
     count, node = UnknownNode.parse(tokens, 0)
     
-    print count, len(tokens) - 1
-    assert count == len(tokens) - 1 # ignore eos
+    print count, len(tokens) - 2
+    assert count == len(tokens) - 2 # ignore eos eof
     
     print repr(node)
     assert isinstance(node, FunctionNode)
@@ -96,10 +96,10 @@ def test_function_calls():
     count1, node1 = UnknownNode.parse(tokens, 0)
     count2, node2 = FunctionNode.parse(tokens, 2)
     
-    print count1, len(tokens) - 1
-    assert count1 == len(tokens) - 1 # ignore eos
-    print count2, len(tokens) - 1
-    assert count2 == len(tokens) - 1 # ignore eos
+    print count1, len(tokens) - 2
+    assert count1 == len(tokens) - 2 # ignore eos eof
+    print count2, len(tokens) - 2
+    assert count2 == len(tokens) - 2 # ignore eos eof
     
     assert count1 == count2
     

@@ -210,6 +210,12 @@ class ExpectedIndexError(ESDLSyntaxErrorBase):
     code = "E1015"
     default_message = "Expected index in subscript"
 
+class RepeatedParameterNameError(ESDLSyntaxErrorBase):
+    '''Returned when a parameter name is repeated.'''
+    code = "E1016"
+    default_message = "Parameter '%s' is specified multiple times"
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Errors/warnings used by Verifier
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

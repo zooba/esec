@@ -405,6 +405,8 @@ class FunctionNode(NodeBase):
             if token.tag != 'name': raise error.InvalidParameterNameError(token)
             arg_name = token.value
             
+            if arg_name in func_args: raise error.RepeatedParameterNameError(token, arg_name)
+            
             token_i += 1
             token = _get_token(tokens, token_i)
             
@@ -420,8 +422,13 @@ class FunctionNode(NodeBase):
                 func_args[arg_name].implicit = True
             
             token = _get_token(tokens, token_i)
-            if token and token.tag == ',': token_i += 1
-            token = _get_token(tokens, token_i)
+            if not token:
+                break
+            elif token.tag == ',':
+                token_i += 1
+                token = _get_token(tokens, token_i)
+            elif token.tag != ')':
+                raise error.ExpectedCommaError(token)
         
         if not token: raise error.UnmatchedBracketError(tokens[-1], ')')
         
