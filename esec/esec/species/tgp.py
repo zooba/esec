@@ -11,6 +11,7 @@ import math
 from esec.species import Species
 from esec.individual import Individual, OnIndividual
 from esec.context import rand, notify
+import esec.utils
 
 # Override Individual to provide one that keeps its valid instructions
 # with it
@@ -1015,8 +1016,7 @@ class TgpSpecies(Species):
         
         deepest_result = int(deepest_result or 0)
         
-        import esec.species
-        for i1_pre, i2_pre in esec.species._pairs(_source):
+        for i1_pre, i2_pre in esec.utils.pairs(_source):
             if do_all_pairs or frand() < per_pair_rate:
                 assert len(i1_pre.genome) == len(i2_pre.genome), "ADF counts are not consistent"
                 i1_post = []

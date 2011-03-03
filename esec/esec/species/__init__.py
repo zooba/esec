@@ -15,16 +15,8 @@ A species determines the type and range of gene values contained in
 
 from itertools import chain, islice, izip
 from esec.context import notify, rand
-from esec.utils import merge_cls_dicts, cfg_validate, ConfigDict
-
-def _pairs(source):
-    '''Returns pairs of values from `source`.
-    
-    Equivalent to ``zip(source[::2], source[1::2])`` but doesn't
-    require `source` to be a list.
-    '''
-    while True:
-        yield next(source), next(source)
+import esec.utils as utils
+from esec.utils import ConfigDict
 
 class Species(object):
     '''Abstract base class for species descriptors.
@@ -60,11 +52,11 @@ class Species(object):
             individual as a parameter.
         '''
         # Merge syntax and default details
-        self.syntax = merge_cls_dicts(self, 'syntax')
-        self.cfg = ConfigDict(merge_cls_dicts(self, 'default'))
+        self.syntax = utils.merge_cls_dicts(self, 'syntax')
+        self.cfg = ConfigDict(utils.merge_cls_dicts(self, 'default'))
         # Now apply user cfg details and test against syntax
         self.cfg.overlay(cfg)
-        cfg_validate(self.cfg, self.syntax, type(self), warnings=False)
+        utils.cfg_validate(self.cfg, self.syntax, type(self), warnings=False)
         # Store default evaluator
         self._eval_default = eval_default
         '''The default evaluator for individuals of this species type.'''
@@ -352,7 +344,7 @@ class Species(object):
         
         frand = rand.random
         
-        for i1, i2 in _pairs(_source):
+        for i1, i2 in utils.pairs(_source):
             if do_all_pairs or frand() < per_pair_rate:
                 i1_genome, i2_genome = i1.genome, i2.genome
                 i1_len, i2_len = len(i1_genome), len(i2_genome)
@@ -465,7 +457,7 @@ class Species(object):
         frand = rand.random
         shuffle = rand.shuffle
         
-        for i1, i2 in _pairs(_source):
+        for i1, i2 in utils.pairs(_source):
             if do_all_pairs or frand() < per_pair_rate:
                 i1_genome, i2_genome = i1.genome, i2.genome
                 i1_len, i2_len = len(i1_genome), len(i2_genome)
@@ -480,7 +472,7 @@ class Species(object):
                     new_genes1 = list(i1_genome)
                     new_genes2 = list(i2_genome)
                     
-                    for cut_i, cut_j in _pairs(iter(cuts)):
+                    for cut_i, cut_j in utils.pairs(iter(cuts)):
                         cut1 = islice(new_genes1, cut_i, cut_j)
                         cut2 = islice(new_genes2, cut_i, cut_j)
                         new_genes1 = list(chain(islice(new_genes1, cut_i),
@@ -596,7 +588,7 @@ class Species(object):
         frand = rand.random
         shuffle = rand.shuffle
         
-        for i1, i2 in _pairs(_source):
+        for i1, i2 in utils.pairs(_source):
             if do_all_pairs or frand() < per_pair_rate:
                 i1_genome, i2_genome = i1.genome, i2.genome
                 i1_len, i2_len = len(i1_genome), len(i2_genome)
@@ -615,7 +607,7 @@ class Species(object):
                     new_genes2 = list(i2_genome)
                     
                     for (i1_cut_i, i1_cut_j), (i2_cut_i, i2_cut_j) in \
-                        izip(_pairs(iter(i1_cuts)), _pairs(iter(i2_cuts))):
+                        izip(utils.pairs(iter(i1_cuts)), utils.pairs(iter(i2_cuts))):
                         
                         i1_cut = islice(new_genes1, i1_cut_i, i1_cut_j)
                         i2_cut = islice(new_genes2, i2_cut_i, i2_cut_j)
@@ -744,7 +736,7 @@ class Species(object):
         
         frand = rand.random
         
-        for i1, i2 in _pairs(_source):
+        for i1, i2 in utils.pairs(_source):
             if do_all_pairs or frand() < per_pair_rate:
                 i1_genome, i2_genome = i1.genome, i2.genome
                 i1_len, i2_len = len(i1_genome), len(i2_genome)

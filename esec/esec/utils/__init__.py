@@ -167,6 +167,15 @@ def str_short_list(values):
     else:
         return str(values)
 
+def pairs(source):
+    '''Returns pairs of values from `source`.
+    
+    Equivalent to ``zip(source[::2], source[1::2])`` but doesn't
+    require `source` to be a list.
+    '''
+    while True:
+        yield next(source), next(source)
+
 
 _is_ironpython = None
 
