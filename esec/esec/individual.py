@@ -228,7 +228,14 @@ class Individual(object):
     def phenome_string(self):
         '''Returns a string representation of the phenome of this
         individual.
+        
+        If the current evaluator provides a ``phenome_string(indiv)``
+        method, it is used by default. Otherwise, returns
+        `genome_string`.
         '''
+        if self._eval and hasattr(self._eval, 'phenome_string'):
+            try: return self._eval.phenome_string(self)
+            except AttributeError: pass
         return self.genome_string
     
     @property

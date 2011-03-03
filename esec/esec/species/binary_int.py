@@ -98,6 +98,9 @@ class BinaryIntegerIndividual(Individual):
     def phenome_string(self):
         '''Returns a string representation of the phenome of this individual.
         '''
+        if self._eval and hasattr(self._eval, 'phenome_string'):
+            try: return self._eval.phenome_string(self)
+            except AttributeError: pass
         return '[' + ', '.join('%f' % i for i in self.phenome) + ']'
 
 class BinaryIntegerSpecies(BinarySpecies):

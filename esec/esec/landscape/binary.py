@@ -128,6 +128,13 @@ class RoyalRoad(Binary):
         C = self.C = self.cfg.C
         self.size.min = self.size.max = self.size.exact = Q * C
     
+    def phenome_string(self, indiv):
+        '''Returns a phenome string with separators between every `C`
+        bits.'''
+        C = self.C
+        return ' '.join(''.join(str(b) for b in indiv[i:i+C])
+                        for i in xrange(0, self.size.exact, C))
+    
     def _eval(self, indiv):
         '''f(x) = sum(blocks(x)) * C'''
         total = 0
