@@ -2,7 +2,7 @@
 for fully customisable breeding systems.
 '''
 
-import sys, random, traceback
+import sys, copy, itertools, random, traceback
 from warnings import warn
 from esec.utils import ConfigDict, cfg_validate, merge_cls_dicts
 from esec.utils.exceptions import EvaluatorError
@@ -15,6 +15,27 @@ import esec.generators  #pylint: disable=W0611
 from esec.species import SPECIES
 
 from esec.context import _context as global_context
+
+
+def _iter(*srcs):
+    '''Automatically calls ``__iter__`` or ``__call__`` depending on the
+    parameter types, allowing constructors and lists to be used
+    interchangeably. If multiple sequences are provided they are
+    concatenated as required by ``FROM-SELECT`` statements.
+    '''
+    return itertools.chain.from_iterable(
+        (getattr(src, '__iter__', None) or getattr(src, '__call__'))() for src in srcs
+    )
+
+class _born_iter(object):
+    '''Calls the ``born`` method of individuals after a ``FROM-SELECT``
+    statement and handles calls to ``rest`` when the underlying sequence
+    does not support it.
+    '''
+    def __init__(self, src): self.src = iter(src)
+    def rest(self): return [i.born() for i in getattr(self.src, 'rest', self.src.__iter__)()]
+    def __iter__(self): return self
+    def next(self): return next(self.src).born()
 
 class System(object):
     '''Provides a system using a dynamically generated controller.
@@ -61,6 +82,10 @@ class System(object):
         rand = random.Random(cfg.random_seed)
         notify = self._do_notify
         self._context = context = {
+            '_iter': _iter,
+            '_born_iter': _born_iter,
+            '_islice': itertools.islice,
+            '_copy': copy.copy,
             'config': self.cfg,
             'rand': rand,
             'notify': notify,

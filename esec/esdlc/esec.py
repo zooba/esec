@@ -13,66 +13,11 @@ class EsecEmitter(object):
     INDENT = '    '
     
     UNSAFE_VARIABLES = ['lambda']
+    UNSAFE_VARIABLE_INIT = ['_%s = globals().get("%s", None)' % (i, i) for i in UNSAFE_VARIABLES]
     
-    DEFINITIONS_PY2 = r'''from itertools import islice as _islice
-from copy import copy as _copy
-''' + '\n'.join('_%s = globals().get("%s", None)' % (i, i) for i in UNSAFE_VARIABLES) + r'''
-
-def _iter(*srcs):
-    for src in srcs:
-        for indiv in (getattr(src, '__iter__', None) or getattr(src, '__call__'))():
-            yield indiv
-
-class _born_iter(object):
-    def __init__(self, src): self.src = iter(src)
-    def rest(self): return [i.born() for i in getattr(self.src, 'rest', self.src.__iter__)()]
-    def __iter__(self): return self
-    def next(self): return next(self.src).born()'''
-    '''Definitions used in compiled systems.
-    
-    The ``_iter`` method automatically calls ``__iter__`` or
-    ``__call__`` depending on the parameter type, allowing constructors
-    and lists to be used interchangeably. If multiple sequences are
-    provided they are concatenated as required by ``FROM-SELECT``
-    statements.
-    
-    The ``_born_iter`` class calls the ``born`` method of individuals
-    after a ``FROM-SELECT`` statement and handles calls to ``rest`` when
-    the underlying sequence does not support it.
-    '''
-    
-    DEFINITIONS_PY3 = r'''from itertools import islice as _islice
-from copy import copy as _copy
-''' + '\n'.join('_%s = globals().get("%s", None)' % (i, i) for i in UNSAFE_VARIABLES) + r'''
-
-def _iter(*srcs):
-    for src in srcs:
-        for indiv in (getattr(src, '__iter__', None) or getattr(src, '__call__'))():
-            yield indiv
-
-class _born_iter(object):
-    def __init__(self, src): self.src = iter(src)
-    def rest(self): return [i.born() for i in getattr(self.src, 'rest', self.src.__iter__)()]
-    def __iter__(self): return self
-    def __next__(self): return next(self.src).born()'''
-    '''Definitions used in compiled systems.
-    
-    The ``_iter`` method automatically calls ``__iter__`` or
-    ``__call__`` depending on the parameter type, allowing constructors
-    and lists to be used interchangeably. If multiple sequences are
-    provided they are concatenated as required by ``FROM-SELECT``
-    statements.
-    
-    The ``_born_iter`` class calls the ``born`` method of individuals
-    after a ``FROM-SELECT`` statement and handles calls to ``rest`` when
-    the underlying sequence does not support it.
-    '''
-    
-    if sys.version.startswith('3'):
-        DEFINITIONS = DEFINITIONS_PY3
+    if sys.version_info.major == 3:
         RANGE_COMMAND = 'range'
     else:
-        DEFINITIONS = DEFINITIONS_PY2
         RANGE_COMMAND = 'xrange'
         
     
@@ -333,8 +278,8 @@ class _born_iter(object):
         result = []
         ast = self.ast
         
-        # write global definitions
-        result.extend(self.DEFINITIONS.splitlines())
+        # prepare unsafe variables
+        result.extend(self.UNSAFE_VARIABLE_INIT)
         result.append('')
         
         # write initialisation block
