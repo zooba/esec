@@ -132,7 +132,7 @@ class JoinedSpecies(Species):
         assert per_gene_rate is not True, "per_gene_rate has no value"
         
         if per_indiv_rate is None: per_indiv_rate = per_pair_rate
-        if per_indiv_rate <= 0.0 or per_gene_rate >= 1.0:
+        if per_indiv_rate <= 0.0 or (per_gene_rate is not None and per_gene_rate >= 1.0):
             for indiv in _source: yield indiv[0]
             raise StopIteration
         

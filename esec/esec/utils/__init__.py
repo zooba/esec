@@ -3,7 +3,11 @@
 Support functions for the |esec| framework.
 '''
 import sys, copy, os.path
-from itertools import chain, islice, izip, izip_longest
+from itertools import chain, islice, izip
+if sys.version_info.major == 3:
+    from itertools import zip_longest
+else:
+    from itertools import izip_longest as zip_longest
 from warnings import warn
 from esec.utils.attributedict import attrdict
 from esec.utils.configdict import ConfigDict
@@ -191,7 +195,7 @@ def overlapped_pairs(source):
     should be more efficient.
     '''
     if type(source) is list:
-        return izip_longest(source, islice(source, 1, None), fillvalue=source[0])
+        return zip_longest(source, islice(source, 1, None), fillvalue=source[0])
     else:
         def _overlapped_pairs(source):
             '''Returns overlapped pairs from an arbitrary iterator.'''
