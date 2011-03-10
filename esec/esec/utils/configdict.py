@@ -67,7 +67,10 @@ class ConfigDict(attrdict):     #pylint: disable=R0904
                     if (isinstance(value, ConfigDict) or
                         isinstance(value, dict) and all(isinstance(i, str) for i in value.iterkeys())):
                         value = ConfigDict(value)
-                    self[key] = value
+                    if '.' in key:
+                        self.set_by_name(key, value)
+                    else:
+                        self[key] = value
             elif bits is not None:
                 for bit in bits:
                     name, _, value = bit.partition('=')
