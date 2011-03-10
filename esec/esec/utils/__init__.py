@@ -5,7 +5,7 @@ Support functions for the |esec| framework.
 import sys, copy, os.path
 from itertools import chain, islice, izip
 if sys.version_info.major == 3:
-    from itertools import zip_longest
+    from itertools import zip_longest   #pylint: diable=E0611
 else:
     from itertools import izip_longest as zip_longest
 from warnings import warn

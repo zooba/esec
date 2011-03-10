@@ -33,9 +33,13 @@ class _born_iter(object):
     does not support it.
     '''
     def __init__(self, src): self.src = iter(src)
-    def rest(self): return [i.born() for i in getattr(self.src, 'rest', self.src.__iter__)()]
     def __iter__(self): return self
-    def next(self): return next(self.src).born()
+    def rest(self):
+        '''Returns all individuals remaining in the stream if finite.'''
+        return (i.born() for i in getattr(self.src, 'rest', self.src.__iter__)())
+    def next(self):
+        '''Returns the next individual in the stream.'''
+        return next(self.src).born()
 
 class System(object):
     '''Provides a system using a dynamically generated controller.
