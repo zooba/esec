@@ -15,7 +15,7 @@ class EsecEmitter(object):
     UNSAFE_VARIABLES = ['lambda']
     UNSAFE_VARIABLE_INIT = ['_%s = globals().get("%s", None)' % (i, i) for i in UNSAFE_VARIABLES]
     
-    if sys.version_info.major == 3:
+    if sys.version_info[0] == 3:
         RANGE_COMMAND = 'range'
     else:
         RANGE_COMMAND = 'xrange'
