@@ -35,7 +35,7 @@ config = {
     },
     'landscape': {
         'class': tsp.Landscape,
-        'cost_map': 'cfgs/TSPU2319.csv',
+        'cost_map': 'cfgs/TSP/U2319.csv',
     },
     'monitor': {
         'report': 'brief+local_header+local_min+local_ave+local_max+local_unique+|+time_delta',

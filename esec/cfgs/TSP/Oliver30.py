@@ -14,7 +14,7 @@
 
 from plugins.ACO import *
 
-city_graph = tsp.Landscape(cost_map="cfgs/TSPOliver30.csv")
+city_graph = tsp.Landscape(cost_map="cfgs/TSP/Oliver30.csv")
 
 config = {
     'system': {
