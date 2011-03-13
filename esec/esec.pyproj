@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{06f96068-ba81-49e1-b5af-019b8e0c30ff}</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>run.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <AssemblyName>esec</AssemblyName>
+    <Name>esec</Name>
+    <RootNamespace>esec</RootNamespace>
+    <InterpreterPath>
+    </InterpreterPath>
+    <CommandLineArguments>
+    </CommandLineArguments>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <InterpreterId>9a7a9026-48c1-4688-9d5d-e5699d47d074</InterpreterId>
+    <InterpreterVersion>2.7</InterpreterVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="**\*.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="cfgs\" />
+    <Folder Include="cfgs\Koza\" />
+    <Folder Include="cfgs\TSP\" />
+    <Folder Include="esdlc\" />
+    <Folder Include="esec\" />
+    <Folder Include="esec\generators\" />
+    <Folder Include="esec\landscape\" />
+    <Folder Include="esec\monitors\" />
+    <Folder Include="esec\species\" />
+    <Folder Include="esec\utils\" />
+    <Folder Include="plugins\" />
+    <Folder Include="plugins\ACO\" />
+    <Folder Include="tests\" />
+    <Folder Include="tests\esdlc\" />
+    <Folder Include="tests\generators\" />
+    <Folder Include="tests\landscape\" />
+    <Folder Include="tests\species\" />
+  </ItemGroup>
+</Project>
