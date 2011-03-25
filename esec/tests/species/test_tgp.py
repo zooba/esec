@@ -93,3 +93,27 @@ def test_mutate_edit_ifnot_5():
     
     _cmp(source, expected)
 
+
+class TestState(object):
+    def __init__(self): self.hits = 0
+    def hit(self): self.hits += 1
+    
+eval_both = tgp.InstructionWithState(lambda state, a, b: a, param_count=2, name="eval_two", lazy=False)
+eval_one_only = tgp.InstructionWithState(lambda state, a, b: a(), param_count=2, name="eval_one", lazy=True)
+hit_state = tgp.InstructionWithState(lambda state: state.hit(), param_count=0, name="hit")
+
+def test_execute_eager():
+    code = [[eval_both, hit_state, hit_state]]
+    indiv = tgp.TgpIndividual(code, Species, [eval_both, hit_state], None, 0)
+    state = TestState()
+    Species.evaluate(indiv, state)
+    
+    assert state.hits == 2, "Expected two hits, not %s" % state.hits
+
+def test_execute_lazy():
+    code = [[eval_one_only, hit_state, hit_state]]
+    indiv = tgp.TgpIndividual(code, Species, [eval_one_only, hit_state], None, 0)
+    state = TestState()
+    Species.evaluate(indiv, state)
+    
+    assert state.hits == 1, "Expected only one hit, not %s" % state.hits

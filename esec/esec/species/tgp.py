@@ -152,7 +152,7 @@ class TgpIndividual(Individual):
 #pylint: disable=C0111,R0903
 class Instruction(object):
     '''Represents instruction nodes.'''
-    def __init__(self, func, param_count, name):
+    def __init__(self, func, param_count, name, lazy=False):
         '''Initialises a new instruction.
         
         .. include:: epydoc_include.txt
@@ -169,10 +169,20 @@ class Instruction(object):
           name : string
             The display name of the instruction. This is used for
             displaying formatted genomes.
+          
+          lazy : bool [default ``False``]
+            ``True`` to only evaluate parameters when requested.
+            
+            When ``True``, parameters are passed to `func` as callables
+            that evaluate and return the parameter value.
+            
+            When ``False``, parameter values are evaluated before
+            calling `func`.
         '''
         self.func = func
         self.param_count = param_count
         self.name = name
+        self.lazy = lazy
     
     def __call__(self, state, *params):
         return self.func(*params)
@@ -331,7 +341,8 @@ class TgpSpecies(Species):
             'mutate_edit': OnIndividual('mutate_edit'),
         }
     
-    def evaluate(self, indiv, state=None, terminals=None, adf_index=0):
+    def evaluate(self, indiv, state=None, terminals=None, adf_index=0,  #pylint: disable=R0912
+                 i_start=0, i_end=-1):
         '''Evaluates the given individual against the specified set of
         terminals and returns the result.
         
@@ -357,6 +368,7 @@ class TgpSpecies(Species):
             This parameter is used internally for `CallAdf`
             instructions.
         '''
+
         assert isinstance(indiv, TgpIndividual), "Expected TgpIndividual, not %s" % type(indiv)
         if terminals is None: terminals = []
         assert isinstance(terminals, (list, tuple)), "terminals must be list/tuple type"
@@ -374,7 +386,7 @@ class TgpSpecies(Species):
                "ADF index %d is not valid (must be [0, %d))" % (adf_index, len(indiv.genome))
         current_program = indiv.genome[adf_index]
         
-        for op_i, op in enumerate(current_program):
+        for op_i, op in islice(enumerate(current_program), i_start, i_end if i_end > i_start else None):
             # Skip instructions if we need to
             if skip_1 and skip_1[-1]:
                 skip_1[-1] -= 1
@@ -403,7 +415,22 @@ class TgpSpecies(Species):
                 
             elif isinstance(op, Instruction):
                 # Add a new item for this instruction
-                op_stack.append([op])   # not extend
+                if op.lazy:
+                    item = []
+                    i = op_i + 1
+                    for _ in xrange(op.param_count):
+                        j = self._find_end(current_program, i)
+                        def make_lazy_eval(indiv, state, terminals, adf_index, i, j):
+                            '''Creates an evaluation lambda.'''
+                            return lambda: self.evaluate(indiv, state, terminals, adf_index, i, j)
+                        item.append(make_lazy_eval(indiv, state, terminals, adf_index, i, j))
+                        i = j
+                    if op_stack:
+                        op_stack[-1].append(op(state, *item))
+                    else:
+                        return op(state, *item)
+                else:
+                    op_stack.append([op])   # not extend
             elif isinstance(op, (Terminal, Constant)):
                 # Add this terminal or constant to the topmost instruction
                 val = op(state, terminals)

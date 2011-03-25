@@ -149,7 +149,7 @@ instructions = [
     InstructionWithState(lambda state: state.advance(), param_count=0, name='ADVANCE'),
     InstructionWithState(lambda state: state.turn_left(), param_count=0, name='TURN-L'),
     InstructionWithState(lambda state: state.turn_right(), param_count=0, name='TURN-R'),
-    DecisionInstructionWithState(lambda state: 1 if state.if_sensor() else 2, param_count=2, name='IF-SENSOR'),
+    InstructionWithState(lambda state, a, b: a() if state.if_sensor() else b(), param_count=2, lazy=True, name='IF-SENSOR'),
     ListInstruction(param_count=2, name='PROGN2'),
     ListInstruction(param_count=3, name='PROGN3'),
 ]
