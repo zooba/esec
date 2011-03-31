@@ -284,15 +284,7 @@ class Multimodal(Binary):
         '''Fitness is the number of genes in common with the nearest
         peak.
         '''
-        tmp = 0.0
-        for j in xrange(self.P):
-            score = 0.0
-            for i in xrange(self.size.exact):
-                if indiv[i] == self._peaks[j][i]:
-                    score += 1
-            if score > tmp:
-                tmp = score
-        return (tmp / self.size.exact) # 0 = no match, 1.0 = exact match.
+        return max(sum(i == j for i, j in izip(indiv, p)) for p in self._peaks) / self.size.exact
     
     def info(self, level):
         '''Return default and add some more peak location info.'''

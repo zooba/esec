@@ -424,15 +424,12 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
             value = owner._stats.get(self.key)     #pylint: disable=W0212
             if value is not None and self.member:
                 for part in self.member:
-                    if hasattr(value, '__getitem__'):
-                        try:
-                            value = value[part]
-                        except (KeyError, IndexError, TypeError):
-                            value = getattr(value, part, self.default)
-                        except:
-                            value = self.default
-                    else:
+                    try:
+                        value = value[part]
+                    except (KeyError, IndexError, TypeError):
                         value = getattr(value, part, self.default)
+                    except:
+                        value = self.default
                     assert value is not None, 'Statistic %s has no member %s.' % (self.key, '.'.join(self.member))
             if value is None and self.default is not None:
                 value = self.default
