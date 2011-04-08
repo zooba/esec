@@ -83,7 +83,7 @@ class UnknownNode(NodeBase):
             return YieldNode.parse(tokens, first_token)
         elif first.tag == 'EVAL':
             return EvalNode.parse(tokens, first_token)
-        elif first.tag == '`':
+        elif first.tag == 'backtick':
             return BacktickNode.parse(tokens, first_token)
         
         # Assume to be mathematical expression, possibly including
