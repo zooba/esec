@@ -81,7 +81,7 @@ from esec import Experiment
 from esec.landscape import LANDSCAPES
 from esec.monitors import ConsoleMonitor, CSVMonitor, MultiMonitor, MultiTarget
 from esec.utils import ConfigDict, settings_split, is_ironpython
-from esec.utils.exceptions import ExceptionGroup
+from esec.utils.exceptions import ESDLCompilerError
 import dialects
 
 HR = '-' * 120 + '\n'# Horizontal rule
@@ -315,19 +315,16 @@ def esec_run(options):
     # Start the experiment
     try:
         ea_app = Experiment(cfg)
-    except ExceptionGroup:
-        # Display any grouped errors nicely - they are probably syntax
-        # errors in the system definition.
-        ex = sys.exc_info()[1]
-        print >> sys.stderr, HR, "Errors occurred:"
-        print >> sys.stderr, ' ' + '\n '.join(str(i) for i in ex.exceptions)
-        print >> sys.stderr, HR
-        return
+    except:
+        ea_app = None
     
     # Run the application (and time it)
-    start_time = time.clock()
-    ea_app.run()
-    print '->> DONE <<- in ', (time.clock() - start_time)
+    if ea_app:
+        start_time = time.clock()
+        ea_app.run()
+        print '->> DONE <<- in ', (time.clock() - start_time)
+    else:
+        print '--> ERRORS OCCURRED <--'
 
 
 #=======================================================================
@@ -641,15 +638,20 @@ def esec_batch(options):
                 }
         
         # Create an Experiment instance
-        ea_exp = Experiment(cfg)
+        try:
+            ea_exp = Experiment(cfg)
+        except:
+            ex_exp = None
         
         # Run the application (and time it)
-        if not batch_cfg.dry_run:
+        if batch_cfg.dry_run:
+            print '--> DRY RUN DONE <--'
+        elif ex_exp:
             start_time = time.clock()
             ea_exp.run()
             print '->> DONE <<- in ', (time.clock() - start_time)
         else:
-            print '--> DRY RUN DONE <--'
+            print '--> ERRORS OCCURRED <--'
         
         # Write the summary to the super summary file.
         if summary_file and not batch_cfg.dry_run:

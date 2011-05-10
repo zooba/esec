@@ -9,6 +9,7 @@ from esec.fitness import EmptyFitness
 from esec.individual import EmptyIndividual
 from esec.monitors import MonitorBase
 from esec.utils import attrdict, ConfigDict, is_ironpython
+from esec.utils.exceptions import ESDLCompilerError
 
 import sys
 import os, os.path
@@ -758,7 +759,11 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
     def on_exception(self, sender, exception_type, value, trace):
         '''Displays the exception trace and terminates immediately.'''
         try:
-            print >> self.error_out, '\n' + trace
+            if exception_type is ESDLCompilerError:
+                print >> self.error_out, '\nCompilation errors:'
+                print >> self.error_out, trace
+            else:
+                print >> self.error_out, '\n' + trace
         except (ValueError, IOError):
             print "IOError writing to output file. Writing exception to stdout."
             print trace

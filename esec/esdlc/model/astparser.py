@@ -267,7 +267,8 @@ class AstSystem(System):
         if node.right is not None and node.right.tag == '(':
             return self._call(node)
         
-        return self._variable(node)
+        var = self._variable(node)
+        return var if not var.external else self._call(node)
 
     def _groupref(self, node, limit=None):
         '''Handles group references, potentially included a size limit.

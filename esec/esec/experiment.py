@@ -2,12 +2,15 @@
 experiment.
 '''
 
+import random
+import sys
+import traceback
+
 from esec.utils import cfg_read, cfg_validate, ConfigDict
-from esec.utils.exceptions import ExceptionGroup    #pylint: disable=W0611
+from esec.utils.exceptions import ESDLCompilerError, EvaluatorError
 from esec.monitors import MonitorBase
 from esec.system import System
 import esec.landscape as landscape
-import random, sys
 
 class Experiment(object):
     '''Used to conduct an experiment using a specified breeding system
@@ -127,10 +130,16 @@ class Experiment(object):
             ``landscape``. See `syntax` for a description of what
             constitutes a valid value.
           
-          - `ExceptionGroup`: One or more unspecified errors were found
-            in `cfg`. Access the `ExceptionGroup.exceptions` list to
-            view all problems.
+          - `ESDLCompilerError`: One or more errors occurred while
+            compiling the provided system. Access the
+            ``validation_result`` member of the exception object for
+            specific information about each error.
         
+        :Note:
+            All exceptions are re-raised by this constructor. Apart
+            from `KeyboardInterrupt`, exceptions raised after the
+            monitor is available are passed to the
+            `MonitorBase.on_exception` handler first.
         '''
         # Configuration processing...
         self.cfg = ConfigDict(self.default)
@@ -148,24 +157,39 @@ class Experiment(object):
             raise TypeError('No monitor provided.')
         cfg.monitor = self.monitor
         
-        # random seed?
         try:
-            self.random_seed = int(cfg.random_seed)
-        except TypeError:
-            random.seed()
-            self.random_seed = cfg.random_seed = random.randrange(0, sys.maxint)
+            # random seed?
+            try:
+                self.random_seed = int(cfg.random_seed)
+            except TypeError:
+                random.seed()
+                self.random_seed = cfg.random_seed = random.randrange(0, sys.maxint)
         
-        # -- Landscape (of type and name) --
-        self.lscape = self._load(cfg, 'landscape', landscape.Landscape, 'eval')
-        cfg.landscape = self.lscape
+            # -- Landscape (of type and name) --
+            self.lscape = self._load(cfg, 'landscape', landscape.Landscape, 'eval')
+            cfg.landscape = self.lscape
         
-        # -- System --
-        self.system = System(cfg, self.lscape, self.monitor)
-        
-        # -- Pass full configuration to monitor --
-        self.monitor.notify('Experiment', 'System', self.system)
-        if self.lscape: self.monitor.notify('Experiment', 'Landscape', self.lscape)
-        self.monitor.notify('Experiment', 'Configuration', cfg)
+            # -- System --
+            self.system = System(cfg, self.lscape, self.monitor)
+
+            # -- Pass full configuration to monitor --
+            self.monitor.notify('Experiment', 'System', self.system)
+            if self.lscape: self.monitor.notify('Experiment', 'Landscape', self.lscape)
+            self.monitor.notify('Experiment', 'Configuration', cfg)
+        except KeyboardInterrupt:
+            raise
+        except:
+            ex = sys.exc_info()
+            if ex[0] is EvaluatorError:
+                ex_type, ex_value, ex_trace = ex[1].args
+            elif ex[0] is ESDLCompilerError:
+                ex_type, ex_value = ex[0], ex[1]
+                ex_trace = '\n'.join(str(i) for i in ex_value.validation_result.all)
+            else:
+                ex_type, ex_value = ex[0], ex[1]
+                ex_trace = ''.join(traceback.format_exception(*ex))
+            self.monitor.on_exception(self, ex_type, ex_value, ex_trace)
+            raise
     
     
     def run(self):

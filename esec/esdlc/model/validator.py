@@ -21,6 +21,12 @@ class Validator(object):
                 self._verify_stmts(stmts)
 
             self._errors = list(sorted(set(self._errors)))
+
+    @property
+    def all(self):
+        '''Returns a list of errors and warnings in the provided model.
+        '''
+        return list(self._errors)
     
     @property
     def errors(self):
@@ -66,7 +72,7 @@ class Validator(object):
         tag = type(expr).__name__.lower()
         
         if tag == 'variableref':
-            self._verify_variable(expr.id)
+            self._verify_variable(expr.id, expr.span)
         elif tag == 'function':
             self._verify_function(expr)
         elif tag == 'binaryop':
@@ -99,7 +105,7 @@ class Validator(object):
                 except error.InvalidSyntaxError:
                     self._errors.append(error.InvalidFunctionCallError(param.span))
 
-    def _verify_variable(self, var):
+    def _verify_variable(self, var, span=None):
         '''Verifies a variable.'''
         if isinstance(var, Function):
             return self._verify_function(var)
@@ -108,19 +114,19 @@ class Validator(object):
         
         if var.external:
             if var.name not in self.system.externals:
-                self._errors.append(error.UninitialisedGlobalError(var.span, var.name))
+                self._errors.append(error.UninitialisedGlobalError(span or var.span, var.name))
         elif var.constant:
             pass
         else:
             if var.name not in self.system.variables:
-                self._errors.append(error.UninitialisedVariableError(var.span, var.name))
+                self._errors.append(error.UninitialisedVariableError(span or var.span, var.name))
             if var.name in self.system.blocks:
-                self._errors.append(error.AmbiguousVariableBlockNameError(var.span, var.name))
+                self._errors.append(error.AmbiguousVariableBlockNameError(span or var.span, var.name))
 
         if var.name and var.name.startswith('_'):
-            self._errors.append(error.InternalVariableNameError(var.span, var.name))
+            self._errors.append(error.InternalVariableNameError(span or var.span, var.name))
         elif var.name and not var.constant and not re.match('^(?!\d)\w+$', var.name, re.IGNORECASE):
-            self._errors.append(error.InvalidVariableError(var.span, var.name))
+            self._errors.append(error.InvalidVariableError(span or var.span, var.name))
 
     def _verify_function(self, stmt):
         '''Verifies a function call.'''
@@ -151,7 +157,7 @@ class Validator(object):
                 self._errors.append(error.InvalidAssignmentError(src.span))
             if (isinstance(dest, VariableRef) and isinstance(dest.id, Variable)
                 and not dest.id.external and not dest.id.constant):
-                self._verify_variable(dest.id)
+                self._verify_variable(dest.id, dest.span)
             else:
                 self._errors.append(error.InvalidAssignmentError(stmt.span))
             src = None
@@ -160,7 +166,7 @@ class Validator(object):
         
         if src is not None:    
             assert isinstance(src, VariableRef), repr(src)
-            self._verify_variable(src.id)
+            self._verify_variable(src.id, src.span)
 
     def _verify_grouplist(self, groups):
         '''Verifies a group list and the groups within it.'''
@@ -184,7 +190,7 @@ class Validator(object):
                 self._errors.append(error.UnexpectedGroupSizeError(i.span, i.id.name))
             
             if isinstance(i, GroupRef):
-                self._verify_group(i.id)
+                self._verify_group(i.id, i.span)
                 if groups.repeats_error and i.id.name in seen:
                     self._errors.append(groups.repeats_error(i.span, i.id.name))
                 seen.add(i.id.name)
@@ -208,18 +214,18 @@ class Validator(object):
             self._verify_parameterlist(stmt.func.parameters, valid_parameters={'_function', '_source'})
             func = stmt.func.parameter_dict['_function']
             assert isinstance(func, VariableRef), repr(func)
-            self._verify_variable(func.id)
+            self._verify_variable(func.id, func.span)
         self._verify_stream(stmt.source)
 
-    def _verify_group(self, group):
+    def _verify_group(self, group, span=None):
         '''Verifies a group.'''
         assert isinstance(group, Variable), repr(group)
-        if group.name not in self.system.variables:
-            self._errors.append(error.InvalidGroupError(group.span, group.name))
         if group.name in self.system.externals:
-            self._errors.append(error.AmbiguousGroupGeneratorNameError(group.span, group.name))
+            self._errors.append(error.AmbiguousGroupGeneratorNameError(span or group.span, group.name))
+        elif group.name not in self.system.variables:
+            self._errors.append(error.InvalidGroupError(span or group.span, group.name))
         if group.name in self.system.blocks:
-            self._errors.append(error.AmbiguousVariableBlockNameError(group.span, group.name))
+            self._errors.append(error.AmbiguousVariableBlockNameError(span or group.span, group.name))
 
     def _verify_stream(self, stmt):
         '''Verifies a stream.'''
