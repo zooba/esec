@@ -29,9 +29,6 @@ def BestWithAll(_source, best_from=0):
     best = (next(BestOnly(best_group)),)  # make it a tuple
     rest = _source
     del rest[best_from]
-    # reorder names
-    if best_from > 0:
-        names = names[best_from] + names[:best_from] + names[best_from+1:]
     
     for groups in product(*rest):
         yield JoinedIndividual(best + groups)

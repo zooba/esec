@@ -7,7 +7,6 @@ The `JoinedSpecies.crossover_tuple` operation is specifically designed
 for joined individuals.
 '''
 
-from itertools import izip
 from esec.context import rand
 from esec.individual import Individual
 from esec.species import Species

@@ -2,10 +2,10 @@
 for fully customisable breeding systems.
 '''
 
-import sys, copy, itertools, random, traceback
+import sys, random, traceback
 from warnings import warn
 from esec.utils import ConfigDict, cfg_validate, merge_cls_dicts
-from esec.utils.exceptions import EvaluatorError
+from esec.utils.exceptions import EvaluatorError, ESDLCompilerError
 
 from esdlc import compileESDL
 from esdlc.emitters.esec import emit
@@ -53,9 +53,21 @@ class System(object):
         # If no default evaluator has been provided, use `lscape`
         cfg_validate(self.cfg, self.syntax, type(self), warnings=False)
         
+        # Initialise empty members
+        self._code = None
+        self._code_string = None
+        
+        self.monitor = None
+        self.selector = None
+        self.selector_current = None
+        
+        self._in_step = False
+        self._next_block = []
+        self._block_cache = {}
+
         # Compile code
         self.definition = self.cfg.system.definition
-        context = {
+        self._context = context = {
             'config': self.cfg,
             'rand': random.Random(cfg.random_seed),
             'notify': self._do_notify
@@ -80,7 +92,9 @@ class System(object):
                 warn('System dictionary contains non-string key %r' % key)
         
         
-        model, valid = compileESDL(self.definition, context)
+        model, self.validation_result = compileESDL(self.definition, context)
+        if not self.validation_result:
+            raise ESDLCompilerError(self.validation_result, "Errors occurred while compiling system.")
         self._code_string, internal_context = emit(model, out=None, optimise_level=0)
         
         internal_context['_yield'] = lambda name, group: self.monitor.on_yield(self, name, group)
@@ -90,7 +104,6 @@ class System(object):
                 warn("Variable/function '%s' is overridden by internal value" % key)
             context[key] = value
 
-        self._context = context
         global_context.context = context
         global_context.config = context['config']
         global_context.rand = context['rand']
@@ -105,9 +118,6 @@ class System(object):
                 context[func] = OnIndividual(func)
         
         self._code = compile(self._code_string, 'ESDL Definition', 'exec')
-        
-        self._in_step = False
-        self._next_block = [ ]
     
     def _do_notify(self, sender, name, value):
         '''Queues a message for the current monitor.

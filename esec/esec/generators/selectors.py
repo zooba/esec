@@ -319,7 +319,6 @@ def UniformRandom(_source,
         If both `with_replacement` and `without_replacement` are
         ``False``, `with_replacement` is the default.
     '''
-    irand = rand.randrange
     choice = rand.choice
     shuffle = rand.shuffle
     group = list(_source)
