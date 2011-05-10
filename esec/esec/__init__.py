@@ -161,16 +161,27 @@ class esdl_eval(object):
         '''Initialises the ``eval`` member of the evaluator with the
         provided function.
         '''
-        self.eval = func
+        self._eval = func
         self._prepare = None
         self._legal = None
         GLOBAL_ESDL_FUNCTIONS[func.__name__] = self
     
-    def __str__(self):
-        '''Displays the evaluator using the name of the `eval` method.
+    def __repr__(self):
+        '''Displays the evaluator using the repr of the underlying
+        function.
         '''
-        return self.eval.__name__
+        return "<%s evaluator at 0x%08x>" % (self._eval.__name__, id(self))
+
+    def __str__(self):
+        '''Displays the evaluator using the str of the underlying
+        function.
+        '''
+        return repr(self)
     
+    def eval(self, indiv):
+        '''Evaluates the provided `indiv`.'''
+        return self._eval(indiv)
+
     def prepare(self, indiv):
         '''Prepares the evaluator to potentially evaluate `indiv`.'''
         if self._prepare: self._prepare(indiv)

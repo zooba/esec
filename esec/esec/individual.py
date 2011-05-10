@@ -114,8 +114,9 @@ class Individual(object):
         '''
         if self.birthday is None:
             self.birthday = Individual._next_birthday()
-        if self._eval and hasattr(self._eval, 'prepare') and self._eval.prepare:
-            self._eval.prepare(self)
+        if self._eval:
+            try: self._eval.prepare(self)
+            except AttributeError: pass
         
         return self
     
@@ -127,8 +128,15 @@ class Individual(object):
         assumed to be true. Both functions must return ``True`` for an
         individual to be considered legal.
         '''
-        return ((not hasattr(self.species, 'legal') or self.species.legal(self)) and
-                (not hasattr(self._eval, 'legal') or self._eval.legal(self)))
+        try:
+            if not self.species.legal(self): return False
+        except AttributeError:
+            pass
+        try:
+            if not self._eval.legal(self): return False
+        except AttributeError:
+            pass
+        return True
     
     def __getattr__(self, name):
         '''Attempts to locate unknown members on the species descriptor
@@ -233,7 +241,7 @@ class Individual(object):
         method, it is used by default. Otherwise, returns
         `genome_string`.
         '''
-        if self._eval and hasattr(self._eval, 'phenome_string'):
+        if self._eval:
             try: return self._eval.phenome_string(self)
             except AttributeError: pass
         return self.genome_string

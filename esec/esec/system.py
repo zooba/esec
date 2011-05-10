@@ -7,39 +7,16 @@ from warnings import warn
 from esec.utils import ConfigDict, cfg_validate, merge_cls_dicts
 from esec.utils.exceptions import EvaluatorError
 
+from esdlc import compileESDL
+from esdlc.emitters.esec import emit
+
 from esec import GLOBAL_ESDL_FUNCTIONS
-from esec.compiler import Compiler
 from esec.monitors import MonitorBase
 from esec.individual import Individual, OnIndividual
 import esec.generators  #pylint: disable=W0611
 from esec.species import SPECIES
 
 from esec.context import _context as global_context
-
-
-def _iter(*srcs):
-    '''Automatically calls ``__iter__`` or ``__call__`` depending on the
-    parameter types, allowing constructors and lists to be used
-    interchangeably. If multiple sequences are provided they are
-    concatenated as required by ``FROM-SELECT`` statements.
-    '''
-    return itertools.chain.from_iterable(
-        (getattr(src, '__iter__', None) or getattr(src, '__call__'))() for src in srcs
-    )
-
-class _born_iter(object):
-    '''Calls the ``born`` method of individuals after a ``FROM-SELECT``
-    statement and handles calls to ``rest`` when the underlying sequence
-    does not support it.
-    '''
-    def __init__(self, src): self.src = iter(src)
-    def __iter__(self): return self
-    def rest(self):
-        '''Returns all individuals remaining in the stream if finite.'''
-        return (i.born() for i in getattr(self.src, 'rest', self.src.__iter__)())
-    def next(self):
-        '''Returns the next individual in the stream.'''
-        return next(self.src).born()
 
 class System(object):
     '''Provides a system using a dynamically generated controller.
@@ -49,10 +26,6 @@ class System(object):
         'system': {
             # The textual description of the system using ESDL
             'definition': str,
-            # The object to report to
-            '_monitor?': MonitorBase,
-            # The default evaluator (must have a method eval(self, individual))
-            '_evaluator': '*',
         },
         # The block selector (must support iter(selector))
         'selector?': '*'
@@ -68,7 +41,7 @@ class System(object):
     }
     
     
-    def __init__(self, cfg, lscape=None):
+    def __init__(self, cfg, lscape=None, monitor=None):
         # Merge syntax and default details
         self.syntax = merge_cls_dicts(self, 'syntax')
         self.cfg = ConfigDict(merge_cls_dicts(self, 'default'))
@@ -78,58 +51,56 @@ class System(object):
         # Now apply user cfg details and test against syntax
         self.cfg.overlay(cfg)
         # If no default evaluator has been provided, use `lscape`
-        if '_evaluator' not in self.cfg.system:
-            self.cfg.system['_evaluator'] = lscape
         cfg_validate(self.cfg, self.syntax, type(self), warnings=False)
         
-        # initialise the execution context
-        rand = random.Random(cfg.random_seed)
-        notify = self._do_notify
-        self._context = context = {
-            '_iter': _iter,
-            '_born_iter': _born_iter,
-            '_islice': itertools.islice,
-            '_copy': copy.copy,
+        # Compile code
+        self.definition = self.cfg.system.definition
+        context = {
             'config': self.cfg,
-            'rand': rand,
-            'notify': notify,
+            'rand': random.Random(cfg.random_seed),
+            'notify': self._do_notify
         }
         
-        self.definition = self.cfg.system.definition
-        compiler = Compiler(self.definition)
-        compiler.externals.extend(context.iterkeys())
-        
-        overrides = self.cfg.system.as_dict()
-        for key, value in overrides.iteritems():
+        # Add species settings to context
+        for cls in SPECIES:
+            inst = context[cls.name] = cls(self.cfg, lscape)
+            try:
+                for key, value in inst.public_context.iteritems():
+                    context[key.lower()] = value
+            except AttributeError: pass
+
+        # Add external values to context
+        for key, value in self.cfg.system.iteritems():
             if isinstance(key, str):
                 key_lower = key.lower()
                 if key_lower in context:
                     warn("Overriding variable/function '%s'" % key_lower)
                 context[key_lower] = value
-                compiler.externals.append(key_lower)
             else:
                 warn('System dictionary contains non-string key %r' % key)
         
-        for cls in SPECIES:
-            inst = context[cls.name] = cls(self.cfg, context['_evaluator'])
-            if hasattr(inst, 'public_context'):
-                context.update(inst.public_context)
         
-        compiler.compile()
+        model, valid = compileESDL(self.definition, context)
+        self._code_string, internal_context = emit(model, out=None, optimise_level=0)
         
+        internal_context['_yield'] = lambda name, group: self.monitor.on_yield(self, name, group)
+        
+        for key, value in internal_context.iteritems():
+            if key in context:
+                warn("Variable/function '%s' is overridden by internal value" % key)
+            context[key] = value
+
+        self._context = context
         global_context.context = context
-        global_context.config = self.cfg
+        global_context.config = context['config']
         global_context.rand = context['rand']
         global_context.notify = context['notify']
         
-        self._code_string = compiler.code
-        
-        self.monitor = context.get('_monitor', None) or MonitorBase()
-        self.selector = self.cfg['selector'] or compiler.blocks
+        self.monitor = monitor or MonitorBase()
+        self.selector = self.cfg['selector'] or model.block_names
         self.selector_current = iter(self.selector)
-        context['_on_yield'] = lambda name, group: self.monitor.on_yield(self, name, group)
         
-        for func in compiler.filters:
+        for func in model.externals.iterkeys():
             if func not in context:
                 context[func] = OnIndividual(func)
         
@@ -199,7 +170,20 @@ class System(object):
             self.monitor.on_run_start(self)
             self.monitor.on_pre_reset(self)
             
+            # Reset the birthday counter
             Individual.reset_birthday()
+            
+            # Reset the block invocation cache
+            self._block_cache = { }
+            
+            # Reset externally specified variables
+            inner_context = self._context
+            for key in self.cfg.system.iterkeys():
+                key_lower = key.lower()
+                if key_lower in inner_context:
+                    inner_context[key_lower] = self.cfg.system[key]
+            
+            # Run the initialisation block
             exec self._code in self._context
             
             self.monitor.on_post_reset(self)
@@ -267,7 +251,11 @@ class System(object):
                         block_name = str(block_name).lower()
                     
                     try:
-                        exec ('_block_' + block_name + '()') in self._context   #pylint: disable=W0122
+                        codeobj = self._block_cache.get(block_name)
+                        if codeobj is None:
+                            codeobj = compile('_block_' + block_name + '()', 'Invoke ' + block_name, 'exec')
+                            self._block_cache[block_name] = codeobj
+                        exec codeobj in self._context   #pylint: disable=W0122
                         self.monitor.notify('System', 'Block', block_name)
                     except NameError:
                         if ('_block_' + block_name) not in self._context:

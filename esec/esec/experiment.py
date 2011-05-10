@@ -160,8 +160,7 @@ class Experiment(object):
         cfg.landscape = self.lscape
         
         # -- System --
-        self.system = System(cfg, self.lscape)
-        self.system.monitor = self.monitor
+        self.system = System(cfg, self.lscape, self.monitor)
         
         # -- Pass full configuration to monitor --
         self.monitor.notify('Experiment', 'System', self.system)

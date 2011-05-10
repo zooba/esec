@@ -9,7 +9,7 @@ The global variable ``rand`` is made available through the context in
 which the selectors are executed.
 '''
 
-from itertools import repeat
+from itertools import cycle, repeat
 from math import isinf
 from warnings import warn
 from esec import esdl_func
@@ -17,46 +17,6 @@ from esec.fitness import Fitness
 from esec.generators import _key_fitness, _key_birthday
 from esec.species.joined import JoinedIndividual
 from esec.context import rand
-
-class NoReplacementSelector(object):
-    '''An internal iterator class that supports selection of the 'rest'
-    of the population.
-    
-    It is used to optimise population partitioning by allowing, for
-    example, five individuals to be selected at random and the remainder
-    to be kept in a separate group.
-    '''
-    def __init__(self, _source, func):
-        '''Initialises the iterator.
-        
-        .. include:: epydoc_include.txt
-        
-        :Parameters:
-          _source : iterable(`Individual`)
-            A sequence of individuals. This sequence is cached in a list
-            at construction.
-          
-          func : function(self, _source) |rArr| index
-            A function that takes a list of individuals and returns the
-            index of the next one selected.
-        '''
-        self._source = list(_source)
-        self.func = func
-    
-    def __iter__(self): return self
-    
-    def rest(self):
-        '''Returns all remaining individuals in the group.'''
-        return self._source
-    
-    def next(self):
-        '''Returns the next selected individual in the group.'''
-        if not self._source: raise StopIteration
-        
-        i = self.func(self, self._source)
-        indiv = self._source[i]
-        del self._source[i]
-        return indiv
 
 @esdl_func('select_all')
 def All(_source):
@@ -80,9 +40,7 @@ def Repeat(_source):
         from this sequence, depending on the selection criteria.
     '''
     group = list(_source)
-    while True:
-        for i in group:
-            yield i
+    return cycle(group)
 
 @esdl_func('best', 'truncate_best')
 def Best(_source, only=False):
@@ -101,7 +59,7 @@ def Best(_source, only=False):
     if only:
         return repeat(max(_source, key=_key_fitness))
     else:
-        return NoReplacementSelector(sorted(_source, key=_key_fitness, reverse=True), lambda s, _source: 0)
+        return iter(sorted(_source, key=_key_fitness, reverse=True))
 
 @esdl_func('best_only')
 def BestOnly(_source):
@@ -131,7 +89,7 @@ def Worst(_source, only=False):
     if only:
         return repeat(min(_source, key=_key_fitness))
     else:
-        return NoReplacementSelector(sorted(_source, key=_key_fitness, reverse=False), lambda s, _source: 0)
+        return iter(sorted(_source, key=_key_fitness, reverse=False))
 
 @esdl_func('worst_only')
 def WorstOnly(_source):
@@ -161,7 +119,7 @@ def Youngest(_source, only=False):
     if only:
         return repeat(max(_source, key=_key_birthday))
     else:
-        return NoReplacementSelector(sorted(_source, key=_key_birthday, reverse=True), lambda s, _source: 0)
+        return iter(sorted(_source, key=_key_birthday, reverse=True))
 
 @esdl_func('youngest_only')
 def YoungestOnly(_source):
@@ -191,7 +149,7 @@ def Oldest(_source, only=False):
     if only:
         return repeat(min(_source, key=_key_birthday))
     else:
-        return NoReplacementSelector(sorted(_source, key=_key_birthday, reverse=False), lambda s, _source: 0)
+        return iter(sorted(_source, key=_key_birthday, reverse=False))
 
 @esdl_func('oldest_only')
 def OldestOnly(_source):
@@ -255,38 +213,31 @@ def Tournament(_source, k=2,
     assert k >= 2, "k must be at least 2"
     irand = rand.randrange
     frand = rand.random
+    choice = rand.choice
     # WITH REPLACEMENT (replacement test is for back-compat)
     if replacement and not without_replacement:
-        def _iter(_src):
-            '''Performs tournaments on `_src` forever.'''
-            size = len(_src)
-            while True:
-                pool = [_src[irand(size)] for _ in xrange(k)]
-                winner = max(pool, key=_key_fitness)
-                if greediness >= 1.0 or frand() < greediness:
-                    yield winner
-                else:
-                    pool.remove(winner)
-                    yield pool[irand(len(pool))]
-        return _iter(list(_source))
+        group = list(_source)
+        size = len(group)
+        while True:
+            pool = [group[irand(size)] for _ in xrange(k)]
+            winner = max(pool, key=_key_fitness)
+            if greediness >= 1.0 or frand() < greediness:
+                yield winner
+            else:
+                pool.remove(winner)
+                yield choice(pool)
     # WITHOUT REPLACEMENT
     else:
-        def _func(sender, _src):    #pylint: disable=W0613
-            '''Performs a tournament on `_src` and returns the winner's
-            index.
-            '''
-            if len(_src) >= k:
-                pool_index = [irand(len(_src)) for _ in xrange(k)]
-                winner_index = max(pool_index, key=lambda i: _src[i].fitness)
-                if greediness >= 1.0 or frand() < greediness:
-                    return winner_index
-                else:
+        group = list(_source)
+        while group:
+            winner_index = 0
+            if len(group) >= k:
+                pool_index = [irand(len(group)) for _ in xrange(k)]
+                winner_index = max(pool_index, key=lambda i: group[i].fitness)
+                if not (greediness >= 1.0 or frand() < greediness):
                     pool_index.remove(winner_index)
-                    return pool_index[irand(len(pool_index))]
-            else:
-                # Now everyone's a winner (in fitness order)!
-                return 0
-        return NoReplacementSelector(_source, _func)
+                    winner_index = choice(pool_index)
+            yield group.pop(winner_index)
 
 @esdl_func('binary_tournament')
 def BinaryTournament(_source,
@@ -369,17 +320,19 @@ def UniformRandom(_source,
         ``False``, `with_replacement` is the default.
     '''
     irand = rand.randrange
+    choice = rand.choice
+    shuffle = rand.shuffle
+    group = list(_source)
     # WITH REPLACEMENT
     if replacement and not without_replacement:
-        def _iter(_src):
+        def _iter():
             '''Returns random selections forever.'''
-            size = len(_src)
-            while True:
-                yield _src[irand(size)]
-        return _iter(list(_source))
+            while True: yield choice(group)
+        return _iter()
     # WITHOUT REPLACEMENT
     else:
-        return NoReplacementSelector(_source, lambda s, _src: irand(len(_src)))
+        shuffle(group)
+        return iter(group)
 
 @esdl_func('uniform_random_no_replacement', 'uniform_shuffle')
 def UniformRandomWithoutReplacement(_source):

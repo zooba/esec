@@ -18,24 +18,17 @@ class JoinedIndividual(Individual):
     
     Behaves identically to the `Individual` class with the exception
     that the genome is now a list of the joined individuals (in the
-    order provided to the initialiser) and individuals may be retrived
-    by the name of the group they were obtained from.
+    order provided to the initialiser).
     '''
     
-    def __init__(self, members, sources, parent=None):
+    def __init__(self, members, parent=None):
         '''Initialises a new individual made up of a set of joined
-        individuals. Each individual can be obtained by the name of the
-        group it came from. If multiple individuals come from the same
-        group, only the first one provided in `members` is accessible by
-        name.
+        individuals. Each individual is positioned within the genome of
+        the joined individual in the order provided.
         
         :Parameters:
           members : iterable(`Individual`)
             The set of individuals joined to create this individual.
-          
-          sources : iterable(string)
-            The names of the group the individuals in `members` were
-            obtained from.
           
           parent : `JoinedIndividual` or `Species`
             Either the `JoinedIndividual` (or derived class) that was
@@ -47,24 +40,6 @@ class JoinedIndividual(Individual):
             value limits) from the parent.
         '''
         super(JoinedIndividual, self).__init__(members, parent or JoinedSpecies.instance)
-        self.sources = { }
-        for source, member in izip(sources, self.genome):
-            if source not in self.sources:
-                self.sources[source] = member
-    
-    def __contains__(self, key):
-        try:
-            if (key in self.sources): return True
-        except TypeError:
-            pass
-        return super(JoinedIndividual, self).__contains__(key)
-    
-    def __getitem__(self, key):
-        try:
-            return self.sources[key]
-        except (TypeError, KeyError):
-            pass
-        return super(JoinedIndividual, self).__getitem__(key)
 
 
 class JoinedSpecies(Species):

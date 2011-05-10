@@ -1,45 +1,57 @@
 '''Performs token identification within ESDL definitions.
 '''
 from __future__ import absolute_import
+import re
 
 def _re(expr):
     '''Shortcut for compiling regular expressions.'''
-    import re
     return re.compile(expr, re.IGNORECASE)
 
 TOKENS = [
-    ("FROM",        'statement', _re(r"from(?![a-z0-9_])")),
-    ("SELECT",      'statement', _re(r"select(?![a-z0-9_])")),
-    ("JOIN",        'statement', _re(r"join(?![a-z0-9_])")),
-    ("INTO",        'statement', _re(r"into(?![a-z0-9_])")),
-    ("USING",       'statement', _re(r"using(?![a-z0-9_])")),
-    ("YIELD",       'statement', _re(r"yield(?![a-z0-9_])")),
-    ("EVAL",        'statement', _re(r"eval(uate)?(?![a-z0-9_])")),
-    ("BEGIN",       'statement', _re(r"begin(?![a-z0-9_])")),
-    ("REPEAT",      'statement', _re(r"repeat(?![a-z0-9_])")),
-    ("END",         'statement', _re(r"end(?![a-z0-9_])")),
-    ("constant",    'literal', _re(r"(true|false|null|none)(?![a-z0-9_])")),
-
-    ("comment",     'comment', _re(r"(#|;|//).*")),
-    ("name",        'literal', _re(r"[a-z_][a-z0-9_]*")),
-    ("number",      'literal', _re(r"([0-9]+\.[0-9]*|[0-9]+|\.[0-9]+)(e[-+]?[0-9]+)?")),
-    (".",           'op', _re(r"\.")),
-    ("(",           'op', _re(r"\(")),
-    (")",           'op', _re(r"\)")),
-    ("[",           'op', _re(r"\[")),
-    ("]",           'op', _re(r"\]")),
-    ("{",           'op', _re(r"\{")),
-    ("}",           'op', _re(r"\}")),
-    ("+",           'op', _re(r"\+")),
-    ("-",           'op', _re(r"-")),
-    ("=",           'op', _re(r"=")),
-    (",",           'op', _re(r"\,")),
-    ("*",           'op', _re(r"\*")),
-    ("/",           'op', _re(r"\/")),
-    ("%",           'op', _re(r"\%")),
-    ("^",           'op', _re(r"\^")),
-    ("backtick",    'special', _re(r"`.*")),
-    ("continue",    'special', _re(r"\\\s*((#|;|//).*)?$")),
+    ("FROM",        'statement', _re(r"from\b")),
+    ("SELECT",      'statement', _re(r"select\b")),
+    ("JOIN",        'statement', _re(r"join\b")),
+    ("INTO",        'statement', _re(r"into\b")),
+    ("USING",       'statement', _re(r"using\b")),
+    ("YIELD",       'statement', _re(r"yield\b")),
+    ("EVAL",        'statement', _re(r"eval(uate)?\b")),
+    ("BEGIN",       'statement', _re(r"begin\b")),
+    ("REPEAT",      'statement', _re(r"repeat\b")),
+    ("END",         'statement', _re(r"end\b")),
+    ("TRUE",        'literal', _re(r"true\b")),
+    ("FALSE",       'literal', _re(r"false\b")),
+    ("NULL",        'literal', _re(r"(null|none)\b")),
+#    ("IN",          'operator', _re(r"in\b")),
+#    ("NOT",         'operator', _re(r"not\b")),
+#    ("ASSERT",      'statement', _re(r"assert\b")),
+#    ("AND",         'operator', _re(r"and\b")),
+#    ("OR",          'operator', _re(r"or\b")),
+#    ("LT",          'operator', _re(r"\<")),
+#    ("LE",          'operator', _re(r"(\<=|=\<)")),
+#    ("NE",          'operator', _re(r"!=")),
+#    ("EQ",          'operator', _re(r"==")),
+#    ("GT",          'operator', _re(r"\>")),
+#    ("GE",          'operator', _re(r"(\>=|=\>)")),
+    ("COMMENTS",    'comment', _re(r"(#|;|//).*")),
+    ("NAME",        'name', _re(r"(?!\d)\w+")),
+    ("NUMBER",      'number', _re(r"(\d+\.\d*|\d+|\.\d+)(e[-+]?\d+)?")),
+    ("DOT",         'operator', _re(r"\.")),
+    ("OPEN_PAR",    'operator', _re(r"\(")),
+    ("CLOSE_PAR",   'operator', _re(r"\)")),
+    ("OPEN_BRACKET", 'operator', _re(r"\[")),
+    ("CLOSE_BRACKET", 'operator', _re(r"\]")),
+    ("OPEN_BRACE",  'operator', _re(r"\{")),
+    ("CLOSE_BRACE", 'operator', _re(r"\}")),
+    ("ADD",         'operator', _re(r"\+")),
+    ("SUB",         'operator', _re(r"-")),
+    ("ASSIGN",      'operator', _re(r"=")),
+    ("COMMA",       'operator', _re(r"\,")),
+    ("MUL",         'operator', _re(r"\*")),
+    ("DIV",         'operator', _re(r"\/")),
+    ("MOD",         'operator', _re(r"\%")),
+    ("POW",         'operator', _re(r"\^")),
+    ("`",           'special', _re(r"`.*$")),
+    ("CONTINUATION",'special', _re(r"\\\s*((#|;|//).*)?$")),
 ]
 
 class Token(object):
@@ -86,16 +98,16 @@ class Token(object):
     def __lt__(self, other): return (self.line, self.col) < (other.line, other.col)
     
     def __str__(self):
-        if self.type == 'end':
-            return '<%s> (%d:%d)' % (self.tag, self.line, self.col)
+        if self.type == 'eos':
+            return '<eos> (%d:%d)' % (self.line+1, self.col+1)
         else:
-            return '%s (%d:%d)' % (self.value, self.line, self.col)
+            return '%s (%d:%d)' % (self.value, self.line+1, self.col+1)
     
     def __repr__(self):
-        if self.type == 'end':
-            return '<%s> (%d:%d)' % (self.tag, self.line, self.col)
+        if self.type == 'eos':
+            return '<eos> (%d:%d)' % (self.line+1, self.col+1)
         else:
-            return '<%s>%s (%d:%d)' % (self.tag, self.value, self.line, self.col)
+            return '<%s>%s (%d:%d)' % (self.tag, self.value, self.line+1, self.col+1)
     
     @classmethod
     def parse(cls, line, lineno, col):
@@ -125,9 +137,9 @@ class Token(object):
             match = token_regex.match(line, col)
             if match:
                 start_col, end_col = match.span()
-                return cls(token_name, token_type, match.group(), lineno+1, start_col+1), end_col
+                return cls(token_name, token_type, match.group(), lineno, start_col), end_col
         
-        return cls('error', 'error', line[col:], lineno+1, col+1), col
+        return cls('error', 'error', line[col:], lineno, col), col
 
 
 class TokenReader(object):
@@ -157,6 +169,13 @@ class TokenReader(object):
         '''Returns the current token or ``None``.'''
         return self.tokens[self.i] if self else None
     
+    @property
+    def last(self):
+        '''Returns the last token stored. Intended for use when a token
+        is expected but none is found.
+        '''
+        return self.tokens[-1] if self.tokens else None
+    
     def move_next(self):
         '''Advances to the next token. Returns `self` after advancing.
         If ``skip_comments`` was ``True``, tokens with tags beginning
@@ -164,7 +183,7 @@ class TokenReader(object):
         '''
         self.i += 1
         if self.skip_comments:
-            while self and self.current.tag.startswith('comment'):
+            while self and self.current.tag.startswith('COMMENT'):
                 self.i += 1
         return self
     
@@ -197,15 +216,13 @@ def tokenise(source):
     '''
     
     if not source:
-        yield [Token('eof', 'end', '', 1, 1)]
-        raise StopIteration
+        return [Token('EOS', 'end', '\\n', 1, 1)]
     
     if isinstance(source, str):
         source = iter(source.splitlines())
     
     if not hasattr(source, '__iter__'):
-        yield [Token('eof', 'end', '', 1, 1)]
-        raise StopIteration
+        return [Token('EOS', 'end', '\\n', 1, 1)]
     
     tokens = []
     for lineno, line in enumerate(source):
@@ -216,16 +233,12 @@ def tokenise(source):
             if tok.type == 'error': col += 1
             tok, col = Token.parse(line, lineno, col)
         
-        if tokens and tokens[-1].tag == 'continue':
+        if tokens and tokens[-1].tag == 'CONTINUATION':
             tokens.pop()
             continue
         
-        tokens.append(Token('eos', 'end', '\\n', lineno, col))
-        yield tokens
-        tokens = []
-    
-    tokens.append(Token('eof', 'end', '', lineno, col))
-    yield tokens
+        tokens.append(Token('EOS', 'end', '\\n', lineno, col))
+    return tokens
 
 if __name__ == '__main__':
     code = tokenise(r'''FROM random_real(length=2,lowest=-2.0,highest=2.0) SELECT (size) population
@@ -253,7 +266,5 @@ BEGIN GENERATION
 END GENERATION
     ''')
     
-    for statement in code:
-        print statement
-        print
-    
+    print code
+        

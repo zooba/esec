@@ -57,7 +57,6 @@ def rosenbrock(indiv):
 config = {
     'system': {
         'definition': SYSTEM_DEFINITION,
-        #'rosenbrock': Rosenbrock, #(),
         'size': 80,
         'n': 10,
         'init_lower':-30,

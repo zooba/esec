@@ -14,16 +14,14 @@ from esec.context import rand
 @esdl_func('full_combine')
 def All(_source):
     '''Returns all individuals matched with all other individuals.'''
-    _source, names = _source
     for groups in product(*_source):
-        yield JoinedIndividual(groups, names)
+        yield JoinedIndividual(groups)
 
 @esdl_func('best_with_rest')
 def BestWithAll(_source, best_from=0):
     '''Returns the best individual from group `best_from` (zero-based
     index into `_source`) matched.
     '''
-    _source, names = _source
     _source = list(_source)
     assert best_from is not True, "best_from has not value."
     best_from = int(best_from)
@@ -36,15 +34,14 @@ def BestWithAll(_source, best_from=0):
         names = names[best_from] + names[:best_from] + names[best_from+1:]
     
     for groups in product(*rest):
-        yield JoinedIndividual(best + groups, names)
+        yield JoinedIndividual(best + groups)
 
 @esdl_func('tuples', '_default_join')
 def Tuples(_source):
     '''Returns all individuals matched with matching elements by index.
     '''
-    _source, names = _source
     for groups in izip(*_source):
-        yield JoinedIndividual(groups, names)
+        yield JoinedIndividual(groups)
 
 @esdl_func('random_tuples')
 def RandomTuples(_source, distinct=False):
@@ -57,7 +54,6 @@ def RandomTuples(_source, distinct=False):
     '''
     choice = rand.choice
     
-    _source, names = _source
     _source = list(_source)
     assert all(len(i) for i in _source), 'Empty groups cannot joined'
     for indiv in _source[0]:
@@ -73,7 +69,7 @@ def RandomTuples(_source, distinct=False):
                 if limit <= 0:
                     indiv2 = next((i for i in other_group if i not in group), indiv2)
             group.append(indiv2)
-        yield JoinedIndividual(group, names)
+        yield JoinedIndividual(group)
 
 @esdl_func('distinct_random_tuples')
 def DistinctRandomTuples(_source):

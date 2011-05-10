@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "esec", "esec.pyproj", "{06F96068-BA81-49E1-B5AF-019B8E0C30FF}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "esec", "esec.pyproj", "{6D98778C-9301-43BB-B8C6-56B1093A6341}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,8 +9,8 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{06F96068-BA81-49E1-B5AF-019B8E0C30FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{06F96068-BA81-49E1-B5AF-019B8E0C30FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D98778C-9301-43BB-B8C6-56B1093A6341}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D98778C-9301-43BB-B8C6-56B1093A6341}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -25,7 +25,9 @@ class ESDLSyntaxErrorBase(BaseException):
         if ('%' in self.message) and args:
             try: self.message = self.message % args
             except TypeError: pass
-        if isinstance(tokens, list):
+        if tokens is None:
+            self.line, self.col, self.text, self.length = None, None, None, None
+        elif isinstance(tokens, list):
             tokens = sorted(tokens)
             self.line, self.col = tokens[0].line, tokens[0].col
             self.length = tokens[-1].col + len(tokens[-1].value) - tokens[0].col
@@ -43,34 +45,49 @@ class ESDLSyntaxErrorBase(BaseException):
         return self.code[0] == 'W'
     
     def __str__(self):
-        if self.col:
-            return '[%s] %s (ESDL Definition, line %d, char %d)' % (self.code, self.message, self.line, self.col)
+        if self.line is not None and self.col is not None:
+            return '[%s] %s (ESDL Definition, line %d, char %d)' % (self.code, self.message, self.line+1, self.col+1)
         else:
-            return '[%s] %s (ESDL Definition, line %d)' % (self.code, self.message, self.line)
+            return '[%s] %s (ESDL Definition)' % (self.code, self.message)
     
+    def __hash__(self):
+        return hash(self.as_tuple)
+
     def __eq__(self, other):
-        if hasattr(other, 'as_tuple'): return self.as_tuple == other.as_tuple
-        return False
+        try:
+            return self.as_tuple == other.as_tuple
+        except AttributeError:
+            return NotImplemented
     
     def __ne__(self, other):
-        if hasattr(other, 'as_tuple'): return self.as_tuple != other.as_tuple
-        return False
+        try:
+            return self.as_tuple != other.as_tuple
+        except AttributeError:
+            return NotImplemented
     
     def __gt__(self, other):
-        if hasattr(other, 'as_tuple'): return self.as_tuple > other.as_tuple
-        return False
+        try:
+            return self.as_tuple > other.as_tuple
+        except AttributeError:
+            return NotImplemented
     
     def __ge__(self, other):
-        if hasattr(other, 'as_tuple'): return self.as_tuple >= other.as_tuple
-        return False
+        try:
+            return self.as_tuple >= other.as_tuple
+        except AttributeError:
+            return NotImplemented
     
     def __lt__(self, other):
-        if hasattr(other, 'as_tuple'): return self.as_tuple < other.as_tuple
-        return False
+        try:
+            return self.as_tuple < other.as_tuple
+        except AttributeError:
+            return NotImplemented
     
     def __le__(self, other):
-        if hasattr(other, 'as_tuple'): return self.as_tuple <= other.as_tuple
-        return False
+        try:
+            return self.as_tuple <= other.as_tuple
+        except AttributeError:
+            return NotImplemented
     
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,7 +128,12 @@ class UnmatchedEndError(ESDLSyntaxErrorBase):
 class UnexpectedStatementError(ESDLSyntaxErrorBase):
     '''Returned when a statement appears in an odd location.'''
     code = "E0007"
-    default_message = "%s cannot be specified here"
+    default_message = "Statement cannot be specified outside of a block"
+
+class ExpectedRepeatCountError(ESDLSyntaxErrorBase):
+    '''Returned when a REPEAT command omits the repeat count.'''
+    code = "E0008"
+    default_message = "Repeat count expected"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Errors/warnings used by AST nodes
@@ -170,10 +192,10 @@ class InvalidVariableError(ESDLSyntaxErrorBase):
     code = "E1010"
     default_message = "'%s' is not a valid variable name"
 
-class ExpectedFilterError(ESDLSyntaxErrorBase):
-    '''Returned when a filter name was expected but not found.'''
+class ExpectedOperatorError(ESDLSyntaxErrorBase):
+    '''Returned when an operator was expected but not found.'''
     code = "E1011"
-    default_message = "Expected filter"
+    default_message = "Expected operator"
 
 class InvalidNumberError(ESDLSyntaxErrorBase):
     '''Returned when a number turns out to not really be a number.'''
@@ -215,6 +237,11 @@ class RepeatedParameterNameError(ESDLSyntaxErrorBase):
     code = "E1016"
     default_message = "Parameter '%s' is specified multiple times"
 
+class ExpectedJoinerError(ESDLSyntaxErrorBase):
+    '''Returned when a joiner was expected but not found.'''
+    code = "E1017"
+    default_message = "Expected joiner"
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Errors/warnings used by Verifier
@@ -243,6 +270,23 @@ class UnexpectedGroupSizeError(ESDLSyntaxErrorBase):
     '''Returned when a size specifier for a group is not allowed.'''
     code = "E2004"
     default_message = "Size specifier for group '%s' not permitted"
+
+class AmbiguousVariableGroupNameError(ESDLSyntaxErrorBase):
+    '''Returned when a group name is also used as a variable name.'''
+    code = "E2005"
+    default_message = "Group name '%s' is also used as a variable"
+
+class AmbiguousGroupGeneratorNameError(ESDLSyntaxErrorBase):
+    '''Returned when a group name is also used as a generator name.'''
+    code = "E2006"
+    default_message = "Group name '%s' is also used as a generator"
+
+class RepeatedGroupError(ESDLSyntaxErrorBase):
+    '''Returned when a YIELD or EVAL clause specifies the same group
+    multiple times.
+    '''
+    code = "W2002"
+    default_message = "Group '%s' is unnecessarily specified more than once"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -279,9 +323,28 @@ class UnusedVariableError(ESDLSyntaxErrorBase):
     code = "W2005"
     default_message = "Variable '%s' unused"
 
-class UnusedGroupError(ESDLSyntaxErrorBase):
+class InaccessibleGroupError(ESDLSyntaxErrorBase):
     '''Returned when a group appears after an unbounded group and will
     never be selected into.
     '''
     code = "W2006"
     default_message = "Group '%s' specified after an unbounded group"
+
+class UninitialisedGroupError(ESDLSyntaxErrorBase):
+    '''Returned when a group is not initialised within the definition.
+    '''
+    code = "W2007"
+    default_message = "Group '%s' not initialised"
+
+class UnusedGroupError(ESDLSyntaxErrorBase):
+    '''Returned when a group is initialised but not used within the
+    definition.
+    '''
+    code = "W2008"
+    default_message = "Group '%s' unused"
+
+class InternalParameterNameError(ESDLSyntaxErrorBase):
+    '''Returned when a parameter name begins with an underscore.'''
+    code = "W2009"
+    default_message = "Parameter '%s' may be used internally by the compiler"
+

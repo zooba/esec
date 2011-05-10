@@ -3,11 +3,7 @@
 Support functions for the |esec| framework.
 '''
 import sys, copy, os.path
-from itertools import chain, islice, izip
-if sys.version_info[0] == 3:
-    from itertools import zip_longest   #pylint: disable=E0611
-else:
-    from itertools import izip_longest as zip_longest
+import itertools
 from warnings import warn
 from esec.utils.attributedict import attrdict
 from esec.utils.configdict import ConfigDict
@@ -159,7 +155,7 @@ def all_equal(values):
               ``False``.
     '''
     v0 = values[0]
-    return all(i == v0 for i in islice(values, 1, None))
+    return all(i == v0 for i in itertools.islice(values, 1, None))
 
 def str_short_list(values):
     '''Check if the list is all the same. If so, show a short version.
@@ -175,37 +171,21 @@ def pairs(source):
     '''Returns pairs of values from `source`.
     
     Equivalent to ``zip(source[::2], source[1::2])`` but doesn't require
-    `source` to be a list. If `source` is a list, the returned iterator
-    should be more efficient.
+    `source` to be a list.
     '''
-    if type(source) is list:
-        return izip(islice(source, 0, None, 2), islice(source, 1, None, 2))
-    else:
-        def _pairs(source):
-            '''Returns pairs of values from an arbitrary iterator.'''
-            while True: yield next(source), next(source)
-        
-        return _pairs(iter(source))
+    p1, p2 = itertools.tee(source)
+    return itertools.izip(itertools.islice(p1, 0, None, 2),
+                          itertools.islice(p2, 1, None, 2))
 
 def overlapped_pairs(source):
     '''Returns overlapped pairs of values from `source`.
     
     Equivalent to ``zip(source, source[1:] + source[:1])`` but doesn't
-    `source` to be a list. If `source` is a list, the returned iterator
-    should be more efficient.
+    `source` to be a list.
     '''
-    if type(source) is list:
-        return zip_longest(source, islice(source, 1, None), fillvalue=source[0])
-    else:
-        def _overlapped_pairs(source):
-            '''Returns overlapped pairs from an arbitrary iterator.'''
-            p1 = next(source)
-            while True:
-                p2 = next(source)
-                yield p1, p2
-                p1 = p2
-        
-        return _overlapped_pairs(iter(source))
+    p1, p2 = itertools.tee(source)
+    first = next(p2, None)
+    return itertools.izip(p1, itertools.chain(p2, itertools.repeat(first)))
 
 _is_ironpython = None
 

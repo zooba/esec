@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{06f96068-ba81-49e1-b5af-019b8e0c30ff}</ProjectGuid>
+    <ProjectGuid>{6d98778c-9301-43bb-b8c6-56b1093a6341}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>run.py</StartupFile>
     <SearchPath>
@@ -12,13 +12,12 @@
     <AssemblyName>esec</AssemblyName>
     <Name>esec</Name>
     <RootNamespace>esec</RootNamespace>
-    <InterpreterPath>
-    </InterpreterPath>
-    <CommandLineArguments>
-    </CommandLineArguments>
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>9a7a9026-48c1-4688-9d5d-e5699d47d074</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments>-c GA+RVP.Sphere+n10</CommandLineArguments>
+    <InterpreterPath />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,13 +28,124 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="**\*.py" />
+    <Compile Include="dialects.py" />
+    <Compile Include="run.py" />
+    <Compile Include="cfgs\__init__.py" />
+    <Compile Include="cfgs\DERosenbrock.py" />
+    <Compile Include="cfgs\GEMultiplexer3.py" />
+    <Compile Include="cfgs\ONeillSymbolicRegression.py" />
+    <Compile Include="cfgs\PSORosenbrock.py" />
+    <Compile Include="cfgs\Regression.py" />
+    <Compile Include="cfgs\Koza\__init__.py" />
+    <Compile Include="cfgs\Koza\2DFunctionRegression.py" />
+    <Compile Include="cfgs\Koza\DecisionTree.py" />
+    <Compile Include="cfgs\Koza\GrammarInduction.py" />
+    <Compile Include="cfgs\Koza\MinimaxGame.py" />
+    <Compile Include="cfgs\Koza\Multiplexer3.py" />
+    <Compile Include="cfgs\Koza\RandomNumberGenerator.py" />
+    <Compile Include="cfgs\Koza\SantaFeAntTrail.py" />
+    <Compile Include="cfgs\Koza\SymbolicRegression.py" />
+    <Compile Include="cfgs\Koza\SymbolicRegression2.py" />
+    <Compile Include="cfgs\TSP\__init__.py" />
+    <Compile Include="cfgs\TSP\A280.py" />
+    <Compile Include="cfgs\TSP\Berlin52.py" />
+    <Compile Include="cfgs\TSP\Brazil58.py" />
+    <Compile Include="cfgs\TSP\Oliver30.py" />
+    <Compile Include="cfgs\TSP\U2319.py" />
+    <Compile Include="esdlc\__init__.py" />
+    <Compile Include="esdlc\errors.py" />
+    <Compile Include="esdlc\ast\__init__.py" />
+    <Compile Include="esdlc\ast\lexer.py" />
+    <Compile Include="esdlc\ast\nodes.py" />
+    <Compile Include="esdlc\ast\validator.py" />
+    <Compile Include="esdlc\emitters\__init__.py" />
+    <Compile Include="esdlc\emitters\esec.py" />
+    <Compile Include="esdlc\model\__init__.py" />
+    <Compile Include="esdlc\model\astparser.py" />
+    <Compile Include="esdlc\model\fluent.py" />
+    <Compile Include="esdlc\model\validator.py" />
+    <Compile Include="esdlc\model\components\__init__.py" />
+    <Compile Include="esdlc\model\components\blocks.py" />
+    <Compile Include="esdlc\model\components\expressions.py" />
+    <Compile Include="esdlc\model\components\functions.py" />
+    <Compile Include="esdlc\model\components\lists.py" />
+    <Compile Include="esdlc\model\components\streams.py" />
+    <Compile Include="esdlc\model\components\variables.py" />
+    <Compile Include="esec\__init__.py" />
+    <Compile Include="esec\context.py" />
+    <Compile Include="esec\experiment.py" />
+    <Compile Include="esec\fitness.py" />
+    <Compile Include="esec\individual.py" />
+    <Compile Include="esec\system.py" />
+    <Compile Include="esec\generators\__init__.py" />
+    <Compile Include="esec\generators\filters.py" />
+    <Compile Include="esec\generators\joiners.py" />
+    <Compile Include="esec\generators\selectors.py" />
+    <Compile Include="esec\landscape\__init__.py" />
+    <Compile Include="esec\landscape\binary.py" />
+    <Compile Include="esec\landscape\ge.py" />
+    <Compile Include="esec\landscape\integer.py" />
+    <Compile Include="esec\landscape\real.py" />
+    <Compile Include="esec\landscape\tgp.py" />
+    <Compile Include="esec\monitors\__init__.py" />
+    <Compile Include="esec\monitors\consolemonitor.py" />
+    <Compile Include="esec\monitors\csvmonitor.py" />
+    <Compile Include="esec\monitors\multimonitor.py" />
+    <Compile Include="esec\monitors\multitarget.py" />
+    <Compile Include="esec\monitors\posttarget.py" />
+    <Compile Include="esec\species\__init__.py" />
+    <Compile Include="esec\species\binary.py" />
+    <Compile Include="esec\species\binary_int.py" />
+    <Compile Include="esec\species\binary_real.py" />
+    <Compile Include="esec\species\ge.py" />
+    <Compile Include="esec\species\integer.py" />
+    <Compile Include="esec\species\joined.py" />
+    <Compile Include="esec\species\real.py" />
+    <Compile Include="esec\species\tgp.py" />
+    <Compile Include="esec\utils\__init__.py" />
+    <Compile Include="esec\utils\attributedict.py" />
+    <Compile Include="esec\utils\configdict.py" />
+    <Compile Include="esec\utils\exceptions.py" />
+    <Compile Include="plugins\__init__.py" />
+    <Compile Include="plugins\DE.py" />
+    <Compile Include="plugins\PSO.py" />
+    <Compile Include="plugins\RVP.MSG.py" />
+    <Compile Include="plugins\ACO\__init__.py" />
+    <Compile Include="plugins\ACO\pheromone.py" />
+    <Compile Include="plugins\ACO\tsp.py" />
+    <Compile Include="tests\__init__.py" />
+    <Compile Include="tests\test_utils.py" />
+    <Compile Include="tests\esdlc\__init__.py" />
+    <Compile Include="tests\esdlc\test_lexer.py" />
+    <Compile Include="tests\esdlc\test_nodes.py" />
+    <Compile Include="tests\esdlc\test_parser.py" />
+    <Compile Include="tests\generators\__init__.py" />
+    <Compile Include="tests\generators\test_filters.py" />
+    <Compile Include="tests\generators\test_joiners.py" />
+    <Compile Include="tests\generators\test_selectors.py" />
+    <Compile Include="tests\landscape\__init__.py" />
+    <Compile Include="tests\landscape\test_binary.py" />
+    <Compile Include="tests\landscape\test_integer.py" />
+    <Compile Include="tests\landscape\test_real.py" />
+    <Compile Include="tests\species\__init__.py" />
+    <Compile Include="tests\species\test_binary.py" />
+    <Compile Include="tests\species\test_binary_int.py" />
+    <Compile Include="tests\species\test_binary_real.py" />
+    <Compile Include="tests\species\test_generic.py" />
+    <Compile Include="tests\species\test_integer.py" />
+    <Compile Include="tests\species\test_real.py" />
+    <Compile Include="tests\species\test_recombiners.py" />
+    <Compile Include="tests\species\test_tgp.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="cfgs\" />
     <Folder Include="cfgs\Koza\" />
     <Folder Include="cfgs\TSP\" />
     <Folder Include="esdlc\" />
+    <Folder Include="esdlc\ast\" />
+    <Folder Include="esdlc\emitters\" />
+    <Folder Include="esdlc\model\" />
+    <Folder Include="esdlc\model\components\" />
     <Folder Include="esec\" />
     <Folder Include="esec\generators\" />
     <Folder Include="esec\landscape\" />
@@ -49,5 +159,10 @@
     <Folder Include="tests\generators\" />
     <Folder Include="tests\landscape\" />
     <Folder Include="tests\species\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="cfgs\TSP\Brazil58.csv" />
+    <Content Include="cfgs\TSP\Oliver30.csv" />
+    <Content Include="cfgs\TSP\U2319.csv" />
   </ItemGroup>
 </Project>
