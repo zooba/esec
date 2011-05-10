@@ -215,7 +215,7 @@ F1 = F(1.0)
             for _ in xrange(20):
                 x = rnd() * 2 - 1
                 y = eval(expr, {'math': math, 'x': x, 'X': x})
-                self.test_cases += [(x, y)]
+                self.test_cases.append((x, y))
     
     def _eval(self, indiv):
         '''Evaluate the set of test cases'''
@@ -230,11 +230,7 @@ F1 = F(1.0)
                 result = Eval(case[0])
                 if result is None: return inf
                 fitness += (result - case[1]) ** 2
-            except KeyboardInterrupt:
-                raise
-            except OverflowError:
-                return inf
-            except ValueError:
+            except (OverflowError, ValueError):
                 return inf
         
         fitness += self._size_penalty(indiv)

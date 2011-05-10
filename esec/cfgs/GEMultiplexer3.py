@@ -24,7 +24,7 @@ config = {
     },
     'system': {
         'definition': r'''
-FROM random_ge(length=config.landscape.size,grammar=default_grammar) SELECT (size) population
+FROM random_ge(length=config.landscape.size,grammar) SELECT (size) population
 YIELD population
 
 BEGIN generation
@@ -43,7 +43,7 @@ BEGIN generation
     YIELD population
 END generation''',
         'size': 100,
-        'default_grammar': landscape.Multiplexer.rules,
+        'grammar': ConfigDict(landscape.Multiplexer.rules),
     },
     'monitor': {
         'report': 'gen+births+best+best_length+|+' +
@@ -63,4 +63,4 @@ settings += 'csv=True;low_priority=True;'
 
 def batch():
     while True:
-        yield ([], "noseed+SSGA", config, None, None)
+        yield ([], "noseed", config, None, None)

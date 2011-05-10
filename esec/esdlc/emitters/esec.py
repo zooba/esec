@@ -229,8 +229,10 @@ class _emitter(object): #pylint: disable=R0903
         self._w('=')
         
         if param.value is None:
-            if param.name in self.model.variables:
-                self._emit_variable(self.model.variables[param.name])
+            name_lower = param.name.lower()
+            var = self.model.variables.get(name_lower) or self.model.externals.get(name_lower)
+            if var:
+                self._emit_variable(var)
             else:
                 self._w('True')
         else:

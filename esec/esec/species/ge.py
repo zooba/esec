@@ -1,13 +1,12 @@
 '''Provides the `GESpecies` and `GEIndividual` classes for
 Grammatical Evolution (GE) genomes.
 '''
+import itertools
 from esec.species.integer import IntegerSpecies, IntegerIndividual
-from esec.utils import ConfigDict
 
 # Disabled: too many public methods
 #pylint: disable=R0904
 
-# Override IntegerIndividual to provide one that ...
 class GEIndividual(IntegerIndividual):
     '''An `Individual` for GE genomes.
     '''
@@ -65,6 +64,9 @@ class GEIndividual(IntegerIndividual):
             These are accumulated with ``parent.statistic`` and allow
             statistics to accurately represent the population.
         '''
+        super(GEIndividual, self).__init__(genes, parent=parent, 
+                                           lower_bounds=lower_bounds, upper_bounds=upper_bounds,
+                                           statistic=statistic)
         
         self._phenome = None
         '''The cached, evaluated individual code.'''
@@ -72,16 +74,13 @@ class GEIndividual(IntegerIndividual):
         '''The cached, compiled individual.'''
         self._effective_size = None
         '''The cached effective size of the individiual.'''
-        if isinstance(grammar, dict):
-            self.grammar = Grammar(grammar)
-        elif isinstance(grammar, ConfigDict):
-            self.grammar = Grammar(grammar.as_dict())
-        else:
-            self.grammar = grammar
+        self.grammar = Grammar(grammar) if isinstance(grammar, dict) else grammar
         '''The grammar used for this individiual.'''
         self.defines = defines
+        '''The definitions used for this individual.'''
         self.wrap_count = int(wrap_count)
         '''The number of times to reuse the genome when mapping.'''
+        
         if isinstance(parent, GEIndividual):
             self.grammar = parent.grammar
             self.defines = parent.defines
@@ -90,16 +89,11 @@ class GEIndividual(IntegerIndividual):
         if isinstance(self.defines, str):
             defines = self.defines
             self.defines = { }
-            '''The definitions used for this individual.'''
             exec defines in self.defines    #pylint: disable=W0122
         elif hasattr(self.defines, '__dict__'):
             self.defines = dict(self.defines.__dict__)
         elif not isinstance(self.defines, dict):
             self.defines = { }
-        
-        super(GEIndividual, self).__init__(genes, parent=parent, 
-                                           lower_bounds=lower_bounds, upper_bounds=upper_bounds,
-                                           statistic=statistic)
     
     @property
     def Eval(self): #pylint: disable=C0103
@@ -113,20 +107,19 @@ class GEIndividual(IntegerIndividual):
             program, self._effective_size = self.grammar.eval(self.genome, self.wrap_count)
             self._phenome = program or ''
             
+            self.statistic['did_not_compile'] = 0
+            self.statistic['dnc_unterminated'] = 0
+            self.statistic['dnc_exception'] = 0
+            
             if not program:
                 self.statistic['did_not_compile'] = 1
                 self.statistic['dnc_unterminated'] = 1
                 self._compiled = None
-                return self._compiled
-            else:
-                self.statistic['did_not_compile'] = 0
-                self.statistic['dnc_unterminated'] = 0
+                return None
             
             try:
                 exec program in defs    #pylint: disable=W0122
                 self._compiled = defs["Eval"]
-                self.statistic['did_not_compile'] = 0
-                self.statistic['dnc_exception'] = 0
             except KeyboardInterrupt:
                 raise
             except:
@@ -364,15 +357,8 @@ class Grammar(object):
             A tuple containing the program code (index zero) and the number
             of codon values used (index one).
         '''
-        def _gen(genes, wrap_count):
-            '''A generator that iterates through `genes` up to
-            `wrap_count` times before terminating.'''
-            for _ in xrange(wrap_count+1):
-                for codon in genes:
-                    yield codon
-        
         eff_size = 0
-        gen = _gen(genome, int(wrap))
+        gen = itertools.chain.from_iterable(itertools.repeat(tuple(genome), int(wrap)+1))
         
         try:
             result = ''
