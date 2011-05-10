@@ -236,7 +236,7 @@ def test_recombiners_Segmented_Normal():
 
 def test_recombiners_PerGeneTuple_None():
     population = make_pop()
-    joined = list(joiners.DistinctRandomTuples(_source=([population] * 2, ['population'] * 2)))
+    joined = list(joiners.DistinctRandomTuples(_source=[population] * 2))
     
     _gen = OnIndividual('crossover_tuple')(_source=iter(joined), per_indiv_rate=1.0, per_gene_rate=1.0)
     offspring = list(_gen)
@@ -246,7 +246,7 @@ def test_recombiners_PerGeneTuple_None():
 
 def test_recombiners_PerGeneTuple_NotFromFirst():
     population = make_pop()
-    joined = list(joiners.DistinctRandomTuples(_source=([population] * 2, ['population'] * 2)))
+    joined = list(joiners.DistinctRandomTuples(_source=[population] * 2))
     
     _gen = OnIndividual('crossover_tuple')(_source=iter(joined), per_indiv_rate=1.0, per_gene_rate=0.0)
     offspring = list(_gen)
@@ -258,7 +258,7 @@ def test_recombiners_PerGeneTuple_NotFromFirst():
 
 def test_recombiners_PerGeneTuple_AutoProb():
     population = make_pop()
-    joined = list(joiners.DistinctRandomTuples(_source=([population] * 2, ['population'] * 2)))
+    joined = list(joiners.DistinctRandomTuples(_source=[population] * 2))
     
     _gen = OnIndividual('crossover_tuple')(_source=iter(joined), per_indiv_rate=1.0, per_gene_rate=None)
     offspring = list(_gen)
@@ -273,7 +273,7 @@ def test_recombiners_PerGeneTuple_AutoProb():
 
 def test_recombiners_PerGeneTuple_HalfFromFirst():
     population = make_pop()
-    joined = list(joiners.DistinctRandomTuples(_source=([population] * 2, ['population'] * 2)))
+    joined = list(joiners.DistinctRandomTuples(_source=[population] * 2))
     
     _gen = OnIndividual('crossover_tuple')(_source=iter(joined), per_indiv_rate=1.0, per_gene_rate=0.5)
     offspring = list(_gen)

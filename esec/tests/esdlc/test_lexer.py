@@ -1,8 +1,8 @@
-from esdlc.lexer import Token, tokenise
+from esdlc.ast.lexer import Token, tokenise
 
 def test_Token():
-    t1 = Token('tag', 'type', 'value', 1, 2)
-    t2 = Token('tag', 'type', 'value', 1, 2)
+    t1 = Token('tag', 'type', 'value', 0, 1)
+    t2 = Token('tag', 'type', 'value', 0, 1)
     
     assert t1 == t2
     
@@ -27,15 +27,14 @@ def test_Token():
 def test_tokenise_number():
     source = "0 0.0 1. 1.2 1e2 2.e1 3.4e7 1e-4 1e+4 3.2e-2 4.4e+3"
     values = [0.0, 0.0, 1.0, 1.2, 100.0, 20.0, 34000000.0, 0.0001, 10000.0, 0.032, 4400.0]
-    tokens = []
-    for stmt in tokenise(source): tokens.extend(stmt)
+    tokens = tokenise(source)
     
     print tokens
-    assert (tokens[-2].tag, tokens[-1].tag) == ('eos', 'eof')
-    tokens = tokens[:-2]
+    assert tokens[-1].tag == 'EOS'
+    tokens = tokens[:-1]
     
     assert len(tokens) == len(values)
-    assert all(t.tag == 'number' for t in tokens)
+    assert all(t.tag == 'NUMBER' for t in tokens)
     
     actual = [float(t.value) for t in tokens]
     print actual
@@ -45,15 +44,14 @@ def test_tokenise_number():
 def test_tokenise_constant():
     source = "true TRUE True false FALSE False none NONE None null NULL Null"
     values = ['true', 'true', 'true', 'false', 'false', 'false', 'none', 'none', 'none', 'null', 'null', 'null']
-    tokens = []
-    for stmt in tokenise(source): tokens.extend(stmt)
+    tokens = tokenise(source)
     
     print tokens
-    assert (tokens[-2].tag, tokens[-1].tag) == ('eos', 'eof')
-    tokens = tokens[:-2]
+    assert tokens[-1].tag == 'EOS'
+    tokens = tokens[:-1]
     
     assert len(tokens) == len(values)
-    assert all(t.tag == 'constant' for t in tokens)
+    assert all(t.type == 'literal' for t in tokens)
     
     actual = [t.value.lower() for t in tokens]
     print actual
@@ -68,17 +66,15 @@ def test_tokenise_comment():
     ]
     for source in sources:
         comment = source[5:]
-        tokens = []
-        for stmt in tokenise(source): tokens.extend(stmt)
+        tokens = tokenise(source)
         
         print tokens
-        assert [t.tag for t in tokens] == ['name', 'comment', 'eos', 'eof']
+        assert [t.tag for t in tokens] == ['NAME', 'COMMENTS', 'EOS']
         
         assert tokens[1].value == comment
 
 def check_tags(source, expect):
-    tokens = []
-    for stmt in tokenise(source): tokens.extend(stmt)
+    tokens = tokenise(source)
     
     print tokens
     assert [t.tag for t in tokens] == expect.split()
@@ -88,45 +84,48 @@ def test_tokenise_commands():
         "from FROM select SELECT using USING join JOIN into INTO yield YIELD begin " + \
         "BEGIN repeat REPEAT end END eval EVAL evaluate EVALUATE", \
         "FROM FROM SELECT SELECT USING USING JOIN JOIN INTO INTO YIELD YIELD BEGIN " + \
-        "BEGIN REPEAT REPEAT END END EVAL EVAL EVAL EVAL eos eof"
+        "BEGIN REPEAT REPEAT END END EVAL EVAL EVAL EVAL EOS"
     
 def test_tokenise_continue():
     yield check_tags, \
         "name 2.3 \\ \n name 4.6", \
-        "name number name number eos eof"
+        "NAME NUMBER NAME NUMBER EOS"
 
 def test_tokenise_line_ending():
     yield check_tags, \
         'name \n  name \r\n name \r\r\n  name \r  name', \
-        'name eos name eos  name eos eos name eos name eos eof'
+        'NAME EOS NAME EOS  NAME EOS EOS NAME EOS NAME EOS'
     
     yield check_tags, \
         'name \n  name \r \n   name \r\r \n     name \n\r    name', \
-        'name eos name eos eos name eos eos eos name eos eos name eos eof'
+        'NAME EOS NAME EOS EOS NAME EOS EOS EOS NAME EOS EOS NAME EOS'
     
     yield check_tags, \
         '', \
-        'eof'
+        'EOS'
     
 def test_tokenise_operator():
     yield check_tags, \
         '+ - * / % ^ ( ) { } [ ] = . , +-*/%^(){}[]=.,', \
-        '+ - * / % ^ ( ) { } [ ] = . , + - * / % ^ ( ) { } [ ] = . , eos eof'
+        'ADD SUB MUL DIV MOD POW OPEN_PAR CLOSE_PAR OPEN_BRACE CLOSE_BRACE OPEN_BRACKET CLOSE_BRACKET ASSIGN DOT COMMA ' + \
+        'ADD SUB MUL DIV MOD POW OPEN_PAR CLOSE_PAR OPEN_BRACE CLOSE_BRACE OPEN_BRACKET CLOSE_BRACKET ASSIGN DOT COMMA EOS'
     
     # each of these should be separate operators
     yield check_tags, \
         '+-+ -+- -- ++ *- ^- %+', \
-        '+ - + - + - - - + + * - ^ - % + eos eof'
+        'ADD SUB ADD SUB ADD SUB SUB SUB ADD ADD MUL SUB POW SUB MOD ADD EOS'
 
 def test_tokenise_equation():
     yield check_tags, \
         'y = (-b + sqrt(b^2 - 4*a*c)) / (2 * a)', \
-        'name = ( - name + name ( name ^ number - number * name * name ) ) / ( number * name ) eos eof'
+        'NAME ASSIGN OPEN_PAR SUB NAME ADD NAME OPEN_PAR NAME POW NUMBER SUB NUMBER MUL NAME MUL NAME ' + \
+            'CLOSE_PAR CLOSE_PAR DIV OPEN_PAR NUMBER MUL NAME CLOSE_PAR EOS'
 
 def test_tokenise_functioncall():
     yield check_tags, \
         'class.method(param=value,   param = value[index+2],         param =   2.3 )', \
-        'name . name ( name = name , name = name [ name + number ] , name = number ) eos eof'
+        'NAME DOT NAME OPEN_PAR NAME ASSIGN NAME COMMA NAME ASSIGN NAME OPEN_BRACKET NAME ADD NUMBER ' + \
+            'CLOSE_BRACKET COMMA NAME ASSIGN NUMBER CLOSE_PAR EOS'
 
 CODE = r'''FROM random_real(length=cfg.length,lowest=-2.0,highest=2.0) SELECT (size) population
 YIELD population
@@ -153,29 +152,29 @@ BEGIN GENERATION
 END GENERATION'''
 
 CODE_TOKENS = [
-    'FROM name ( name = name . name , name = - number , name = number ) SELECT ( name ) name eos',
-    'YIELD name eos',
-    'eos',
-    'BEGIN name eos',
-    'name = name eos',
-    'eos',
-    'comment eos',
-    'FROM name SELECT ( name ) name USING name ( name = name ) eos',
-    'eos',
-    'comment eos',
-    'JOIN name , name , name INTO name USING name ( name = constant ) eos',
-    'eos',
-    'FROM name SELECT name USING name ( name = name ) eos',
-    'eos',
-    'JOIN name , name INTO name USING name eos',
-    'FROM name SELECT name USING name ( name = name [ number ] ) eos',
-    'eos',
-    'JOIN name , name INTO name USING name eos',
-    'FROM name SELECT name USING name eos',
-    'eos',
-    'YIELD name eos',
-    'END name eos',
-    'eof'
+    'FROM NAME OPEN_PAR NAME ASSIGN NAME DOT NAME COMMA NAME ASSIGN SUB NUMBER COMMA NAME ASSIGN NUMBER CLOSE_PAR ' + \
+        'SELECT OPEN_PAR NAME CLOSE_PAR NAME EOS',
+    'YIELD NAME EOS',
+    'EOS',
+    'BEGIN NAME EOS',
+    'NAME ASSIGN NAME EOS',
+    'EOS',
+    'COMMENTS EOS',
+    'FROM NAME SELECT OPEN_PAR NAME CLOSE_PAR NAME USING NAME OPEN_PAR NAME ASSIGN NAME CLOSE_PAR EOS',
+    'EOS',
+    'COMMENTS EOS',
+    'JOIN NAME COMMA NAME COMMA NAME INTO NAME USING NAME OPEN_PAR NAME ASSIGN TRUE CLOSE_PAR EOS',
+    'EOS',
+    'FROM NAME SELECT NAME USING NAME OPEN_PAR NAME ASSIGN NAME CLOSE_PAR EOS',
+    'EOS',
+    'JOIN NAME COMMA NAME INTO NAME USING NAME EOS',
+    'FROM NAME SELECT NAME USING NAME OPEN_PAR NAME ASSIGN NAME OPEN_BRACKET NUMBER CLOSE_BRACKET CLOSE_PAR EOS',
+    'EOS',
+    'JOIN NAME COMMA NAME INTO NAME USING NAME EOS',
+    'FROM NAME SELECT NAME USING NAME EOS',
+    'EOS',
+    'YIELD NAME EOS',
+    'END NAME EOS',
 ]
 
 CODE_VALUES = [
@@ -203,8 +202,17 @@ CODE_VALUES = [
     'END GENERATION',
 ]
 
+def split_at_eos(src):
+    result = []
+    for i in src:
+        result.append(i)
+        if i.tag == 'EOS':
+            yield result
+            result = []
+            
+
 def test_tokenise():
-    lines = list(tokenise(CODE))
+    lines = list(split_at_eos(tokenise(CODE)))
     
     print len(lines), len(CODE_TOKENS)
     assert len(lines) == len(CODE_TOKENS)
@@ -221,3 +229,12 @@ def test_tokenise():
         print j
         assert i == j
     
+if __name__ == '__main__':
+    funcs = [(k, v) for k, v in globals().items() if k.startswith('test_') and hasattr(v, '__call__')]
+    for fname, f in funcs:
+        print fname
+        gen = f()
+        if gen:
+            for t in gen:
+                print t
+                t[0](*t[1:])

@@ -247,7 +247,7 @@ class AstSystem(System):
             source = VariableRef(source, span=node.left.tokens)
         assert isinstance(source, VariableRef), repr(source)
 
-        attrib = node.right.tag
+        attrib = node.right.tag.lower()
         stmt = Function.getattrib(source, attrib, node.fulltokens)
         nrr = node.right.right
         if nrr is None:

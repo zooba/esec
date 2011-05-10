@@ -20,7 +20,7 @@ def test_joiners():
     
 
 def check_joiners_All(population):
-    _gen = joiners.All(_source=([population] * 2, ['population'] * 2))
+    _gen = joiners.All(_source=[population] * 2)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population)**2 = %d" % (len(offspring), len(population)**2)
     assert len(offspring) == len(population)**2, "Did not select all combinations"
@@ -29,7 +29,7 @@ def check_joiners_All(population):
     assert all(all(i in population for i in g.genome) for g in offspring), "Some members are not in original population"
         
 def check_joiners_Tuples(population):
-    _gen = joiners.Tuples(_source=([population] * 3, ['population'] * 3))
+    _gen = joiners.Tuples(_source=[population] * 3)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
@@ -40,7 +40,7 @@ def check_joiners_Tuples(population):
     assert all(all(i is g[0] for i in g[1:]) for g in offspring), "Some members are not matched with themselves"
     
 def check_joiners_RandomTuples(population):
-    _gen = joiners.RandomTuples(_source=([population] * 3, ['population'] * 3))
+    _gen = joiners.RandomTuples(_source=[population] * 3)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
@@ -51,7 +51,7 @@ def check_joiners_RandomTuples(population):
     assert not all(all(i is g[0] for i in g[1:]) for g in offspring), "All members are matched with themselves"
     
 def check_joiners_DistinctRandomTuples(population):
-    _gen = joiners.DistinctRandomTuples(_source=([population] * 3, ['population'] * 3))
+    _gen = joiners.DistinctRandomTuples(_source=[population] * 3)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"

@@ -51,7 +51,7 @@ def test_NKC():
         for _ in xrange(bvp.group):
             param.append([randrange(2) for _ in xrange(bvp.size.exact)])
         # test list of random binary values
-        fitness = bvp.eval(JoinedIndividual(param, [str(i) for i in xrange(bvp.group)], JoinedSpecies.instance))
+        fitness = bvp.eval(JoinedIndividual(param, JoinedSpecies.instance))
         assert isinstance(fitness, (int, long, float, Fitness, EmptyFitness)), "Result was not fitness value"
     print '\n'.join(bvp.info(5))
     #assert False
