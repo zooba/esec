@@ -9,7 +9,7 @@ from esec.fitness import EmptyFitness
 from esec.individual import EmptyIndividual
 from esec.monitors import MonitorBase
 from esec.utils import attrdict, ConfigDict, is_ironpython
-from esec.utils.exceptions import ESDLCompilerError
+from esec.utils.exceptions import ESDLCompilerError, ExceptionGroup
 
 import sys
 import os, os.path
@@ -761,9 +761,9 @@ class ConsoleMonitor(MonitorBase):  #pylint: disable=R0902
         try:
             if exception_type is ESDLCompilerError:
                 print >> self.error_out, '\nCompilation errors:'
-                print >> self.error_out, trace
-            else:
-                print >> self.error_out, '\n' + trace
+            elif exception_type is ExceptionGroup:
+                print >> self.error_out, '\nErrors:'
+            print >> self.error_out, '\n' + trace
         except (ValueError, IOError):
             print "IOError writing to output file. Writing exception to stdout."
             print trace

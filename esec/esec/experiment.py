@@ -7,7 +7,7 @@ import sys
 import traceback
 
 from esec.utils import cfg_read, cfg_validate, ConfigDict
-from esec.utils.exceptions import ESDLCompilerError, EvaluatorError
+from esec.utils.exceptions import ESDLCompilerError, EvaluatorError, ExceptionGroup
 from esec.monitors import MonitorBase
 from esec.system import System
 import esec.landscape as landscape
@@ -180,13 +180,14 @@ class Experiment(object):
             raise
         except:
             ex = sys.exc_info()
-            if ex[0] is EvaluatorError:
-                ex_type, ex_value, ex_trace = ex[1].args
-            elif ex[0] is ESDLCompilerError:
-                ex_type, ex_value = ex[0], ex[1]
+            ex_type, ex_value = ex[0], ex[1]
+            if ex_type is EvaluatorError:
+                ex_type, ex_value, ex_trace = ex_value.args
+            elif ex_type is ESDLCompilerError:
                 ex_trace = '\n'.join(str(i) for i in ex_value.validation_result.all)
+            elif ex_type is ExceptionGroup:
+                ex_trace = '\n'.join(str(i) for i in ex_value.exceptions)
             else:
-                ex_type, ex_value = ex[0], ex[1]
                 ex_trace = ''.join(traceback.format_exception(*ex))
             self.monitor.on_exception(self, ex_type, ex_value, ex_trace)
             raise
