@@ -9,7 +9,11 @@ class RepeatBlock(object):
 
     def __init__(self, statements, count):
         self.statements = statements
+        '''A list of statements contained within this block.'''
         self.count = count
+        '''A model element providing the number of times to execute
+        this block.
+        '''
 
     def __str__(self):
         return 'REPEAT %s' % self.count

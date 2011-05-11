@@ -48,15 +48,22 @@ class Function(object):
 
     def __init__(self, name, span=None):
         self.name = name
+        '''The name of this function. This should be one of
+        ``'_call'``, ``'_assign'``, ``'_getattrib'`` or
+        ``'_getindex'``.
+        '''
         self.parameters = None
+        '''The list of parameters to pass to the function.'''
         self.span = span
+        '''A list of tokens constituting this function call.'''
         self.references = []
+        '''A list of references to this function call. In general,
+        there should be no more than one reference to each call.
+        '''
     
     @property
     def parameter_dict(self):
-        '''Returns a dictionary containing the parameters to this
-        function call.
-        '''
+        '''A dictionary containing the parameters to this function.'''
         return dict(self.parameters)
     
     def __str__(self):

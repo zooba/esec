@@ -10,8 +10,10 @@ class VariableRef(object):
 
     def __init__(self, var_id, span=None):
         self.id = var_id
+        '''The referenced variable.'''
         self.id.references.append(self)
         self.span = span
+        '''A list of tokens constituting this reference.'''
 
     def __str__(self):
         return str(self.id)
@@ -26,9 +28,17 @@ class GroupRef(object):
 
     def __init__(self, group_id, limit=None, span=None):
         self.id = group_id
+        '''The referenced variable. Groups are stored in non-constant,
+        non-internal variables and may be referenced by either
+        `GroupRef` or `VariableRef` depending on context.
+        '''
         self.limit = limit
+        '''The maximum number of individuals to store into this group.
+        If not applicable, this should be ``None``.
+        '''
         self.id.references.append(self)
         self.span = span
+        '''A list of tokens constituting this reference.'''
     
     def __str__(self):
         if self.limit:
@@ -46,9 +56,13 @@ class UnaryOp(object):
 
     def __init__(self, op, right, span=None):
         self.left = None
+        '''The left operand. This is always ``None``.'''
         self.op = str(op)
+        '''The operator. This must be a string.'''
         self.right = right
+        '''The right operand.'''
         self.span = span
+        '''A list of tokens constituting this operation.'''
 
     def __str__(self):
         return '(%s%s)' % (self.op, self.right)
@@ -68,9 +82,13 @@ class BinaryOp(object):
 
     def __init__(self, left, op, right, span=None):
         self.left = left
+        '''The left operand.'''
         self.op = str(op)
+        '''The operator. This must be a string.'''
         self.right = right
+        '''The right operand.'''
         self.span = span
+        '''A list of tokens constituting this operation.'''
     
     def __str__(self):
         return '(%s%s%s)' % (self.left, self.op, self.right)
@@ -98,7 +116,11 @@ class Pragma(object):
 
     def __init__(self, text, span=None):
         self.text = str(text)
+        '''The text contained in this pragma, excluding the leading
+        backtick. Emitters are responsible for interpreting this text.
+        '''
         self.span = span
+        '''A list of tokens constituting this pragma.'''
 
     def __str__(self):
         return '`' + self.text

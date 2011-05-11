@@ -13,6 +13,7 @@ class Stream(object):
 
     def __init__(self, source):
         self.source = source
+        '''The source of this stream.'''
     
     def __str__(self):
         return str(self.source)
@@ -27,7 +28,9 @@ class Operator(object):
 
     def __init__(self, source, func):
         self.source = source
+        '''The source stream.'''
         self.func = func
+        '''The function object to invoke.'''
 
     def __str__(self):
         return '%s<%s>' % (self.func, self.source)
@@ -42,6 +45,7 @@ class Merge(object):
 
     def __init__(self, sources):
         self.sources = GroupList(sources, allow_generators=True, allow_streams=True)
+        '''The source groups or generators.'''
 
     def __str__(self):
         return '+'.join(str(i) for i in self.sources)
@@ -59,6 +63,7 @@ class Join(object):
     
     def __init__(self, sources):
         self.sources = GroupList(sources, allow_generators=True, allow_streams=True)
+        '''The source groups or generators.'''
 
     def __str__(self):
         return '&'.join(str(i) for i in self.sources)
@@ -75,12 +80,13 @@ class Store(object):
     
     def __init__(self, source, destinations):
         self.source = source
+        '''The source stream.'''
         self.destinations = GroupList(destinations, allow_sizes=True, repeats_error=RepeatedDestinationGroupError)
-        self._cached_str = None
+        '''The destination groups. These groups may have a limit
+        specified.
+        '''
 
     def __str__(self):
-        if self._cached_str: return self._cached_str
-        
         from_cmd = 'FROM '
         select_cmd = ' SELECT '
         dest_str = str(self.destinations)
@@ -122,10 +128,10 @@ class EvalStmt(object):
 
     def __init__(self, sources, evaluators):
         self.sources = GroupList(sources, repeats_error=RepeatedGroupError)
-        if evaluators:
-            self.evaluators = FunctionList(evaluators)
-        else:
-            self.evaluators = None
+        '''The list of source groups.'''
+        self.evaluators = FunctionList(evaluators) if evaluators else None
+        '''The list of evaluators. This may be ``None`` if no
+        evaluators were specified.'''
 
     def __str__(self):
         if self.evaluators:
@@ -143,6 +149,7 @@ class YieldStmt(object):
 
     def __init__(self, sources):
         self.sources = GroupList(sources, repeats_error=RepeatedGroupError)
+        '''The list of source groups.'''
 
     def __str__(self):
         return 'YIELD %s' % self.sources

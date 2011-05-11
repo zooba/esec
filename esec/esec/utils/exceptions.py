@@ -28,6 +28,10 @@ class ESDLCompilerError(Exception):
     def __init__(self, validation_result, *args):
         super(ESDLCompilerError, self).__init__(*args)
         self.validation_result = validation_result
+        '''An instance of `esdlc.model.validator.Validator` for the
+        system. Errors and warnings may be accessed through the
+        ``errors``, ``warnings`` and ``all`` properties.
+        '''
 
 class ExceptionGroup(Exception):
     '''Raised when a group of exceptions have been caught, allowing all

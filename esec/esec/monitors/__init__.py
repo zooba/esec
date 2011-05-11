@@ -62,7 +62,7 @@ class MonitorBase(object):
         normally.
         
         :Parameters:
-          sender : `System`
+          sender : `esec.system.System`
             The system instance reporting to this monitor.
         '''
         pass
@@ -151,7 +151,7 @@ class MonitorBase(object):
         and the run will be terminated.
         
         :Parameters:
-          sender : `System`
+          sender : `esec.system.System`
             The system instance reporting to this monitor.
         '''
         pass
@@ -165,7 +165,7 @@ class MonitorBase(object):
         and the run will be terminated.
         
         :Parameters:
-          sender : `System`
+          sender : `esec.system.System`
             The system instance reporting to this monitor.
         '''
         pass
@@ -179,7 +179,7 @@ class MonitorBase(object):
         continue normally.
         
         :Parameters:
-          sender : `System`
+          sender : `esec.system.System`
             The system instance reporting to this monitor.
         '''
         pass
@@ -191,7 +191,7 @@ class MonitorBase(object):
         Python interpreter.
         
         :Parameters:
-          sender : `System`
+          sender : `esec.system.System`
             The system instance reporting to this monitor.
         '''
         pass
@@ -204,7 +204,7 @@ class MonitorBase(object):
         terminated.
         
         :Parameters:
-          sender : `System`
+          sender : `esec.system.System`
             The system instance reporting to this monitor.
         '''
         pass
@@ -217,7 +217,7 @@ class MonitorBase(object):
         Python interpreter.
         
         :Parameters:
-          sender : `System`
+          sender : `esec.system.System`
             The system instance reporting to this monitor.
         '''
         pass
@@ -229,7 +229,7 @@ class MonitorBase(object):
         Python interpreter.
         
         :Parameters:
-          sender : `System`
+          sender : `esec.system.System`
             The system instance reporting to this monitor.
           
           exception_type : type(Exception)
@@ -249,7 +249,7 @@ class MonitorBase(object):
         terminate.
         
         :Parameters:
-          sender : `System`
+          sender : `esec.system.System`
             The system instance reporting to this monitor.
         
         :Returns:

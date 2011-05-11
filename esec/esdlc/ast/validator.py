@@ -1,5 +1,5 @@
-'''Provides the `Analyser` class for producing a more complete model of
-the provided AST.
+'''Provides the `Validator` class for checking for a valid syntactic
+structure in the provided AST.
 '''
 # Disable too many return statements warnings
 #pylint: disable=R0911
@@ -10,8 +10,8 @@ import warnings
 import esdlc.errors as error
 
 class Validator(object):
-    '''Validates node-specific elements of an AST and updates `data`
-    members to contain useful information.
+    '''Validates node-specific elements of an AST and updates node
+    ``data`` members to contain useful information.
     '''
     
     def __init__(self):

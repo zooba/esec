@@ -10,9 +10,15 @@ class GroupList(list):
     def __init__(self, source, allow_sizes=False, allow_generators=False, allow_streams=False, repeats_error=None):
         super(GroupList, self).__init__(source)
         self.allow_sizes = allow_sizes
+        '''``True`` to allow elements to have sizes specified.'''
         self.allow_generators = allow_generators
+        '''``True`` to allow elements to be function calls.'''
         self.allow_streams = allow_streams
+        '''``True`` to allow elements to be streams.'''
         self.repeats_error = repeats_error
+        '''An exception type to instantiate for repeated elements, or
+        ``None`` if repeated elements are not an error.
+        '''
 
     def __str__(self):
         return ', '.join(str(i) for i in self)

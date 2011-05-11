@@ -4,6 +4,7 @@ To define a system, derive your class from `FluentSystem` and use its
 instance functions to specify the code.
 
 For example::
+
     class GAwithTournament(FluentSystem):
         def definitions(self):
             self.External("random_binary")
@@ -158,11 +159,11 @@ class FluentSystem(System):
         All blocks apart from `block_init` must be specified in this
         function, for example::
 
-        def definitions(self):
-            self.Block("Generation")
+            def definitions(self):
+                self.Block("Generation")
 
-        def block_generation(self):
-            ...
+            def block_generation(self):
+                ...
         '''
         raise NotImplementedError()
 
@@ -199,15 +200,17 @@ class FluentSystem(System):
         `Variable`, `External`, `Constant`, `Function` or
         `RPNExpression`.
 
-        An error occurs if this is called within `definition`.
+        An error occurs if this is called within `definitions`.
 
         For example::
-            ...
-            self.Repeat(self.repeat_block, 100)
-            ...
+
+            def block_generation(self):
+                ...
+                self.Repeat(self.repeat_block, 100)
+                ...
         
-        def repeat_block(self):
-            ...
+            def repeat_block(self):
+                ...
         '''
         assert not self.__isdef, "Cannot specify repeat blocks within definitions()"
         self._complete_stmt()
@@ -226,7 +229,7 @@ class FluentSystem(System):
 
     def Group(self, name, limit=None, span=None):
         '''Specify a named group. The `name` is case-insensitive. All
-        groups must be specified initially within `definition` before
+        groups must be specified initially within `definitions` before
         they may be referenced elsewhere.
 
         If called within `definitions`, `limit` must be ``None``.
@@ -376,8 +379,8 @@ class FluentSystem(System):
     def Function(self, name, span=None, **parameters):
         '''Specifies a function call. The `name` must be a string or
         the value returned by `External`; calling `Function` within
-        `definition` behaves identically to calling `External` with the
-        same `name`.
+        `definitions` behaves identically to calling `External` with
+        the same `name`.
 
         The values in `parameters` may be variable names, numbers, the
         result of calling one of `Variable`, `External`, `Constant`,
@@ -412,6 +415,7 @@ class FluentSystem(System):
         returned object may optionally be called to specifiy operators.
 
         For example::
+
             self.From("source").Select(self.Group("destination", limit=100))
         '''
         self._complete_stmt()
@@ -428,6 +432,7 @@ class FluentSystem(System):
         returned object may optionally be called to specifiy operators.
 
         For example::
+
             self.Join("A", "B").Into("merged").Using("tuples")
         '''
         self._complete_stmt()
