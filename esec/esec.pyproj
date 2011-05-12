@@ -139,6 +139,7 @@
     <Compile Include="tests\species\test_real.py" />
     <Compile Include="tests\species\test_recombiners.py" />
     <Compile Include="tests\species\test_tgp.py" />
+    <Compile Include="test_full.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="cfgs\" />
