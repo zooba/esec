@@ -641,12 +641,12 @@ def esec_batch(options):
         try:
             ea_exp = Experiment(cfg)
         except:
-            ex_exp = None
+            ea_exp = None
         
         # Run the application (and time it)
         if batch_cfg.dry_run:
             print '--> DRY RUN DONE <--'
-        elif ex_exp:
+        elif ea_exp:
             start_time = time.clock()
             ea_exp.run()
             print '->> DONE <<- in ', (time.clock() - start_time)

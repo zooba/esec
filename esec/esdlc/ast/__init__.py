@@ -48,7 +48,7 @@ class AST(object):
             node = symbols[" name"].copy(new_tag=token.value)
         elif token.type == 'number':
             try:
-                key = repr(float(token.value))
+                key = str(float(token.value))
                 node = symbols[" number"].copy(new_tag=key)
             except ValueError:
                 self._errors.append(error.InvalidNumberError([token], token.value))
@@ -157,7 +157,7 @@ class AST(object):
                 for i in node:
                     _fmt(i, ind)
                 return
-            elif node.category in {'expr', 'block'}:
+            elif node.category in set(('expr', 'block')):
                 result.append(ind + '<' + (str(node)))
                 _fmt(node.expr, ind+'  ')
                 result.append(ind + '>' + (str(node.close) if node.close else "?"))

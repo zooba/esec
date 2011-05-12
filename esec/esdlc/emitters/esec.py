@@ -279,7 +279,7 @@ class _emitter(object): #pylint: disable=R0903
         '''Emits code for expressions.'''
         tag = expr.tag
         
-        if tag in {'groupref', 'variableref'}:
+        if tag in set(('groupref', 'variableref')):
             self._emit_variable(expr.id)
         elif tag == 'variable':
             self._emit_variable(expr)
@@ -312,7 +312,7 @@ class _emitter(object): #pylint: disable=R0903
         
         op = stmt.source
         op_stack = []
-        while op.tag not in {'merge', 'join'}:
+        while op.tag not in set(('merge', 'join')):
             op_stack.append(op)
             op = op.source
             
@@ -365,7 +365,7 @@ class _emitter(object): #pylint: disable=R0903
         
         closing = ')'
         op = stmt.source
-        while op.tag not in {'merge', 'join'}:
+        while op.tag not in set(('merge', 'join')):
             self._emit_expression(op.func.parameter_dict["_function"])
             self._w('(')
             for arg in (i for i in op.func.parameters if i.name != '_function'):

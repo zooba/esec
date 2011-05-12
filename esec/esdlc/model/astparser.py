@@ -91,7 +91,7 @@ class AstSystem(System):
             self._add(self._assignment(stmt))
         elif stmt.category == 'UsingStmt':
             assert stmt.left is not None, repr(stmt)
-            assert stmt.left.category in {'SelectStmt', 'IntoStmt', 'EvalStmt'}, repr(stmt.left)
+            assert stmt.left.category in set(('SelectStmt', 'IntoStmt', 'EvalStmt')), repr(stmt.left)
             if stmt.left.category == 'SelectStmt':
                 self._add(self._fromstmt(stmt))
             elif stmt.left.category == 'IntoStmt':
@@ -130,7 +130,7 @@ class AstSystem(System):
             else:
                 expr = BinaryOp(self._expression(node.left), node.tag, self._expression(node.right),
                                 span=node.fulltokens)
-        elif node.category in {'number', 'literal'}:
+        elif node.category in set(('number', 'literal')):
             expr = VariableRef(self._constant(node), span=node.tokens)
         elif node.category == 'name':
             if node.right is None:
@@ -147,7 +147,7 @@ class AstSystem(System):
 
     def _constant(self, node):  #pylint: disable=R0201
         '''Handles constant nodes.'''
-        assert node.category in {'number', 'literal'}, repr(node)
+        assert node.category in set(('number', 'literal')), repr(node)
 
         if node.category == 'number':
             value = node.text
@@ -161,7 +161,7 @@ class AstSystem(System):
 
     def _variable(self, node):
         '''Handles variable nodes.'''
-        assert node.category in {'name'}, repr(node)
+        assert node.category in set(('name',)), repr(node)
         assert node.right is None, repr(node.right)
         name = node.text.lower()
 
@@ -172,7 +172,7 @@ class AstSystem(System):
         
     def _call(self, node):
         '''Handles function call nodes.'''
-        assert node.category in {'name', 'dot'}, repr(node)
+        assert node.category in set(('name', 'dot')), repr(node)
         
         if node.category == 'name':
             name = node.text.lower()
@@ -210,7 +210,7 @@ class AstSystem(System):
 
     def _getindex(self, node, index_node=None):
         '''Handles indexing nodes.'''
-        assert node.category in {'name'}, repr(node)
+        assert node.category in set(('name',)), repr(node)
         if index_node is None: index_node = node.right
         assert index_node is not None, repr(node)
         assert index_node.tag == '[' and len(index_node.expr) <= 1, repr(index_node)
@@ -237,7 +237,7 @@ class AstSystem(System):
 
     def _getattrib(self, node):
         '''Handles dotted attribute access nodes.'''
-        assert node.category in {'dot'}, repr(node)
+        assert node.category in set(('dot',)), repr(node)
         assert node.left is not None, repr(node)
         assert node.right is not None, repr(node)
         assert node.right.category == 'name', repr(node.right)
@@ -263,7 +263,7 @@ class AstSystem(System):
 
     def _group(self, node):
         '''Handles group name nodes.'''
-        assert node.category in {'name'}, repr(node)
+        assert node.category in set(('name',)), repr(node)
         if node.right is not None and node.right.tag == '(':
             return self._call(node)
         
@@ -284,7 +284,7 @@ class AstSystem(System):
 
     def _fromstmt(self, node, from_cmd='FromStmt', select_cmd='SelectStmt', merge_op=Merge):
         '''Handles FROM-SELECT statements.'''
-        assert node.category in {'UsingStmt', select_cmd}, repr(node)
+        assert node.category in set(('UsingStmt', select_cmd)), repr(node)
         
         if node.category == 'UsingStmt':
             operators = [self._call(i) for i in node.right.iter_list()]
@@ -313,7 +313,7 @@ class AstSystem(System):
     
     def _evalstmt(self, node):
         '''Handles EVAL statements.'''
-        assert node.category in {'UsingStmt', 'EvalStmt'}, repr(node)
+        assert node.category in set(('UsingStmt', 'EvalStmt')), repr(node)
 
         evaluators = []
         if node.category == 'UsingStmt':

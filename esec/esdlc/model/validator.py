@@ -80,7 +80,7 @@ class Validator(object):
             self._verify_expression(expr.right)
         elif tag == 'unaryop':
             self._verify_expression(expr.right)
-        elif tag in {'groupref', 'variable'}:
+        elif tag in set(('groupref', 'variable')):
             raise error.InvalidSyntaxError(expr.span)
         else:
             warnings.warn("Unhandled expression node %s (%r)" % (expr, expr))
@@ -132,7 +132,7 @@ class Validator(object):
         '''Verifies a function call.'''
         src = None    
         if stmt.name == '_call':
-            self._verify_parameterlist(stmt.parameters, valid_parameters={'_function'})
+            self._verify_parameterlist(stmt.parameters, valid_parameters=set(('_function',)))
             src = stmt.parameter_dict['_function']
             # src is validated below
         elif stmt.name == '_getattrib':
@@ -211,7 +211,7 @@ class Validator(object):
         if stmt.func.name != '_call':
             self._errors.append(error.InvalidFunctionCallError(stmt.func.span))
         else:
-            self._verify_parameterlist(stmt.func.parameters, valid_parameters={'_function', '_source'})
+            self._verify_parameterlist(stmt.func.parameters, valid_parameters=set(('_function', '_source')))
             func = stmt.func.parameter_dict['_function']
             assert isinstance(func, VariableRef), repr(func)
             self._verify_variable(func.id, func.span)

@@ -28,24 +28,24 @@ class Validator(object):
         if stmt is None: return True
 
         result = True
-        if stmt.category in {'block', 'expr'}:
+        if stmt.category in set(('block', 'expr')):
             for node in (stmt.expr or []):
                 self.validate(node)
-        elif stmt.category in {'FromStmt', 'JoinStmt'}:
+        elif stmt.category in set(('FromStmt', 'JoinStmt')):
             result &= getattr(self, '_validate_' + stmt.category)(stmt)
             result &= self._update_groups(stmt, allow_function=True)
-        elif stmt.category in {'SelectStmt', 'IntoStmt'}:
+        elif stmt.category in set(('SelectStmt', 'IntoStmt')):
             result &= getattr(self, '_validate_' + stmt.category)(stmt)
             result &= self._update_groups(stmt, allow_size=True, repeats_error=error.RepeatedDestinationGroupError)
         elif stmt.category == 'UsingStmt':
             result &= self._validate_UsingStmt(stmt)
             result &= self._update_functions(stmt)
-        elif stmt.category in {'EvalStmt', 'YieldStmt'}:
+        elif stmt.category in set(('EvalStmt', 'YieldStmt')):
             result &= getattr(self, '_validate_' + stmt.category)(stmt)
             result &= self._update_groups(stmt, repeats_error=error.RepeatedGroupError)
-        elif stmt.category in {'assign', 'name', 'dot', 'comma', 'op'}:
+        elif stmt.category in set(('assign', 'name', 'dot', 'comma', 'op')):
             result &= getattr(self, '_validate_' + stmt.category)(stmt)
-        elif stmt.category in {'pragma'}:
+        elif stmt.category in set(('pragma',)):
             pass
         else:
             warnings.warn("Unhandled statement type: %s" % stmt.category)
@@ -80,7 +80,7 @@ class Validator(object):
             
             if name_node is None:
                 errors.append(error.ExpectedGroupError(node.fulltokens))
-            elif size_node is not None and size_node.rightmost.category not in {'expr', 'name', 'number'}:
+            elif size_node is not None and size_node.rightmost.category not in set(('expr', 'name', 'number')):
                 errors.append(error.InvalidGroupError(size_node.fulltokens))
                 seen_any = True
             elif size_node is not None and allow_size == False:
@@ -92,7 +92,7 @@ class Validator(object):
                 else:
                     errors.append(error.InvalidGroupError(name_node.rightmost.fulltokens))
                 seen_any = True
-            elif name_node.category not in {'name', 'dot'}:
+            elif name_node.category not in set(('name', 'dot')):
                 errors.append(error.InvalidGroupError(name_node.tokens, name_node.text))
                 seen_any = True
             else:
@@ -143,7 +143,7 @@ class Validator(object):
 
     def _validate_SelectStmt(self, node):
         '''Validates a SelectStmt node.'''
-        if node.parent is not None and node.parent.category not in {'block', 'UsingStmt'}:
+        if node.parent is not None and node.parent.category not in set(('block', 'UsingStmt')):
             self.errors.append(error.InvalidSyntaxError(node.tokens))
             return False
         elif node.left is None or node.left.category != 'FromStmt':
@@ -175,7 +175,7 @@ class Validator(object):
 
     def _validate_IntoStmt(self, node):
         '''Validates an IntoStmt node.'''
-        if node.parent is not None and node.parent.category not in {'block', 'UsingStmt'}:
+        if node.parent is not None and node.parent.category not in set(('block', 'UsingStmt')):
             self.errors.append(error.InvalidSyntaxError(node.tokens))
             return False
         elif node.left is None or node.left.category != 'JoinStmt':
@@ -193,7 +193,7 @@ class Validator(object):
     
     def _validate_UsingStmt(self, node):
         '''Validates a UsingStmt node.'''
-        if node.left is None or node.left.category not in {'SelectStmt', 'IntoStmt', 'EvalStmt'}:
+        if node.left is None or node.left.category not in set(('SelectStmt', 'IntoStmt', 'EvalStmt')):
             self.errors.append(error.InvalidSyntaxError((node.left or node).fulltokens))
             return False
 
@@ -201,7 +201,7 @@ class Validator(object):
 
     def _validate_EvalStmt(self, node):
         '''Validates an EvalStmt node.'''
-        if node.parent is not None and node.parent.category not in {'block', 'UsingStmt'}:
+        if node.parent is not None and node.parent.category not in set(('block', 'UsingStmt')):
             self.errors.append(error.InvalidSyntaxError(node.fulltokens))
             return False
         elif node.right is None:
@@ -212,7 +212,7 @@ class Validator(object):
 
     def _validate_YieldStmt(self, node):
         '''Validates an YieldStmt node.'''
-        if node.parent is not None and node.parent.category not in {'block'}:
+        if node.parent is not None and node.parent.category not in set(('block',)):
             self.errors.append(error.InvalidSyntaxError(node.fulltokens))
             return False
         elif node.right is None:
@@ -282,11 +282,11 @@ class Validator(object):
             return True
         elif node.category == 'assign':
             return self._validate_assign(node)
-        elif node.category in {'name', 'dot'}:
+        elif node.category in set(('name', 'dot')):
             return self._validate_name(node)
         elif node.category == 'comma':
             return self._validate_comma(node)
-        elif node.category in {'op'}:
+        elif node.category in set(('op',)):
             if node.tag in "*/^%" and node.left is None:
                 self.errors.append(error.InvalidSyntaxError(node.fulltokens))
                 return False

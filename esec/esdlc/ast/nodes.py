@@ -122,7 +122,7 @@ class Node(object):
             node = next_node
         return node, direction
     
-    def iter_list(self, value_category=None, delimiter_category={'comma'}):
+    def iter_list(self, value_category=None, delimiter_category=set(('comma',))):
         '''Iterates through a list delimited by nodes in category
         `delimiter_category`.
         '''

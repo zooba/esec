@@ -113,12 +113,15 @@
     <Compile Include="plugins\ACO\__init__.py" />
     <Compile Include="plugins\ACO\pheromone.py" />
     <Compile Include="plugins\ACO\tsp.py" />
+    <Compile Include="tests\esdlc\test_ast.py" />
+    <Compile Include="tests\esdlc\test_emitters_esdl.py" />
+    <Compile Include="tests\esdlc\test_model.py" />
+    <Compile Include="tests\esdlc\test_model_ast.py" />
+    <Compile Include="tests\esdlc\test_model_validator.py" />
     <Compile Include="tests\__init__.py" />
     <Compile Include="tests\test_utils.py" />
     <Compile Include="tests\esdlc\__init__.py" />
     <Compile Include="tests\esdlc\test_lexer.py" />
-    <Compile Include="tests\esdlc\test_nodes.py" />
-    <Compile Include="tests\esdlc\test_parser.py" />
     <Compile Include="tests\generators\__init__.py" />
     <Compile Include="tests\generators\test_filters.py" />
     <Compile Include="tests\generators\test_joiners.py" />
