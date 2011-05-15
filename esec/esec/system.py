@@ -110,7 +110,7 @@ class System(object):
         global_context.notify = context['notify']
         
         self.monitor = monitor or MonitorBase()
-        self.selector = self.cfg['selector'] or model.block_names
+        self.selector = self.cfg['selector'] or [name for name in model.block_names if name != model.INIT_BLOCK_NAME]
         self.selector_current = iter(self.selector)
         
         for func in model.externals.iterkeys():
