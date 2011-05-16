@@ -161,6 +161,14 @@ class Validator(object):
             else:
                 self._errors.append(error.InvalidAssignmentError(stmt.span))
             src = None
+        elif stmt.name == '_alias':
+            params = stmt.parameter_dict
+            src, dest = params['_source'], params['_destination']
+            if not isinstance(src, GroupRef):
+                self._errors.append(error.InvalidAssignmentError(src.span))
+            if not isinstance(dest, GroupRef):
+                self._errors.append(error.InvalidAssignmentError(dest.span))
+            src = None
         else:
             self._errors.append(error.InvalidFunctionCallError(stmt.span))
         

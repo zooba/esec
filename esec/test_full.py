@@ -22,16 +22,21 @@ class Interpreter(object):
 
     def run(self, script, *arguments):
         import subprocess
-        if self.path and script:
-            args = [self.path]
-            if self.interpreter_args:
-                args.extend(self.interpreter_args)
-            if isinstance(script, str):
-                args.append(script)
-            else:
-                args.extend(script)
-            args.extend(arguments)
-            self._proc = subprocess.Popen(args, stdin=None, stdout=open("NUL", "w"), stderr=open(self._temp_file, "w"))
+        try:
+            if self.path and script:
+                args = [self.path]
+                if self.interpreter_args:
+                    args.extend(self.interpreter_args)
+                if isinstance(script, str):
+                    args.append(script)
+                else:
+                    args.extend(script)
+                args.extend(arguments)
+                self._proc = subprocess.Popen(args, stdin=None, stdout=open("NUL", "w"), stderr=open(self._temp_file, "w"))
+        except (IOError, WindowsError):
+            self._proc = None
+            try: os.remove(self._temp_file)
+            except: pass
 
     def wait(self):
         if self._proc:
@@ -111,7 +116,9 @@ def run_nosetests(interpreters):
         print
         print "Failures in unit tests."
         print
+    return all_succeeded
 
+def run_regression(interpreters):
     print 'Running Regression batch file'
     for i in interpreters:
         import shutil
@@ -120,24 +127,27 @@ def run_nosetests(interpreters):
 
     all_succeeded = True
     for i in interpreters:
-        errors = i.wait()
-        if errors:
-            all_succeeded = False
-            print 'Failure for', i
-            i.log(''.join(errors))
+        try:
+            errors = i.wait()
+            if errors:
+                all_succeeded = False
+                print 'Failure for', i
+                i.log(''.join(errors))
 
-        for line in open('results/Test_%s/_summary.txt' % i.safe_name):
-            bits = [bit for bit in line.split(' ') if bit]
-            if bits[0] == '#': continue
+            for line in open('results/Test_%s/_summary.txt' % i.safe_name):
+                bits = [bit for bit in line.split(' ') if bit]
+                if bits[0] == '#': continue
 
-            if bits[4] != 'ITER_LIMIT' and bits[6] != 'ITER_LIMIT':
-                i.log(line)
+                if bits[4] != 'ITER_LIMIT' and bits[6] != 'ITER_LIMIT':
+                    i.log(line)
+        except (IOError, WindowsError):
+            pass
         i.reset()
 
     if not all_succeeded:
         print
         print "Failures in regression tests."
-
+    return all_succeeded
 
 
 if __name__ == '__main__':
@@ -148,4 +158,4 @@ if __name__ == '__main__':
     
     clean(interpreters)
     run_nosetests(interpreters)
-
+    run_regression(interpreters)

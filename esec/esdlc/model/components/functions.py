@@ -45,6 +45,14 @@ class Function(object):
         inst = Function("_assign", span)
         inst.parameters = ParameterList.from_args(_source=source, _destination=destination)
         return inst
+    
+    @classmethod
+    def alias(cls, destination, source, span=None):
+        '''Instantiates a group alias.
+        '''
+        inst = Function("_alias", span)
+        inst.parameters = ParameterList.from_args(_source=source, _destination=destination)
+        return inst
 
     def __init__(self, name, span=None):
         self.name = name
@@ -73,6 +81,8 @@ class Function(object):
             return '%s(%s)' % (src, args)
         elif self.name == '_assign':
             return '%(_destination)s = %(_source)s' % self.parameter_dict
+        elif self.name == '_alias':
+            return '%(_destination)s := %(_source)s' % self.parameter_dict
         elif self.name == '_getattrib':
             return '%(_source)s.%(_attrib)s' % self.parameter_dict
         elif self.name == '_getindex':
@@ -94,6 +104,10 @@ class Function(object):
                 raise TypeError("Cannot assign to '%s'" % dest.name)
             src = args['_source'].execute(context)
             context[dest.name] = src
+        elif self.name == '_alias':
+            args = self.parameter_dict
+            dest = args['_destination'].id
+            dest.alias = args['_source']
         elif self.name == '_getattrib':
             args = self.parameter_dict
             src = args['_source'].execute(context)

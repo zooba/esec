@@ -16,7 +16,18 @@ from esec.individual import Individual, OnIndividual
 import esec.generators  #pylint: disable=W0611
 from esec.species import SPECIES
 
-from esec.context import _context as global_context
+import esec.context
+
+class GroupAlias(object):
+    '''Represents an aliased group.'''
+    def __init__(self, dest_name, source_name):
+        self._source_name = source_name
+        esec.context.context[dest_name] = self
+
+    def __len__(self):                  return esec.context.context[self._source_name].__len__()
+    def __iter__(self):                 return esec.context.context[self._source_name].__iter__()
+    def __getitem__(self, key):         return esec.context.context[self._source_name].__getitem__(key)
+    def __setitem__(self, key, value):  return esec.context.context[self._source_name].__setitem__(key, value)
 
 class System(object):
     '''Provides a system using a dynamically generated controller.
@@ -98,16 +109,17 @@ class System(object):
         self._code_string, internal_context = emit(model, out=None, optimise_level=0)
         
         internal_context['_yield'] = lambda name, group: self.monitor.on_yield(self, name, group)
+        internal_context['_alias'] = GroupAlias
         
         for key, value in internal_context.iteritems():
             if key in context:
                 warn("Variable/function '%s' is overridden by internal value" % key)
             context[key] = value
 
-        global_context.context = context
-        global_context.config = context['config']
-        global_context.rand = context['rand']
-        global_context.notify = context['notify']
+        esec.context._context.context = context
+        esec.context._context.config = context['config']
+        esec.context._context.rand = context['rand']
+        esec.context._context.notify = context['notify']
         
         self.monitor = monitor or MonitorBase()
         self.selector = self.cfg['selector'] or [name for name in model.block_names if name != model.INIT_BLOCK_NAME]

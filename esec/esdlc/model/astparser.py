@@ -116,6 +116,15 @@ class AstSystem(System):
     def _assignment(self, node):
         '''Handles assignment nodes.'''
         assert node.category == 'assign', repr(node)
+        if (node.right and node.right.category == 'name' and node.rightmost is node.right and
+            node.left and node.left.category == 'name' and node.left.rightmost is node.left):
+            var = self._variable(node.right)
+            if any(i.tag == 'groupref' for i in var.references):
+                return Function.alias(GroupRef(self._variable(node.left), span=node.left.tokens),
+                                      GroupRef(var, span=node.right.tokens),
+                                      node.fulltokens)
+            else:
+                return Function.assign(self._expression(node.left), var, node.fulltokens)
         return Function.assign(self._expression(node.left), self._expression(node.right), node.fulltokens)
 
     def _expression(self, node):

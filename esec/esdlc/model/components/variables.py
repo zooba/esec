@@ -77,6 +77,9 @@ class Variable(object):
         '''The list of tokens constituting the original definition of
         this variable. Each reference may have its own distinct span.
         '''
+        self.alias = None
+        '''The original variable aliased by this variable. This is not
+        valid except when executing the model.'''
 
     def __str__(self):
         return self.name
@@ -85,5 +88,7 @@ class Variable(object):
         '''Returns the current value for this variable.'''
         if self.constant:
             return self.value
+        elif self.alias:
+            return self.alias.execute(context)
         else:
             return context[self.name]

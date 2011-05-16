@@ -13,6 +13,10 @@ ILLEGAL_VARIABLE_NAMES = frozenset((
     'raise', 'return', 'try', 'while', 'with', 'yield'
 ))
 
+def _alias(dest, source):
+    '''Makes `dest` an alias for `source`. Both are strings.'''
+    globals()[dest] = globals()[source]
+
 def _range(count=None):
     '''Returns a sequence of length `count`. If `count` is ``None``,
     returns an empty sequence.
@@ -74,6 +78,7 @@ def _yield(source_name, source_group):  #pylint: disable=W0613
     pass
 
 DEFAULT_CONTEXT = {
+    '_alias': _alias,
     '_group': _group,
     '_merge': _merge,
     '_join': _join,
@@ -94,7 +99,7 @@ class _emitter(object): #pylint: disable=R0903
         self.code = []
         self._indent = 0
         self._current_line = None
-        self.optimise = bool(optimise_level > 0)
+        self.optimise = optimise_level
 
         self._wl("_global = globals()")
 
@@ -138,7 +143,7 @@ class _emitter(object): #pylint: disable=R0903
     def _emit(self, stmt):
         '''Emits code for the provided statement.'''
         tag = stmt.tag
-        if not self.optimise:    
+        if self.optimise < 3:
             self._w('# ')
             self._wl(str(stmt))
         if tag == 'repeatblock':
@@ -156,7 +161,7 @@ class _emitter(object): #pylint: disable=R0903
             self._emit_pragma(stmt)
         else:
             assert False, "Invalid statement: %s" % stmt
-        if not self.optimise: self._wl()
+        if self.optimise < 3: self._wl()
 
     def _emit_pragma(self, stmt):
         '''Emits code for pragmas.'''
@@ -212,6 +217,8 @@ class _emitter(object): #pylint: disable=R0903
         '''Emits code for functions.'''
         if expr.name == '_call':
             self._emit_call(expr)
+        elif expr.name == '_alias':
+            self._emit_alias(expr)
         elif expr.name == '_assign':
             self._emit_assign(expr)
         elif expr.name == '_getattrib':
@@ -251,6 +258,18 @@ class _emitter(object): #pylint: disable=R0903
                 self._w(', ')
                 self._emit_param(arg)
         self._w(')')
+
+    def _emit_alias(self, expr):
+        '''Emits code for alias statements.'''
+        dest = expr.parameter_dict['_destination']
+        src = expr.parameter_dict['_source']
+        assert dest.tag == 'groupref' and src.tag == 'groupref'
+
+        self._w('_alias("')
+        self._emit_variable(dest.id, name_only=True)
+        self._w('", "')
+        self._emit_variable(src.id, name_only=True)
+        self._w('")')
 
     def _emit_assign(self, expr):
         '''Emits code for assignment statements.'''
@@ -304,7 +323,7 @@ class _emitter(object): #pylint: disable=R0903
 
     def _emit_store(self, stmt):
         '''Emits code for Store statements.'''
-        if self.optimise:
+        if self.optimise > 0:
             self._emit_store_optimised(stmt)
             return
 
@@ -408,7 +427,7 @@ class _emitter(object): #pylint: disable=R0903
                     
     def _emit_repeat(self, block):
         '''Emits code for REPEAT blocks.'''
-        if (self.optimise and 
+        if (self.optimise > 1 and 
             block.count.tag == 'variableref' and block.count.id.tag == 'variable' and 
             block.count.id.constant and block.count.id.value <= 4):
             for _ in xrange(int(block.count.id.value)):
