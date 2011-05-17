@@ -12,9 +12,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from plugins.ACO import *
+import plugins.ACO
+import esec.landscape.sequence
 
-city_graph = tsp.Landscape(cost_map="cfgs/TSP/Oliver30.csv")
+city_graph = esec.landscape.sequence.TSP(cost_map="cfgs/TSP/Oliver30.csv")
 
 config = {
     'system': {
@@ -39,7 +40,7 @@ config = {
                 pheromone_map.update(source=ants, persistence=(rho), strength=(Q), minimisation)
             END GENERATION
         ''',
-        'create_pheromone_map': pheromone.PheromoneMap,
+        'create_pheromone_map': plugins.ACO.pheromone.PheromoneMap,
     },
     'monitor': {
         'report': 'brief+local_header+local_min+local_ave+local_max+local_unique+|+time',

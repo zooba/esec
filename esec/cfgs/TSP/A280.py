@@ -12,7 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from plugins.ACO import *
+import plugins.ACO
+import esec.landscape.sequence
 
 nodes = [
     (288,149), (288,129), (270,133), (256,141), (256,157), (246,157),
@@ -80,11 +81,11 @@ config = {
                                              strength=1, minimisation=True)
             END GENERATION
         ''',
-        'create_pheromone_map': pheromone.PheromoneMap,
+        'create_pheromone_map': plugins.ACO.pheromone.PheromoneMap,
         'size': 50,
     },
     'landscape': {
-        'class': tsp.Landscape,
+        'class': esec.landscape.sequence.TSP,
         'cost_map': nodes,
     },
     'monitor': {

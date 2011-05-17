@@ -12,7 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from plugins.ACO import *
+import plugins.ACO
+import esec.landscape.sequence
 
 config = {
     'system': {
@@ -30,11 +31,11 @@ config = {
                                              strength=1, minimisation=True)
             END GENERATION
         ''',
-        'create_pheromone_map': pheromone.PheromoneMap,
+        'create_pheromone_map': plugins.ACO.pheromone.PheromoneMap,
         'size': 10,
     },
     'landscape': {
-        'class': tsp.Landscape,
+        'class': esec.landscape.sequence.TSP,
         'cost_map': 'cfgs/TSP/U2319.csv',
     },
     'monitor': {

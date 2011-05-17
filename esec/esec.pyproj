@@ -16,7 +16,7 @@
     <InterpreterId>9a7a9026-48c1-4688-9d5d-e5699d47d074</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>-c GA+RVP.Sphere+n10</CommandLineArguments>
+    <CommandLineArguments>-c Packing+noseed</CommandLineArguments>
     <InterpreterPath />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -28,6 +28,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="cfgs\TSP\Oliver30_2.py" />
     <Compile Include="dialects.py" />
     <Compile Include="run.py" />
     <Compile Include="cfgs\__init__.py" />
@@ -118,6 +119,7 @@
     <Compile Include="tests\esdlc\test_model.py" />
     <Compile Include="tests\esdlc\test_model_ast.py" />
     <Compile Include="tests\esdlc\test_model_validator.py" />
+    <Compile Include="tests\species\test_sequence.py" />
     <Compile Include="tests\__init__.py" />
     <Compile Include="tests\test_utils.py" />
     <Compile Include="tests\esdlc\__init__.py" />

@@ -17,6 +17,7 @@
 
 import pheromone
 import tsp
+import esec.landscape.sequence
 
 #==============================================================================
 
@@ -47,7 +48,7 @@ configs = {
     # The ACO.TSP configuration name may be used to load settings for running the TSP problem.
     'ACO.TSP': {
         'landscape': {
-            'class': tsp.Landscape,
+            'class': esec.landscape.sequence.TSP,
         },
         'system': {
             'definition': TSP_DEF,
@@ -55,13 +56,13 @@ configs = {
         },
         'monitor': {
             'primary': 'ants',
-            'report': 'brief_int+local_header+local_min_int+local_ave+local_max_int+|+time_delta'
+            'report': 'brief+local_header+local_min+local_ave+local_max+|+time_delta'
         },
     },
     # The berlin52 configuration name specifies the cost settings associated with the TSP landscape.
     'berlin52': {
         'landscape': {
-            'cost_map': tsp.Landscape.berlin52_map,
+            'cost_map': esec.landscape.sequence.TSP.berlin52_map,
         },
         'monitor': {
             'limits': {
