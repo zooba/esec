@@ -106,7 +106,7 @@ class System(object):
         model, self.validation_result = compileESDL(self.definition, context)
         if not self.validation_result:
             raise ESDLCompilerError(self.validation_result, "Errors occurred while compiling system.")
-        self._code_string, internal_context = emit(model, out=None, optimise_level=0)
+        self._code_string, internal_context = emit(model, out=None, optimise_level=0, profile='_profiler' in context)
         
         internal_context['_yield'] = lambda name, group: self.monitor.on_yield(self, name, group)
         internal_context['_alias'] = GroupAlias

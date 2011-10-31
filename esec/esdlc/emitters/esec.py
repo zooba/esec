@@ -6,12 +6,26 @@ import sys
 from warnings import warn
 
 ILLEGAL_VARIABLE_NAMES = frozenset((
-    'and', 'as', 'assert', 'break', 'class', 'continue',
-    'def', 'del', 'elif', 'else', 'except', 'exec',
-    'finally', 'for', 'from', 'global', 'if', 'import',
-    'in', 'is', 'lambda', 'not', 'or', 'pass', 'print',
+    'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
+    'else', 'except', 'exec', 'finally', 'for', 'from', 'global', 'globals',
+    'if', 'import', 'in', 'is', 'lambda', 'not', 'or', 'pass', 'print',
     'raise', 'return', 'try', 'while', 'with', 'yield'
 ))
+
+class Profiler(object):
+    '''Tracks statement execution time.'''
+    def __init__(self):
+        self.data = []
+
+    def _current_time(self):
+        return 0
+
+    def start(self, statement):
+        self.data.append(None)
+        self.data[-1] = (statement, 0, self._current_time())
+
+    def end(self, statement):
+        self.data.append((statement, 1, self._current_time()))
 
 def _alias(dest, source):
     '''Makes `dest` an alias for `source`. Both are strings.'''
@@ -93,13 +107,14 @@ class _emitter(object): #pylint: disable=R0903
     '''
     INDENT = '    '
 
-    def __init__(self, model, optimise_level=0):
+    def __init__(self, model, optimise_level=0, profile=False):
         self.model = model
         self.context = dict(DEFAULT_CONTEXT)
         self.code = []
         self._indent = 0
         self._current_line = None
         self.optimise = optimise_level
+        self.profile = profile
 
         self._wl("_global = globals()")
 
@@ -135,8 +150,16 @@ class _emitter(object): #pylint: disable=R0903
         '''Emits code for a named block.'''
         self._wl("def _block_" + block_name.lower() + "():")
         self._indent += 1
-        for stmt in statements:
-            self._emit(stmt)
+        if self.profile:
+            self._wl("_profiler.start('BLOCK %s')" % block_name)
+            for stmt in statements:
+                self._wl("_profiler.start('%s')" % stmt)
+                self._emit(stmt)
+                self._wl("_profiler.end('%s')" % stmt)
+            self._wl("_profiler.end('BLOCK %s')" % block_name)
+        else:
+            for stmt in statements:
+                self._emit(stmt)
         self._indent -= 1
         self._wl()
 
@@ -442,10 +465,10 @@ class _emitter(object): #pylint: disable=R0903
                 self._emit(stmt)
             self._indent -= 1
 
-def emit(model, out=sys.stdout, optimise_level=0):
+def emit(model, out=sys.stdout, optimise_level=0, profile=False):
     '''Converts the provided model to ``esec`` compatible code.
     '''
-    result = _emitter(model, optimise_level)
+    result = _emitter(model, optimise_level, profile)
     if out is not None:
         for line in result.code:
             print >> out, line

@@ -7,6 +7,7 @@ The `JoinedSpecies.crossover_tuple` operation is specifically designed
 for joined individuals.
 '''
 
+import itertools
 from esec.context import rand
 from esec.individual import Individual
 from esec.species import Species
@@ -114,7 +115,6 @@ class JoinedSpecies(Species):
         equal_per_gene_rate = (per_gene_rate is None)
         
         frand = rand.random
-        choice = rand.choice
         
         for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
@@ -122,14 +122,14 @@ class JoinedSpecies(Species):
                 # Iterate through tuples of the genes at each point in the
                 # genomes, filling with None if an individual is shorter
                 # than the rest.
-                for genes in map(lambda *args: args, *(i.genome for i in indiv)):
+                for genes in itertools.izip_longest(*(i.genome for i in indiv)):
                     genes = [i for i in genes if i is not None]
                     len_genes = len(genes)
                     if len_genes == 0: break
                     elif len_genes == 1: new_genes.append(genes[0])
-                    elif equal_per_gene_rate: new_genes.append(choice(genes))
+                    elif equal_per_gene_rate: new_genes.append(genes[int(frand()*len_genes)])
                     elif frand() >= per_gene_rate: new_genes.append(genes[0])
-                    else: new_genes.append(choice(genes[1:]))
+                    else: new_genes.append(genes[int(frand()*(len_genes-1)+1)])
                 yield type(indiv[0])(new_genes, indiv[0], statistic={ 'recombined': 1 })
             else:
                 yield indiv[0]
