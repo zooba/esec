@@ -188,7 +188,8 @@ class _emitter(object): #pylint: disable=R0903
 
     def _emit_pragma(self, stmt):
         '''Emits code for pragmas.'''
-        self._wl(stmt.text, preflush=True)
+        if stmt.text and stmt.text.startswith('py '):
+            self._wl(stmt.text[3:], preflush=True)
 
     def _emit_yield(self, stmt):
         '''Emits code for YIELD statements.'''
