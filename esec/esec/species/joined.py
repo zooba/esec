@@ -41,6 +41,21 @@ class JoinedIndividual(Individual):
         '''
         super(JoinedIndividual, self).__init__(members, parent or JoinedSpecies.instance)
 
+    @property
+    def genome_string(self):
+        '''Returns a string representation of the genes of this individual.
+        '''
+        return '{[' + '], ['.join([g.genome_string for g in self.genome]) + ']}'
+    
+    @property
+    def phenome_string(self):
+        '''Returns a string representation of the phenome of this individual.
+        '''
+        if self._eval and hasattr(self._eval, 'phenome_string'):
+            try: return self._eval.phenome_string(self)
+            except AttributeError: pass
+        return '{[' + '], ['.join([p.phenome_string for p in self.phenome]) + ']}'
+
 
 class JoinedSpecies(Species):
     '''Species class for joined individuals. Joined individuals do not
