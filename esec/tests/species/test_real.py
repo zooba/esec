@@ -1,6 +1,7 @@
 import tests
 from itertools import islice, chain
 import esec.species.real as real
+from esec.generators import selectors
 
 from esec.context import rand, notify
 
@@ -62,6 +63,15 @@ def test_mutate():
         ]:
         
         yield check_mutate, gen, params, expected_genes
+
+def test_crossover_average():
+    pop = _make_pop(Species.init_toggle, length=10, lowest=0.0, highest=1.0)
+    
+    pop2 = _make_pop(Species.crossover_average, _source=selectors.Repeat(iter(pop)), per_pair_rate=0.0)
+    assert all(all(g == 0.0 for g in i.genome) for i in pop2), "didn't return first individual of each pair"
+    
+    pop2 = _make_pop(Species.crossover_average, _source=selectors.Repeat(iter(pop)), per_pair_rate=1.0, per_gene_rate=1.0)
+    assert all(all(g == 0.5 for g in i.genome) for i in pop2), "didn't average each gene"
 
 def check_init_length_int(gen, expected_genes):
     pop = _make_pop(gen, length=10, lowest=0.0, highest=1.0)

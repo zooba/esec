@@ -7,6 +7,7 @@ import math
 from esec.species import Species
 from esec.individual import Individual
 from esec.context import rand
+import esec.utils as utils
 
 # Disabled: method could be a function
 #pylint: disable=R0201
@@ -267,6 +268,74 @@ class RealSpecies(Species):
         while True:
             yield next(high_gen)
             yield next(low_gen)
+    
+    def crossover_average(self, _source, per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=1.0): #pylint: disable=W0613
+        '''Performs crossover by averaging the gene values from two individuals
+        to create a single offspring.
+        
+        Returns a sequence of crossed individuals based on the
+        individuals in `_source`.
+        
+        The number of individuals returned is half the number of individuals in
+        `_source`, rounded towards zero.
+        
+        .. include:: epydoc_include.txt
+        
+        :Parameters:
+          _source : iterable(`Individual`)
+            A sequence of individuals. Individuals are taken two at a
+            time from this sequence and recombined to produce one new
+            individual.
+          
+          per_pair_rate : |prob|
+            The probability of any particular pair of individuals being
+            recombined. If two individuals are not recombined, the first
+            is returned unmodified.
+            
+            If this is ``None``, the value of `per_indiv_rate` is used.
+          
+          per_indiv_rate : |prob|
+            A synonym for `per_pair_rate`.
+          
+          per_gene_rate : |prob|
+            The probability of any particular gene position in a pair
+            of individuals being averaged. If averaging does not occur,
+            the value from the first individual of the pair is retained.
+        '''
+        assert per_pair_rate is not True, "per_pair_rate has no value"
+        assert per_indiv_rate is not True, "per_indiv_rate has no value"
+        assert per_gene_rate is not True, "per_indiv_rate has no value"
+        
+        if per_pair_rate is None: per_pair_rate = per_indiv_rate
+        if per_pair_rate <= 0.0 or per_gene_rate <= 0.0:
+            skip = True
+            for indiv in _source:
+                if not skip: yield indiv
+                skip = not skip
+            raise StopIteration
+        
+        do_all_pairs = (per_pair_rate >= 1.0)
+        do_all_genes = (per_gene_rate >= 1.0)
+        
+        frand = rand.random
+        
+        for i1, i2 in utils.pairs(_source):
+            if do_all_pairs or frand() < per_pair_rate:
+                i1_genome, i2_genome = i1.genome, i2.genome
+                i1_len, i2_len = len(i1_genome), len(i2_genome)
+                
+                new_genes = list(i1_genome)
+                
+                if do_all_genes:
+                    for i, g2 in enumerate(i2_genome):
+                        new_genes[i] = (new_genes[i] + g2) / 2
+                else:
+                    for i, g2 in enumerate(i2_genome):
+                        if frand() < per_gene_rate:
+                            new_genes[i] = (new_genes[i] + g2) / 2
+                
+                i1 = type(i1)(new_genes, i1, statistic={ 'recombined': 1 })
+            yield i1
     
     def mutate_random(self, _source, per_indiv_rate=1.0, per_gene_rate=0.1, genes=None):
         '''Mutates a group of individuals by replacing genes with random values.
