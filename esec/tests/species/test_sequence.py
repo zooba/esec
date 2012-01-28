@@ -112,7 +112,7 @@ def check_mutate(gen, params, expected_genes):
 
 def check_repair(gen, params, expected_genes):
     pop = _make_pop(Species.init_random, length=10)
-    pop2 = _make_pop(Species.crossover_one, _source=iter(pop), per_pair_rate=1.0)
+    pop2 = _make_pop(Species.crossover_one, _source=iter(pop), per_pair_rate=1.0, two_children=True)
     pop3 = _make_pop(gen, _source=iter(pop2), **params)
     
     for genes in (i.genome for i in pop3):

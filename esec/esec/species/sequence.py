@@ -124,7 +124,7 @@ class SequenceSpecies(Species):
         while True:
             yield SequenceIndividual(genes, parent=self)
     
-    def repair(self, _source, randomly=False, sequentially=False):
+    def repair(self, _source, randomly=True, sequentially=False):
         '''Repairs a group of individuals by replacing duplicate values.
         
         If `sequentially` is ``False``, repairs are performed by
@@ -163,17 +163,17 @@ class SequenceSpecies(Species):
                 dups[g].append(i)
             dups = dict(i for i in dups.iteritems() if len(i[1]) > 1)
             
-            if sequentially:
-                wants = list(sorted(needs - has))
-                for i in sorted(chain.from_iterable(islice(i, 1, None) for i in dups.itervalues())):
-                    new_genes[i] = wants.pop(0)
-            else:
+            if randomly and not sequentially:
                 wants = list(needs - has)
                 rand.shuffle(wants)
                 for locs in dups.itervalues():
                     while len(locs) > 1:
                         i = locs.pop(rand.randrange(len(locs)))
                         new_genes[i] = wants.pop(0)
+            else:
+                wants = list(sorted(needs - has))
+                for i in sorted(chain.from_iterable(islice(i, 1, None) for i in dups.itervalues())):
+                    new_genes[i] = wants.pop(0)
             
             yield type(indiv)(genes=new_genes, parent=indiv, statistic={'repaired': 1})
     

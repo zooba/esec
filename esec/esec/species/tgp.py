@@ -21,9 +21,10 @@ class TgpIndividual(Individual):
     mutation operations without being respecified.
     '''
     def __init__(self, genes, parent,
-        instructions=None, instruction_set=None, terminals=2,
-        constant_bounds=None, constant_type=None, fixed_root=False,
-        statistic=None):
+                 instructions=None, instruction_set=None, terminals=2,
+                 constant_bounds=None, constant_type=None, fixed_root=False,
+                 statistic=None):
+
         '''Initialises a new `TgpIndividual`. Instances are generally
         created using the initialisation methods provided by
         `TgpSpecies`.

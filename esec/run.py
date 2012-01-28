@@ -178,11 +178,16 @@ def _load_module(folder, mod_name):
         Returns ``None`` if the module cannot be found.
     '''
     mod_file = os.path.join(*mod_name.split('.')) if '.' in mod_name else mod_name
-    py_import = os.path.join(folder, mod_file + '.py')
-    init_import = os.path.join(folder, mod_file, '__init__.py')
-    py_file = os.path.join(folder, mod_name + '.py')
+    if folder:
+        py_import = os.path.join(folder, mod_file + '.py')
+        init_import = os.path.join(folder, mod_file, '__init__.py')
+        py_file = os.path.join(folder, mod_name + '.py')
+    else:
+        py_import = None
+        init_import = None
+        py_file = mod_name + '.py'
     
-    if os.path.exists(py_import) or os.path.exists(init_import):
+    if py_import and os.path.exists(py_import) or init_import and os.path.exists(init_import):
         source = folder + '.' + mod_name
         mod = __import__(source)
         for bit in mod_name.split('.'):
@@ -223,7 +228,7 @@ def _load_config(config_string, defaults):
             cfg.overlay(cfg[name])
         # Attempt to load module from cfgs or plugins
         else:
-            mod = _load_module('cfgs', name) or _load_module('plugins', name)
+            mod = _load_module('cfgs', name) or _load_module('plugins', name) or _load_module(None, name)
             if not mod:
                 raise ImportError('Cannot find ' + name + ' as configuration or plugin.')
             
@@ -282,7 +287,8 @@ def esec_run(options):
     definition, since no built-in dialect is specified.
     '''
     
-    print "  ** Configuration names: ", options.config
+    if not options.nologo:
+        print "  ** Configuration names: ", options.config
     
     # Loading defaults and the configuration names specified.
     cfg = _load_config(options.config, default)
@@ -322,7 +328,8 @@ def esec_run(options):
     if ea_app:
         start_time = time.clock()
         ea_app.run()
-        print '->> DONE <<- in ', (time.clock() - start_time)
+        if not options.nologo:
+            print '->> DONE <<- in ', (time.clock() - start_time)
     else:
         print '--> ERRORS OCCURRED <--'
 
@@ -687,15 +694,11 @@ def esec_batch(options):
 def main():
     '''The main entry point for ``run.py``.
     '''
-    # Banner
-    print HR,
-    print ' esec: EcoSystem Evolutionary Computation'
-    print ' Copyright (c) Clinton Woodward and Steve Dower 2010-2011'
-    print HR
-    
     # Check for arguments
     parser = optparse.OptionParser()
     # Options are ...
+    parser.add_option('--nologo', action="store_true", default=False,
+                      help="don't display banner and version info")
     parser.add_option('-o', '--optimise', action="store_true", default=False,
                       help='use psyco optimisation')
     parser.add_option('-p', '--profile', action="store_true", default=False,
@@ -717,6 +720,13 @@ def main():
     
     # Keep the processed options and any remaining items
     options, _ = parser.parse_args()
+    
+    if not options.nologo:
+        # Banner
+        print HR,
+        print ' esec: EcoSystem Evolutionary Computation'
+        print ' Copyright (c) Clinton Woodward and Steve Dower 2010-2011'
+        print HR
     
     # Ignore some options under IronPython
     if is_ironpython():

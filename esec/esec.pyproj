@@ -16,8 +16,10 @@
     <InterpreterId>9a7a9026-48c1-4688-9d5d-e5699d47d074</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>-c Packing+noseed</CommandLineArguments>
+    <CommandLineArguments>-c es_esec</CommandLineArguments>
     <InterpreterPath />
+    <InterpreterArguments>
+    </InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,6 +32,7 @@
   <ItemGroup>
     <Compile Include="cfgs\TSP\Oliver30_2.py" />
     <Compile Include="dialects.py" />
+    <Compile Include="esec\species\sequence.py" />
     <Compile Include="run.py" />
     <Compile Include="cfgs\__init__.py" />
     <Compile Include="cfgs\DERosenbrock.py" />

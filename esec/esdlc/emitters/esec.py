@@ -358,13 +358,16 @@ class _emitter(object): #pylint: disable=R0903
         while op.tag not in set(('merge', 'join')):
             op_stack.append(op)
             op = op.source
-            
+
         self._w("_gen = _" + op.tag + "(")
         self._emit_expression(op.sources[0])
         for group in itertools.islice(op.sources, 1, None):
             self._w(", ")
             self._emit_expression(group)
         self._wl(")")
+
+        if op.tag == 'join' and not op_stack:
+            self._wl('_gen = tuples(_source=_gen)')
 
         while op_stack:
             op = op_stack.pop()
@@ -417,6 +420,10 @@ class _emitter(object): #pylint: disable=R0903
             self._w('_source=')
             closing += ')'
             op = op.source
+
+        if op.tag == 'join' and closing == ')':
+            self._w('tuples(_source=')
+            closing += ')'
 
         self._w('_' + op.tag + '(') # either '_merge()' or '_join()'
         self._emit_expression(op.sources[0])

@@ -238,7 +238,7 @@ def test_recombiners_PerGeneTuple_None():
     population = make_pop()
     joined = list(joiners.DistinctRandomTuples(_source=[population] * 2))
     
-    _gen = OnIndividual('crossover_tuple')(_source=iter(joined), per_indiv_rate=1.0, per_gene_rate=1.0)
+    _gen = OnIndividual('crossover_tuple')(_source=iter(joined), per_indiv_rate=1.0, greediness=1.0)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
@@ -248,7 +248,7 @@ def test_recombiners_PerGeneTuple_NotFromFirst():
     population = make_pop()
     joined = list(joiners.DistinctRandomTuples(_source=[population] * 2))
     
-    _gen = OnIndividual('crossover_tuple')(_source=iter(joined), per_indiv_rate=1.0, per_gene_rate=0.0)
+    _gen = OnIndividual('crossover_tuple')(_source=iter(joined), per_indiv_rate=1.0, greediness=0.0)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"
@@ -260,22 +260,7 @@ def test_recombiners_PerGeneTuple_AutoProb():
     population = make_pop()
     joined = list(joiners.DistinctRandomTuples(_source=[population] * 2))
     
-    _gen = OnIndividual('crossover_tuple')(_source=iter(joined), per_indiv_rate=1.0, per_gene_rate=None)
-    offspring = list(_gen)
-    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
-    assert len(offspring) == len(population), "Did not select all individuals"
-    assert all(g1 is not g2 for g1, g2 in izip(population, offspring)), "DistinctRandom failed"
-    assert all(g not in population for g in offspring), "Some individuals were not cloned"
-    assert sum(g.statistic.get('recombined', 0) for g in offspring) == len(offspring), "Some individuals were not recombined"
-    strikes = sum(len(set(g)) < 2 for g in offspring)
-    print "stikes:", strikes
-    assert strikes < 3, "Some individuals did not get two gene values"
-
-def test_recombiners_PerGeneTuple_HalfFromFirst():
-    population = make_pop()
-    joined = list(joiners.DistinctRandomTuples(_source=[population] * 2))
-    
-    _gen = OnIndividual('crossover_tuple')(_source=iter(joined), per_indiv_rate=1.0, per_gene_rate=0.5)
+    _gen = OnIndividual('crossover_tuple')(_source=iter(joined), per_indiv_rate=1.0, greediness=None)
     offspring = list(_gen)
     print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
     assert len(offspring) == len(population), "Did not select all individuals"

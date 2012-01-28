@@ -79,6 +79,26 @@ def Unique(_source):
             known.add(phenome)
             yield indiv
 
+@esdl_func('duplicates')
+def Duplicates(_source):
+    '''Returns a sequence of duplicate individuals based on phenomes.
+    
+    Individuals are compared using their ``phenome_string`` property.
+    
+    :Parameters:
+      _source : iterable(`Individual`)
+        A sequence of individuals. Some or all individuals are returned
+        from this sequence, depending on the selection criteria.
+    '''
+    known = set()
+    
+    for indiv in _source:
+        phenome = indiv.phenome_string
+        if phenome not in known:
+            known.add(phenome)
+        else:
+            yield indiv
+
 @esdl_func('legal')
 def Legal(_source):
     '''Returns all legal individuals. Legality is tested using the

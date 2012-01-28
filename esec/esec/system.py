@@ -18,7 +18,7 @@ from esec.species import SPECIES
 
 import esec.context
 
-class GroupAlias(object):
+class GroupAlias(object):   #pylint: disable=R0903
     '''Represents an aliased group.'''
     def __init__(self, dest_name, source_name):
         self._source_name = source_name

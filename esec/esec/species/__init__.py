@@ -17,6 +17,7 @@ from itertools import chain, islice, izip
 from esec.context import notify, rand
 import esec.utils as utils
 from esec.utils import ConfigDict
+from sys import maxsize
 
 class Species(object):
     '''Abstract base class for species descriptors.
@@ -100,9 +101,9 @@ class Species(object):
     
     #pylint: disable=R0201
     def mutate_insert(self, _source,
-                      per_indiv_rate=0.1,
+                      per_indiv_rate=1.0,
                       length=None, shortest=1, longest=10,
-                      longest_result=20):
+                      longest_result=None):
         '''Mutates a group of individuals by inserting random gene
         sequences.
         
@@ -139,7 +140,7 @@ class Species(object):
             The largest number of genes that may be inserted at any
             mutation.
           
-          longest_result : int > 0
+          longest_result : int > 0 [optional]
             The longest new genome that may be created. The length of
             the inserted segment is deliberately selected to avoid
             creating genomes longer than this. If there is no way to
@@ -157,7 +158,7 @@ class Species(object):
         
         shortest = int(shortest)
         longest = int(longest)
-        longest_result = int(longest_result)
+        longest_result = int(longest_result or maxsize)
         
         assert longest >= shortest, \
                "Value of longest (%d) must be higher or equal to shortest (%d)" % (longest, shortest)
@@ -186,7 +187,7 @@ class Species(object):
     
     #pylint: disable=R0201
     def mutate_delete(self, _source,
-                      per_indiv_rate=0.1,
+                      per_indiv_rate=1.0,
                       length=None, shortest=1, longest=10,
                       shortest_result=1):
         '''Mutates a group of individuals by deleting random gene
@@ -274,8 +275,8 @@ class Species(object):
     
     def crossover_uniform(self, _source,
                           per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=0.5,
-                          discrete=False,
-                          one_child=False, two_children=False): #pylint: disable=W0613
+                          genes=None, discrete=False,
+                          one_child=True, two_children=False):
         '''Performs uniform crossover by selecting genes at random from
         one of two individuals.
         
@@ -315,21 +316,20 @@ class Species(object):
           
           one_child : bool
             If ``True``, only one child is returned from each crossover
-            operation. `two_children` is the default.
+            operation.
           
           two_children : bool
             If ``True``, both children are returned from each crossover
-            operation. If ``False``, only one is. If neither `one_child`
-            nor `two_children` are specified, `two_children` is the
-            default.
+            operation. If ``False``, only one is.
         '''
         assert per_pair_rate is not True, "per_pair_rate has no value"
         assert per_indiv_rate is not True, "per_indiv_rate has no value"
         assert per_gene_rate is not True, "per_gene_rate has no value"
+        assert genes is not True, "genes has no value"
         
         if per_pair_rate is None: per_pair_rate = per_indiv_rate
-        if per_pair_rate <= 0.0 or per_gene_rate <= 0.0:
-            if one_child:
+        if per_pair_rate <= 0.0 or (per_gene_rate <= 0.0 and not genes):
+            if one_child and not two_children:
                 skip = True
                 for indiv in _source:
                     if not skip: yield indiv
@@ -351,7 +351,15 @@ class Species(object):
                 
                 new_genes1 = list(i1_genome)
                 new_genes2 = list(i2_genome)
-                for i in xrange(i1_len if i1_len < i2_len else i2_len):
+                source = xrange(i1_len if i1_len < i2_len else i2_len)
+
+                if genes:
+                    do_all_genes = True
+                    source = list(source)
+                    rand.shuffle(source)
+                    source = islice(source, genes)
+
+                for i in source:
                     if do_all_genes or frand() < per_gene_rate:
                         if discrete:
                             new_genes1[i] = i1_genome[i] if frand() < 0.5 else i2_genome[i]
@@ -363,7 +371,7 @@ class Species(object):
                 i1 = type(i1)(new_genes1, i1, statistic={ 'recombined': 1 })
                 i2 = type(i2)(new_genes2, i2, statistic={ 'recombined': 1 })
             
-            if one_child:
+            if one_child and not two_children:
                 yield i1 if frand() < 0.5 else i2
             else:
                 yield i1
@@ -371,7 +379,7 @@ class Species(object):
 
     def crossover_discrete(self, _source,
                            per_pair_rate=None, per_indiv_rate=1.0, per_gene_rate=1.0,
-                           one_child=False, two_children=False):
+                           one_child=True, two_children=False):
         '''A specialisation of `crossover_uniform` for discrete
         crossover.
         
@@ -388,7 +396,7 @@ class Species(object):
     def crossover(self, _source,
                   points=1,
                   per_pair_rate=None, per_indiv_rate=1.0,
-                  one_child=False, two_children=False): #pylint: disable=W0613
+                  one_child=True, two_children=False):
         '''Performs crossover by selecting a `points` points common to
         both individuals and exchanging the sequences of genes to the
         right (including the selection).
@@ -427,13 +435,11 @@ class Species(object):
           
           one_child : bool
             If ``True``, only one child is returned from each crossover
-            operation. `two_children` is the default.
+            operation.
           
           two_children : bool
             If ``True``, both children are returned from each crossover
-            operation. If ``False``, only one is. If neither `one_child`
-            nor `two_children` are specified, `two_children` is the
-            default.
+            operation. If ``False``, only one is.
         '''
         assert points is not True, "points has no value"
         assert per_pair_rate is not True, "per_pair_rate has no value"
@@ -441,7 +447,7 @@ class Species(object):
         
         if per_pair_rate is None: per_pair_rate = per_indiv_rate
         if per_pair_rate <= 0.0 or points < 1:
-            if one_child:
+            if one_child and not two_children:
                 skip = True
                 for indiv in _source:
                     if not skip: yield indiv
@@ -484,7 +490,7 @@ class Species(object):
                     
                     i1 = type(i1)(new_genes1, i1, statistic={ 'recombined': 1 })
                     i2 = type(i2)(new_genes2, i2, statistic={ 'recombined': 1 })
-            if one_child:
+            if one_child and not two_children:
                 yield i1 if frand() < 0.5 else i2
             else:
                 yield i1
@@ -492,7 +498,7 @@ class Species(object):
     
     def crossover_one(self, _source,
                       per_pair_rate=None, per_indiv_rate=1.0,
-                      one_child=False, two_children=False):
+                      one_child=True, two_children=False):
         '''A specialisation of `crossover` for single-point crossover.
         '''
         return self.crossover(
@@ -503,7 +509,7 @@ class Species(object):
     
     def crossover_two(self, _source,
                       per_pair_rate=None, per_indiv_rate=1.0,
-                      one_child=False, two_children=False):
+                      one_child=True, two_children=False):
         '''A specialisation of `crossover` for two-point crossover.'''
         return self.crossover(
             _source,
@@ -515,7 +521,7 @@ class Species(object):
                             points=1,
                             per_pair_rate=None, per_indiv_rate=1.0,
                             longest_result=None,
-                            one_child=False, two_children=False):   #pylint: disable=W0613
+                            one_child=True, two_children=False):
         '''Performs multi-point crossover by selecting a point in each
         individual and exchanging the sequence of genes to the right
         (including the selection). The selected points are not
@@ -571,7 +577,7 @@ class Species(object):
         
         if per_pair_rate is None: per_pair_rate = per_indiv_rate
         if per_pair_rate <= 0.0 or points < 1:
-            if one_child:
+            if one_child and not two_children:
                 skip = True
                 for indiv in _source:
                     if not skip: yield indiv
@@ -631,7 +637,7 @@ class Species(object):
                     else:
                         i2 = type(i2)(new_genes2, i2, statistic={ 'recombined': 1 })
             
-            if one_child:
+            if one_child and not two_children:
                 yield i1 if frand() < 0.5 else i2
             else:
                 yield i1

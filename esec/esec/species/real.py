@@ -322,7 +322,6 @@ class RealSpecies(Species):
         for i1, i2 in utils.pairs(_source):
             if do_all_pairs or frand() < per_pair_rate:
                 i1_genome, i2_genome = i1.genome, i2.genome
-                i1_len, i2_len = len(i1_genome), len(i2_genome)
                 
                 new_genes = list(i1_genome)
                 

@@ -7,10 +7,10 @@ The `JoinedSpecies.crossover_tuple` operation is specifically designed
 for joined individuals.
 '''
 
-import itertools
 from esec.context import rand
 from esec.individual import Individual
 from esec.species import Species
+from esec.generators import _key_fitness
 
 class JoinedIndividual(Individual):
     '''Represents a set of `Individual` objects which represent one
@@ -79,10 +79,41 @@ class JoinedSpecies(Species):
     '''A singleton instance of `JoinedSpecies` that should be used when
     creating new instances of `JoinedIndividual`.
     '''
+
+    def best_of_tuple(self, _source):   #pylint: disable=R0201
+        '''Returns a sequence of the individuals with highest fitness from
+        each `JoinedIndividual` provided.
+
+        :Parameters:
+          _source : iterable(`JoinedIndividual`)
+            A sequence of joined individuals.
+        '''
+
+        for indiv in _source:
+            yield max(indiv, key=_key_fitness)
     
+    def from_tuple(self, _source, index=1): #pylint: disable=R0201
+        '''Returns a sequence of the individuals at the specified index
+        in each `JoinedIndividual` provided.
+
+        .. include:: epydoc_include.txt
+
+        :Parameters:
+          _source : iterable(`JoinedIndividual`)
+            A sequence of joined individuals.
+
+          index : int |ge| 1
+            The one-based index into each joined individual.
+        '''
+        assert index is not True, "index has no value"
+
+        index -= 1
+        for indiv in _source:
+            yield indiv[index]
+
     def crossover_tuple(self, _source,  #pylint: disable=R0201
-                        per_indiv_rate=None, per_pair_rate=1.0,
-                        per_gene_rate=None):
+                        per_indiv_rate=1.0,
+                        greediness=0.0):
         '''Performs per-gene crossover by selecting one gene from each
         individual in the tuples provided in `_source`.
         
@@ -105,46 +136,37 @@ class JoinedSpecies(Species):
             If this value is ``None``, the value of `per_pair_rate` is
             used.
           
-          per_pair_rate : |prob|
-            A synonym for `per_indiv_rate`.
-          
-          per_gene_rate : |prob| [optional]
-            The probability of not selecting a gene from the first
+          greediness : |prob|
+            The probability of always selecting a gene from the first
             individual in the joined individual. If the gene is not
-            selected, a gene is selected from one of the other individuals
+            selected, a gene is selected from any one of the individuals
             with equal probability.
-            If omitted, a gene is selected from any individual with equal
-            probability. If set to 1.0 or higher, the first individual in
-            each joined individual is returned unmodified.
         '''
         assert per_indiv_rate is not True, "per_indiv_rate has no value"
-        assert per_pair_rate is not True, "per_pair_rate has no value"
-        assert per_gene_rate is not True, "per_gene_rate has no value"
+        assert greediness is not True, "greediness has no value"
         
-        if per_indiv_rate is None: per_indiv_rate = per_pair_rate
-        if per_indiv_rate <= 0.0 or (per_gene_rate is not None and per_gene_rate >= 1.0):
+        if per_indiv_rate <= 0.0 or greediness >= 1.0:
             for indiv in _source: yield indiv[0]
             raise StopIteration
         
         do_all_indiv = (per_indiv_rate >= 1.0)
-        equal_per_gene_rate = (per_gene_rate is None)
         
         frand = rand.random
         
         for indiv in _source:
             if do_all_indiv or frand() < per_indiv_rate:
-                new_genes = [ ]
+                new_genes = list(indiv[0].genome)
+                len_indiv = len(indiv)
                 # Iterate through tuples of the genes at each point in the
                 # genomes, filling with None if an individual is shorter
                 # than the rest.
-                for genes in itertools.izip_longest(*(i.genome for i in indiv)):
-                    genes = [i for i in genes if i is not None]
-                    len_genes = len(genes)
-                    if len_genes == 0: break
-                    elif len_genes == 1: new_genes.append(genes[0])
-                    elif equal_per_gene_rate: new_genes.append(genes[int(frand()*len_genes)])
-                    elif frand() >= per_gene_rate: new_genes.append(genes[0])
-                    else: new_genes.append(genes[int(frand()*(len_genes-1)+1)])
+                for i in xrange(len(new_genes)):
+                    if greediness <= 0.0 or frand() >= greediness:
+                        src = None
+                        while not src or len(src.genome) <= i:
+                            src = indiv[int(frand()*len_indiv)]
+                        
+                        new_genes[i] = src[i]
                 yield type(indiv[0])(new_genes, indiv[0], statistic={ 'recombined': 1 })
             else:
                 yield indiv[0]
