@@ -8,7 +8,7 @@ def check(input, output=None):
         print 'Errors:\n  ' + '\n  '.join(str(i) for i in ast.errors)
         print 'Warnings:\n  ' + '\n  '.join(str(i) for i in ast.warnings)
         assert False
-    model = AstSystem(ast)
+    model = AstSystem(ast=ast)
     validation = model.validate()
     if not validation:
         print ast.format()
@@ -48,9 +48,9 @@ def test_members():
 def test_fromstmt():
     yield check, "FROM source SELECT destination", None
     yield check, "FROM source1, source2 SELECT destination", None
-    yield check, "FROM source SELECT (100.0) destination1, destination2", None
-    yield check, "FROM source SELECT (100.0) destination1, (size) destination2", None
-    yield check, "FROM source1, source2 SELECT (100.0) destination1, (size) destination2", None
+    yield check, "FROM source SELECT (100) destination1, destination2", None
+    yield check, "FROM source SELECT (100) destination1, (size) destination2", None
+    yield check, "FROM source1, source2 SELECT (100) destination1, (size) destination2", None
     yield check, "FROM source(length=10.0) SELECT destination", None
     
     yield check, "FROM source SELECT destination USING operator()", None

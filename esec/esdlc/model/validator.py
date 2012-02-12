@@ -17,6 +17,8 @@ class Validator(object):
         self._known_names = { }
 
         if system is not None:
+            try: self._errors.extend(system._errors)
+            except AttributeError: pass
             for stmts in self.system.blocks.itervalues():
                 self._verify_stmts(stmts)
 
@@ -71,8 +73,8 @@ class Validator(object):
         '''Verifies an arithmetic expression tree.'''
         tag = type(expr).__name__.lower()
         
-        if tag == 'variableref':
-            self._verify_variable(expr.id, expr.span)
+        if tag == 'variable':
+            self._verify_variable(expr)
         elif tag == 'function':
             self._verify_function(expr)
         elif tag == 'binaryop':
@@ -80,7 +82,7 @@ class Validator(object):
             self._verify_expression(expr.right)
         elif tag == 'unaryop':
             self._verify_expression(expr.right)
-        elif tag in set(('groupref', 'variable')):
+        elif tag in frozenset(('groupref',)):
             raise error.InvalidSyntaxError(expr.span)
         else:
             warnings.warn("Unhandled expression node %s (%r)" % (expr, expr))
@@ -105,7 +107,7 @@ class Validator(object):
                 except error.InvalidSyntaxError:
                     self._errors.append(error.InvalidFunctionCallError(param.span))
 
-    def _verify_variable(self, var, span=None):
+    def _verify_variable(self, var):
         '''Verifies a variable.'''
         if isinstance(var, Function):
             return self._verify_function(var)
@@ -114,19 +116,19 @@ class Validator(object):
         
         if var.external:
             if var.name not in self.system.externals:
-                self._errors.append(error.UninitialisedGlobalError(span or var.span, var.name))
+                self._errors.append(error.UninitialisedGlobalError(var.span, var.name))
         elif var.constant:
             pass
         else:
             if var.name not in self.system.variables:
-                self._errors.append(error.UninitialisedVariableError(span or var.span, var.name))
+                self._errors.append(error.UninitialisedVariableError(var.span, var.name))
             if var.name in self.system.blocks:
-                self._errors.append(error.AmbiguousVariableBlockNameError(span or var.span, var.name))
+                self._errors.append(error.AmbiguousVariableBlockNameError(var.span, var.name))
 
         if var.name and var.name.startswith('_'):
-            self._errors.append(error.InternalVariableNameError(span or var.span, var.name))
+            self._errors.append(error.InternalVariableNameError(var.span, var.name))
         elif var.name and not var.constant and not re.match('^(?!\d)\w+$', var.name, re.IGNORECASE):
-            self._errors.append(error.InvalidVariableError(span or var.span, var.name))
+            self._errors.append(error.InvalidVariableError(var.span, var.name))
 
     def _verify_function(self, stmt):
         '''Verifies a function call.'''
@@ -155,61 +157,70 @@ class Validator(object):
                 self._verify_expression(src)
             except error.InvalidSyntaxError:
                 self._errors.append(error.InvalidAssignmentError(src.span))
-            if (isinstance(dest, VariableRef) and isinstance(dest.id, Variable)
-                and not dest.id.external and not dest.id.constant):
-                self._verify_variable(dest.id, dest.span)
+            if (isinstance(dest, Variable) and not dest.external and not dest.constant):
+                self._verify_variable(dest)
             else:
                 self._errors.append(error.InvalidAssignmentError(stmt.span))
             src = None
-        elif stmt.name == '_alias':
-            params = stmt.parameter_dict
-            src, dest = params['_source'], params['_destination']
-            if not isinstance(src, GroupRef):
-                self._errors.append(error.InvalidAssignmentError(src.span))
-            if not isinstance(dest, GroupRef):
-                self._errors.append(error.InvalidAssignmentError(dest.span))
-            src = None
         else:
             self._errors.append(error.InvalidFunctionCallError(stmt.span))
+            return
         
-        if src is not None:    
-            assert isinstance(src, VariableRef), repr(src)
-            self._verify_variable(src.id, src.span)
+        if src is None:
+            pass
+        else:
+            self._verify_expression(src)
 
     def _verify_grouplist(self, groups):
         '''Verifies a group list and the groups within it.'''
         assert isinstance(groups, GroupList), repr(groups)
 
         seen_unlimited = False
+        seen_function = False
         seen = set()
-        for i in groups:
-            try: limit = i.limit
+        for gref in groups:
+            if not isinstance(gref, (GroupRef, Function)):
+                self._errors.append(error.InvalidGroupError(gref.span))
+                continue
+
+            try: limit = gref.limit
             except AttributeError: limit = None
             if groups.allow_sizes:
                 if seen_unlimited:
-                    self._errors.append(error.InaccessibleGroupError(i.span, str(i)))
+                    self._errors.append(error.InaccessibleGroupError(gref.span, str(gref)))
                 seen_unlimited = seen_unlimited or (limit is None)
                 if limit is not None:
                     try:
                         self._verify_expression(limit)
+                        if isinstance(limit, BinaryOp) and limit.op == ',':
+                            self._errors.append(error.InvalidGroupSizeError(limit.span))
+                        if isinstance(limit, Variable) and isinstance(gref, GroupRef) and limit.name == gref.id.name:
+                            self._errors.append(error.InvalidGroupSizeError(limit.span))
                     except error.InvalidSyntaxError:
                         self._errors.append(error.InvalidGroupSizeError(limit.span))
             elif limit is not None:
-                self._errors.append(error.UnexpectedGroupSizeError(i.span, i.id.name))
+                self._errors.append(error.UnexpectedGroupSizeError(gref.span, gref.id.name))
             
-            if isinstance(i, GroupRef):
-                self._verify_group(i.id, i.span)
-                if groups.repeats_error and i.id.name in seen:
-                    self._errors.append(groups.repeats_error(i.span, i.id.name))
-                seen.add(i.id.name)
-            elif isinstance(i, Function):
-                if groups.allow_generators: self._verify_function(i)
-                else: self._errors.append(error.GeneratorAsDestinationError(i.span))
-            elif isinstance(i, Stream):
-                if groups.allow_streams: self._verify_stream(i)
-                else: self._errors.append(error.InvalidGroupError(i.span))
+            if groups.allow_one_generator and seen_function:
+                self._errors.append(error.InaccessibleGroupError(gref.span, str(gref)))
+
+            if isinstance(gref, GroupRef):
+                self._verify_group(gref.id, gref.span)
+                if groups.repeats_error and gref.id.name in seen:
+                    self._errors.append(groups.repeats_error(gref.span, gref.id.name))
+                seen.add(gref.id.name)
+            elif isinstance(gref, Function):
+                if groups.allow_generators: self._verify_function(gref)
+                elif groups.allow_one_generator:
+                    self._verify_function(gref)
+                    seen_function = True
+                else: self._errors.append(error.GeneratorAsDestinationError(gref.span))
+            elif isinstance(gref, Stream):
+                if groups.allow_streams: self._verify_stream(gref)
+                else: self._errors.append(error.InvalidGroupError(gref.span))
             else:
-                self._errors.append(error.ExpectedGroupError(i.span))
+                self._errors.append(error.ExpectedGroupError(gref.span))
+
 
     def _verify_operator(self, stmt):
         '''Verifies an operator instance and its internal function
@@ -221,13 +232,14 @@ class Validator(object):
         else:
             self._verify_parameterlist(stmt.func.parameters, valid_parameters=set(('_function', '_source')))
             func = stmt.func.parameter_dict['_function']
-            assert isinstance(func, VariableRef), repr(func)
-            self._verify_variable(func.id, func.span)
+            assert isinstance(func, Variable), repr(func)
+            self._verify_variable(func)
         self._verify_stream(stmt.source)
 
     def _verify_group(self, group, span=None):
         '''Verifies a group.'''
-        assert isinstance(group, Variable), repr(group)
+        if not isinstance(group, Variable):
+            self._errors.append(error.InvalidGroupError(span or group.span, str(group)))
         if group.name in self.system.externals:
             self._errors.append(error.AmbiguousGroupGeneratorNameError(span or group.span, group.name))
         elif group.name not in self.system.variables:

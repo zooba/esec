@@ -15,12 +15,14 @@ class System(object):
     '''
     INIT_BLOCK_NAME = '_init'
 
-    def __init__(self):
+    def __init__(self, source_file=None):
+        self.source_file = source_file
         self.variables = { }
         self.constants = [ ]
         self.externals = { }
         self.blocks = { }
         self.block_names = [ ]
+        self._errors = []
 
     def as_esdl(self):
         '''Converts this system back to ESDL.'''

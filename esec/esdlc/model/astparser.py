@@ -20,8 +20,8 @@ class AstSystem(System):
         Variables which are defined externally. Values may be ``None``
         if they will be specified later (before execution).
     '''
-    def __init__(self, ast=None, externals=None):
-        super(AstSystem, self).__init__()
+    def __init__(self, source_file=None, ast=None, externals=None):
+        super(AstSystem, self).__init__(source_file)
         self.ast = None    
         self._active = None
         
@@ -30,6 +30,7 @@ class AstSystem(System):
                                   for name, value in externals.iteritems())
         if ast is not None:
             self.read(ast)
+            self._errors.extend(ast._errors)
         
     def read(self, ast):
         '''Reads an abstract syntax tree into the model.
@@ -39,30 +40,37 @@ class AstSystem(System):
         '''
         if self.ast is not None:
             raise RuntimeError("Cannot call AstSystem.read() multiple times.")
-        if ast.errors:
-            raise ValueError("AST contains errors.")
+        #if ast.errors:
+        #    raise ValueError("AST contains errors.")
         self.ast = ast
 
-        blocks = []
-        init_block = []
-        blocks.append((self.INIT_BLOCK_NAME, init_block))
-        
+        block_stack = []
+        block = []
+        self.block_names.append(self.INIT_BLOCK_NAME)
+        blocks = {self.INIT_BLOCK_NAME: block}
+        nesting = 0
+
         for stmt in ast.expr:
-            if stmt is None:
+            if stmt is None or len(stmt) == 0:
                 pass
-            elif stmt.category != 'block':
-                if init_block is not None:
-                    init_block.append(stmt)
-                else:
-                    pass
-            else:
-                init_block = None
-                blocks.append((stmt.data, stmt.expr))
+            elif stmt[0] == 'BeginStmt' and not block_stack:
+                block = []
+                self.block_names.append(stmt[1])
+                blocks[stmt[1]] = block
+                block_stack.append(None)
+            elif stmt[0] == 'RepeatStmt':
+                block_stack.append(block)
+                new_block = []
+                block.append(type(stmt)(stmt[0], stmt[1], new_block))
+                block = new_block
+            elif stmt[0] == 'EndStmt':
+                block = block_stack.pop()
+            elif block is not None:
+                block.append(stmt)
         
-        for block_name, statements in blocks:
-            self.block_names.append(block_name)
+        for block_name in self.block_names:
             self._active = self.blocks[block_name] = []
-            self._visit_block(statements)
+            self._visit_block(blocks[block_name])
 
     def _add(self, item):
         '''Adds `item` to the active block.'''
@@ -76,79 +84,63 @@ class AstSystem(System):
 
     def _repeatblock(self, block):
         '''Handles REPEAT blocks.'''
-        count_expr = self._expression(block.data)
+        count_expr = self._expression(block[1])
         previous = self._active
         self._active = stmts = []
-        self._visit_block(block.expr)
+        self._visit_block(block[2])
         self._active = previous
         return RepeatBlock(stmts, count_expr)
 
     def _visit_stmt(self, stmt):
         '''Dispatches control to the appropriate handler for `stmt`.'''
-        if stmt.category == 'op':
-            self._add(self._expression(stmt))
-        elif stmt.category == 'assign':
+        tag = stmt[0]
+        if tag == 'Comment':
+            pass
+        elif tag == '=':
             self._add(self._assignment(stmt))
-        elif stmt.category == 'UsingStmt':
-            assert stmt.left is not None, repr(stmt)
-            assert stmt.left.category in set(('SelectStmt', 'IntoStmt', 'EvalStmt')), repr(stmt.left)
-            if stmt.left.category == 'SelectStmt':
-                self._add(self._fromstmt(stmt))
-            elif stmt.left.category == 'IntoStmt':
-                self._add(self._joinstmt(stmt))
-            else:
-                self._add(self._evalstmt(stmt))
-        elif stmt.category == 'SelectStmt':
+        elif tag == 'CallFunc':
+            self._add(self._call(stmt))
+        elif tag == 'FromStmt':
             self._add(self._fromstmt(stmt))
-        elif stmt.category == 'IntoStmt':
+        elif tag == 'JoinStmt':
             self._add(self._joinstmt(stmt))
-        elif stmt.category == 'EvalStmt':
+        elif tag == 'EvalStmt':
             self._add(self._evalstmt(stmt))
-        elif stmt.category == 'YieldStmt':
+        elif tag == 'YieldStmt':
             self._add(self._yieldstmt(stmt))
-        elif stmt.tag == 'REPEAT':
+        elif tag == 'RepeatStmt':
             self._add(self._repeatblock(stmt))
-        elif stmt.category == 'pragma':
-            self._add(Pragma(stmt.tag[1:], stmt.tokens))
+        elif tag == 'PragmaStmt':
+            self._add(Pragma(stmt[1], stmt.tokens))
+        elif tag == 'Name':
+            pass
         else:
             warn('Unhandled statement type: %r' % stmt)
 
     def _assignment(self, node):
         '''Handles assignment nodes.'''
-        assert node.category == 'assign', repr(node)
-        if (node.right and node.right.category == 'name' and node.rightmost is node.right and
-            node.left and node.left.category == 'name' and node.left.rightmost is node.left):
-            var = self._variable(node.right)
-            if any(i.tag == 'groupref' for i in var.references):
-                return Function.alias(GroupRef(self._variable(node.left), span=node.left.tokens),
-                                      GroupRef(var, span=node.right.tokens),
-                                      node.fulltokens)
-            else:
-                return Function.assign(self._expression(node.left), var, node.fulltokens)
-        return Function.assign(self._expression(node.left), self._expression(node.right), node.fulltokens)
+        return Function.assign(self._expression(node.left), self._expression(node.right), node.tokens)
 
     def _expression(self, node):
         '''Handles expression nodes.'''
         expr = None
-        if node.category == 'expr':
-            assert len(node.expr) == 1, repr(node.expr)
-            expr = self._expression(node.expr[0])
-        elif node.category == 'op':
+        if node is None:
+            return None
+        elif node.tag in frozenset('+-*/%^,'):
             if node.left is None:
-                expr = UnaryOp(node.tag, self._expression(node.right), span=node.fulltokens)
+                expr = UnaryOp(node.tag, self._expression(node.right), span=node.tokens)
             else:
                 expr = BinaryOp(self._expression(node.left), node.tag, self._expression(node.right),
-                                span=node.fulltokens)
-        elif node.category in set(('number', 'literal')):
-            expr = VariableRef(self._constant(node), span=node.tokens)
-        elif node.category == 'name':
-            if node.right is None:
-                expr = VariableRef(self._variable(node), span=node.tokens)
-            elif node.right.tag == '(':
-                expr = self._call(node)
-            elif node.right.tag == '[':
-                expr = self._getindex(node)
-        elif node.category == 'dot':
+                                span=node.tokens)
+        elif node.tag in frozenset(('Number', 'Constant')):
+            expr = self._constant(node)
+        elif node.tag == 'Name':
+            expr = self._variable(node)
+        elif node.tag == 'CallFunc':
+            expr = self._call(node)
+        elif node.tag == 'GetElement':
+            expr = self._getindex(node)
+        elif node.tag == '.':
             expr = self._getattrib(node)
         else:
             warn('Unhandled expression node: %r' % node)
@@ -156,24 +148,15 @@ class AstSystem(System):
 
     def _constant(self, node):  #pylint: disable=R0201
         '''Handles constant nodes.'''
-        assert node.category in set(('number', 'literal')), repr(node)
+        assert node.tag in frozenset(('Number', 'Constant')), repr(node)
 
-        if node.category == 'number':
-            value = node.text
-            try:
-                value = float(value)
-            except (ValueError, TypeError):
-                pass
-        else:
-            value = { 'True': True, 'False': False, 'Null': None }[node.tag]
-        return Variable(value=value, constant=True, span=node.tokens)
+        return Variable(value=node[1], constant=True, span=node.tokens)
 
     def _variable(self, node):
         '''Handles variable nodes.'''
-        assert node.category in set(('name',)), repr(node)
-        assert node.right is None, repr(node.right)
-        name = node.text.lower()
-
+        assert node.tag == 'Name', repr(node)
+        
+        name = node[1]
         var = self.variables.get(name) or self.externals.get(name)
         if not var:
             var = self.variables[name] = Variable(name=name, span=node.tokens)
@@ -181,37 +164,39 @@ class AstSystem(System):
         
     def _call(self, node):
         '''Handles function call nodes.'''
-        assert node.category in set(('name', 'dot')), repr(node)
-        
-        if node.category == 'name':
-            name = node.text.lower()
+        assert node.tag == 'CallFunc', repr(node)
+        assert node[1].tag in frozenset(('Name', '.')), repr(node)
+
+        name = None
+        name_node = node[1]
+        if name_node.tag == 'Name':
+            name = name_node[1]
             func = self.externals.get(name)
         else:
-            func = self._getattrib(node)
+            func = self._getattrib(name_node)
 
-        if not func:
+        if name and not func:
             func = self.externals[name] = Variable(name=name, external=True, span=node.tokens)
         
-        return self._call_internal(VariableRef(func, span=node.tokens), node.right, span=node.fulltokens)
+        return self._call_internal(func, node.right, span=node.tokens)
 
     def _call_internal(self, func, param_node, span):
         '''Internal handling for function calls.'''
-        assert isinstance(func, VariableRef), repr(func)   
-        if param_node is not None and param_node.tag == '(':
+        if param_node is not None and param_node.tag == 'ParameterList':
             func_call = Function.call(func, {}, span=span)
-            if param_node.expr:
+            if param_node[1]:
                 params = []
-                for p_node in param_node.expr[0].iter_list():
-                    if p_node.tag == '=':
-                        name = p_node.left.tag
-                        value = self._expression(p_node.right)
+                for p_node in param_node[1]:
+                    if p_node[2]:
+                        name = p_node[1]
+                        value = self._expression(p_node[2])
                     else:
-                        name = p_node.tag
+                        name = p_node[1]
                         value = None
                     params.append(Parameter((name, value), span=p_node.tokens))
                 func_call.parameters.update(params)
-        elif func.id.tag == 'function':
-            func_call = func.id
+        elif func.tag == 'function':
+            func_call = func
         else:
             func_call = Function.call(func, {}, span=span)
         
@@ -219,96 +204,72 @@ class AstSystem(System):
 
     def _getindex(self, node, index_node=None):
         '''Handles indexing nodes.'''
-        assert node.category in set(('name',)), repr(node)
+        assert node.tag == 'GetElement', repr(node)
+        name_node = node.left
+        assert name_node is not None, repr(node)
         if index_node is None: index_node = node.right
         assert index_node is not None, repr(node)
-        assert index_node.tag == '[' and len(index_node.expr) <= 1, repr(index_node)
-        name = node.text.lower()
-
-        source = self.variables.get(name) or self.externals.get(name)
-        if not source:
-            source = self.variables[name] = Variable(name=name, external=True, span=node.tokens)
-        source = VariableRef(source, span=node.tokens)
         
-        return self._getindex_internal(source, node.right, span=node.fulltokens)
+        if name_node.tag == 'Name':
+            name = name_node[1]
+            source = self.variables.get(name) or self.externals.get(name)
+            if not source:
+                source = self.variables[name] = Variable(name=name, external=True, span=node.tokens)
+        else:
+            source = self._expression(name_node)
+        
+        return self._getindex_internal(source, node.right, span=node.tokens)
 
     def _getindex_internal(self, source, index_node, span):
         '''Internal handling for getindex nodes.'''
-        assert isinstance(source, (Function, VariableRef)), repr(source)
-        
-        if index_node and index_node.expr:
-            index = self._expression(index_node.expr[0])
-        else:
-            index = None
-        
-        return Function.getindex(source, index, span=span)
-
+        return Function.getindex(source, self._expression(index_node), span=span)
 
     def _getattrib(self, node):
         '''Handles dotted attribute access nodes.'''
-        assert node.category in set(('dot',)), repr(node)
+        assert node.tag == '.', repr(node)
         assert node.left is not None, repr(node)
         assert node.right is not None, repr(node)
-        assert node.right.category == 'name', repr(node.right)
+        assert node.right.tag == 'Name', repr(node.right)
         
         source = self._expression(node.left)
-        if isinstance(source, Function):
-            source = VariableRef(source, span=node.left.tokens)
-        assert isinstance(source, VariableRef), repr(source)
+        attrib = node.right[1]
 
-        attrib = node.right.tag.lower()
-        stmt = Function.getattrib(source, attrib, node.fulltokens)
-        nrr = node.right.right
-        if nrr is None:
-            return stmt
-        elif nrr.tag == '(':
-            span = node.fulltokens
-            return self._call_internal(VariableRef(stmt, span=span), nrr, span)
-        elif nrr.tag == '[':
-            span = node.fulltokens
-            return self._getindex_internal(VariableRef(stmt, span=span), nrr, span)
-        else:
-            warn("Unhandled dotted node child: %s (%r)" % (node, node))
+        return Function.getattrib(source, attrib, node.tokens)
 
     def _group(self, node):
         '''Handles group name nodes.'''
-        assert node.category in set(('name',)), repr(node)
-        if node.right is not None and node.right.tag == '(':
-            return self._call(node)
+        assert node.tag == 'Name', repr(node)
         
         var = self._variable(node)
-        return var if not var.external else self._call(node)
+        return var if not var.external else Function.call(var, {}, node.tokens)
 
-    def _groupref(self, node, limit=None):
+    def _groupref(self, node):
         '''Handles group references, potentially included a size limit.
         Generators are also handled.
         '''
-        group = self._group(node)
+        assert node.tag in frozenset(('Group', 'CallFunc')), repr(node)
+
+        if node.tag == 'CallFunc':
+            return self._call(node)
+
+        limit_node, group_node = node[1], node[2]
+        if group_node.tag == 'Name':
+            group = self._group(group_node)
+
         if isinstance(group, Function):
             return group
-        elif limit:
-            return GroupRef(group, limit=self._expression(limit), span=node.fulltokens)
+        elif limit_node:
+            return GroupRef(group, limit=self._expression(limit_node), span=node.tokens)
         else:
-            return GroupRef(group, limit=None, span=node.fulltokens)
+            return GroupRef(group, limit=None, span=node.tokens)
 
     def _fromstmt(self, node, from_cmd='FromStmt', select_cmd='SelectStmt', merge_op=Merge):
         '''Handles FROM-SELECT statements.'''
-        assert node.category in set(('UsingStmt', select_cmd)), repr(node)
+        assert node.tag == from_cmd, repr(node)
         
-        if node.category == 'UsingStmt':
-            operators = [self._call(i) for i in node.right.iter_list()]
-            node = node.left
-        else:
-            operators = []
-
-        assert node.category == select_cmd, repr(node)
-
-        dests = [self._groupref(group, limit) for limit, group in node.data]
-        node = node.left
-
-        assert node.category == from_cmd, repr(node)
-
-        srcs = [self._groupref(group, limit) for limit, group in node.data]
+        srcs = [self._groupref(group) for group in node[1]]
+        dests = [self._groupref(group) for group in node[2]]
+        operators = [self._call(operator) for operator in node[3]]
 
         gen = merge_op(srcs)
         for op in operators:
@@ -322,28 +283,16 @@ class AstSystem(System):
     
     def _evalstmt(self, node):
         '''Handles EVAL statements.'''
-        assert node.category in set(('UsingStmt', 'EvalStmt')), repr(node)
+        assert node.tag == 'EvalStmt', repr(node)
 
-        evaluators = []
-        if node.category == 'UsingStmt':
-            for i in node.right.iter_list():
-                if i.rightmost.category == 'expr':
-                    evaluators.append(self._call(i))
-                else:
-                    evaluators.append(self._expression(i))
-            node = node.left
-
-        assert node.category == 'EvalStmt', repr(node)
-
-        srcs = [self._groupref(group) for _, group in node.data]
-
-        assert len(evaluators) == 1, "Only single evaluators are supported"
+        srcs = [self._groupref(group) for group in node[1]]
+        evaluators = [self._call(evaluator) for evaluator in node[2]]
 
         return EvalStmt(srcs, evaluators)
 
     def _yieldstmt(self, node):
         '''Handles YIELD statements.'''
-        assert node.category == 'YieldStmt', repr(node)
+        assert node.tag == 'YieldStmt', repr(node)
 
-        srcs = [self._groupref(group) for _, group in node.data]
+        srcs = [self._groupref(group) for group in node[1]]
         return YieldStmt(srcs)

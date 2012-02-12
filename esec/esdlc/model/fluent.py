@@ -275,7 +275,7 @@ class FluentSystem(System):
         else:
             var = self.variables.get(name) or self.externals.get(name)
             assert var, "Variable `%s` is not defined" % name
-            return VariableRef(var, span=span)
+            return var
     
     def Constant(self, value, span=None):
         '''Specify a constant. Constants do not need to be specified in
@@ -283,7 +283,7 @@ class FluentSystem(System):
         '''
         var = Variable(value=value, constant=True)
         self.constants.append(var)
-        return VariableRef(var, span=span)
+        return var
     
     def External(self, name, value=None, span=None):
         '''Specify an external. Externals do not need to be specified
@@ -294,7 +294,7 @@ class FluentSystem(System):
         if not var or self.__isdef:
             var = Variable(name=name, value=value, external=True)
             self.externals[name] = var
-        return None if self.__isdef else VariableRef(var, span=span)
+        return None if self.__isdef else var
 
     def RPNExpression(self, expr, span=None):
         '''Constructs an arithmetic expression from reverse-Polish
@@ -334,7 +334,7 @@ class FluentSystem(System):
                 source = stack.pop()
                 if type(source) is float: source = self.Constant(source, span=span)
                 elif type(source) is str: source = self.Variable(source, span=span)
-                stack.append(VariableRef(Function.getattrib(source, attrib, span=span), span=span))
+                stack.append(Function.getattrib(source, attrib, span=span))
             elif token == '~':
                 right = stack.pop()
                 if type(right) is float: right = self.Constant(right, span=span)
@@ -396,10 +396,8 @@ class FluentSystem(System):
             for key, value in parameters.iteritems():
                 if value is None:
                     params[key] = None
-                elif isinstance(value, VariableRef):
-                    params[key] = value
                 elif isinstance(value, (Function, Variable)):
-                    params[key] = VariableRef(value, span=span)
+                    params[key] = value
                 else:
                     params[key] = self.Constant(value, span=span)
             

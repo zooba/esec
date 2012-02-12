@@ -211,6 +211,9 @@ class _emitter(object): #pylint: disable=R0903
                 self._w(', ')
                 self._emit_expression(evaluator)
             self._wl(')')
+            eval_name = '_eval'
+        else:
+            eval_name = 'None'
         self._w('for _indiv in _merge(')
         self._emit_variable(stmt.sources[0].id)
         for group in itertools.islice(stmt.sources, 1, None):
@@ -218,7 +221,7 @@ class _emitter(object): #pylint: disable=R0903
             self._emit_variable(group.id)
         self._wl('):')
         self._indent += 1
-        self._wl('_indiv._eval = _eval')
+        self._wl('_indiv._eval = ' + eval_name)
         self._wl('del _indiv.fitness')
         self._indent -= 1
 
@@ -274,7 +277,7 @@ class _emitter(object): #pylint: disable=R0903
         src = next(i.value for i in expr.parameters if i.name == '_function')
         args = [i for i in expr.parameters if i.name != '_function']
 
-        self._emit_expression(src.id)
+        self._emit_expression(src)
         self._w('(')
         if args:
             self._emit_param(args[0])
@@ -298,8 +301,8 @@ class _emitter(object): #pylint: disable=R0903
     def _emit_assign(self, expr):
         '''Emits code for assignment statements.'''
         dest = expr.parameter_dict['_destination']
-        if dest.tag == 'variableref':
-            self._emit_variable(dest.id, safe_access=True)
+        if dest.tag == 'variable':
+            self._emit_variable(dest, safe_access=True)
         else:
             self._emit_expression(dest)
         self._w(' = ')
@@ -322,7 +325,7 @@ class _emitter(object): #pylint: disable=R0903
         '''Emits code for expressions.'''
         tag = expr.tag
         
-        if tag in set(('groupref', 'variableref')):
+        if tag in frozenset(('groupref',)):
             self._emit_variable(expr.id)
         elif tag == 'variable':
             self._emit_variable(expr)
@@ -358,7 +361,7 @@ class _emitter(object): #pylint: disable=R0903
         while op.tag not in set(('merge', 'join')):
             op_stack.append(op)
             op = op.source
-
+            
         self._w("_gen = _" + op.tag + "(")
         self._emit_expression(op.sources[0])
         for group in itertools.islice(op.sources, 1, None):
@@ -388,6 +391,8 @@ class _emitter(object): #pylint: disable=R0903
             if group.limit is None:
                 self._wl(' = _group(_gen)')
                 break
+            elif group.limit.tag == 'variable' and group.limit.constant:
+                self._wl(' = _group(_part(_gen, %d))' % group.limit.value)
             else:
                 self._w(' = _group(_part(_gen, ')
                 self._emit_expression(group.limit)
@@ -459,9 +464,9 @@ class _emitter(object): #pylint: disable=R0903
     def _emit_repeat(self, block):
         '''Emits code for REPEAT blocks.'''
         if (self.optimise > 1 and 
-            block.count.tag == 'variableref' and block.count.id.tag == 'variable' and 
-            block.count.id.constant and block.count.id.value <= 4):
-            for _ in xrange(int(block.count.id.value)):
+            block.count.tag == 'variable' and 
+            block.count.constant and block.count.value <= 4):
+            for _ in xrange(int(block.count.value)):
                 for stmt in block.statements:
                     self._emit(stmt)
         else:

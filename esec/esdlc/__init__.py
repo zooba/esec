@@ -25,16 +25,13 @@ def compileESDL(source, external_variables=None):
         model should not be executed or used to generate code.
     '''
     if isinstance(source, str) and '\n' not in source and os.path.exists(source):
+        source_file = os.path.abspath(source)
         ast = esdlc.ast.load(source)
     else:
+        source_file = '<string>'
         ast = esdlc.ast.parse(source)
     
-    if ast.errors:
-        model = None
-        validation = esdlc.model.Validator()
-        validation._errors.extend(ast._errors)  #pylint: disable=W0212
-    else:
-        model = esdlc.model.AstSystem(ast=ast, externals=external_variables)
-        validation = model.validate()
+    model = esdlc.model.AstSystem(source_file=source_file, ast=ast, externals=external_variables)
+    validation = model.validate()
 
     return model, validation

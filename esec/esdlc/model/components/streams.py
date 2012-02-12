@@ -44,7 +44,7 @@ class Merge(object):
     tag = 'merge'
 
     def __init__(self, sources):
-        self.sources = GroupList(sources, allow_generators=True, allow_streams=True)
+        self.sources = GroupList(sources, allow_one_generator=True, allow_streams=True)
         '''The source groups or generators.'''
 
     def __str__(self):

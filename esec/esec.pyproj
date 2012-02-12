@@ -13,10 +13,10 @@
     <Name>esec</Name>
     <RootNamespace>esec</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>9a7a9026-48c1-4688-9d5d-e5699d47d074</InterpreterId>
+    <InterpreterId>2af0f10d-7135-4994-9156-5d01c9c11b7e</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>-c es_esec</CommandLineArguments>
+    <CommandLineArguments>-b Regression</CommandLineArguments>
     <InterpreterPath />
     <InterpreterArguments>
     </InterpreterArguments>
@@ -61,7 +61,6 @@
     <Compile Include="esdlc\ast\__init__.py" />
     <Compile Include="esdlc\ast\lexer.py" />
     <Compile Include="esdlc\ast\nodes.py" />
-    <Compile Include="esdlc\ast\validator.py" />
     <Compile Include="esdlc\emitters\__init__.py" />
     <Compile Include="esdlc\emitters\esec.py" />
     <Compile Include="esdlc\model\__init__.py" />

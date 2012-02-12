@@ -163,7 +163,7 @@ def OldestOnly(_source):
 
 @esdl_func('tournament')
 def Tournament(_source, k=2,
-               with_replacement=True, without_replacement=False,   #pylint: disable=W0613
+               with_replacement=True, without_replacement=False,
                greediness=1.0):
     '''Returns a sequence of individuals selected using tournament
     selection. `k` individuals are selected at random and the individual
@@ -232,7 +232,7 @@ def Tournament(_source, k=2,
 
 @esdl_func('binary_tournament')
 def BinaryTournament(_source,
-                     with_replacement=False, without_replacement=False,
+                     with_replacement=True, without_replacement=False,
                      greediness=1.0):
     '''Returns a sequence of individuals selected using binary
     tournament selection. Two individuals are selected at random and the

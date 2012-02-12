@@ -59,7 +59,7 @@ YIELD population
 BEGIN generation
     FROM population SELECT (size) parents USING tournament(k=2.0)
     REPEAT 10.0
-        FROM parents SELECT (1.0) offspring USING random_shuffle(), mutate_random(per_gene_rate)
+        FROM parents SELECT (1) offspring USING random_shuffle(), mutate_random(per_gene_rate)
         FROM population, offspring SELECT (size) population USING best()
     END REPEAT
     YIELD population

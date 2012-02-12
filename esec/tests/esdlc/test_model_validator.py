@@ -44,7 +44,7 @@ class Test_UninitialisedGlobalError(System):
         statements = self.blocks[self.INIT_BLOCK_NAME] = []
         
         func = Variable("func", external=True)
-        statements.append(Function.call(VariableRef(func), {}))
+        statements.append(Function.call(func, {}))
 
 @check
 class Test_RepeatedParameterNameError(System):
@@ -56,8 +56,8 @@ class Test_RepeatedParameterNameError(System):
         
         func = Variable("func", external=True)
         self.externals[func.name] = func
-        func_call = Function.call(VariableRef(func), { 'k': VariableRef(Variable(value=2, constant=True)) })
-        func_call.parameters.update([Parameter(('k', VariableRef(Variable(value=5, constant=True))))])
+        func_call = Function.call(func, { 'k': Variable(value=2, constant=True) })
+        func_call.parameters.update([Parameter(('k', Variable(value=5, constant=True)))])
         statements.append(func_call)
 
 @check
@@ -72,7 +72,7 @@ class Test_AmbiguousGroupGeneratorNameError(System):
         self.variables['test'] = Variable('test')
         self.externals['test'] = Variable('test', external=True)
 
-        stmt = Merge([GroupRef(self.variables['test']), Function.call(VariableRef(self.externals['test']), { })])
+        stmt = Merge([GroupRef(self.variables['test']), Function.call(self.externals['test'], { })])
         stmt = Store(stmt, [GroupRef(self.variables['pop'])])
         
         statements.append(stmt)
@@ -96,7 +96,7 @@ class Test_AmbiguousVariableBlockNameError(System):
         statements = self.blocks['gen1'] = []
         self.block_names.append('gen1')
 
-        stmt = Function.assign(VariableRef(self.variables['gen2']), VariableRef(self.variables['gen2']))
+        stmt = Function.assign(self.variables['gen2'], self.variables['gen2'])
         statements.append(stmt)
 
         self.blocks['gen2'] = []
@@ -113,7 +113,7 @@ class Test_ExpectedGroupError(System):
         self.variables['var'] = Variable('var')
         
         stmt = Merge([GroupRef(self.variables['pop'])])
-        stmt = Store(stmt, [VariableRef(self.variables['var'])])
+        stmt = Store(stmt, [self.variables['var']])
         
         statements.append(stmt)
 
@@ -161,7 +161,7 @@ class Test_InternalVariableNameError(System):
         self.externals['func'] = Variable('func', external=True)
         self.variables['_test'] = Variable('_test')
 
-        stmt = Function.call(VariableRef(self.externals['func']), { 'test': VariableRef(self.variables['_test']) })
+        stmt = Function.call(self.externals['func'], { 'test': self.variables['_test'] })
         
         statements.append(stmt)
 
@@ -176,7 +176,7 @@ class Test_InternalParameterNameError(System):
         self.externals['func'] = Variable('func', external=True)
         self.variables['test'] = Variable('test')
 
-        stmt = Function.call(VariableRef(self.externals['func']), { '_test': VariableRef(self.variables['test']) })
+        stmt = Function.call(self.externals['func'], { '_test': self.variables['test'] })
         
         statements.append(stmt)
 
@@ -192,13 +192,13 @@ class Test_InvalidAssignmentError(System):
         self.variables['test'] = Variable('test')
         c1 = Variable(value=1.0, constant=True)
 
-        stmt = Function.assign(VariableRef(self.externals['func']), VariableRef(c1), span=Token(1, 1, ''))
+        stmt = Function.assign(self.externals['func'], c1, span=Token(1, 1, ''))
         statements.append(stmt)
-        stmt = Function.assign(VariableRef(c1), VariableRef(self.variables['test']), span=Token(2, 1, ''))
+        stmt = Function.assign(c1, self.variables['test'], span=Token(2, 1, ''))
         statements.append(stmt)
-        stmt = Function.assign(VariableRef(self.variables['test']), VariableRef(c1), span=Token(3, 1, ''))
+        stmt = Function.assign(self.variables['test'], c1, span=Token(3, 1, ''))
         statements.append(stmt)
-        stmt = Function.assign(VariableRef(self.variables['test']), VariableRef(self.externals['func']), span=Token(4, 1, ''))
+        stmt = Function.assign(self.variables['test'], self.externals['func'], span=Token(4, 1, ''))
         statements.append(stmt)
 
 @check
@@ -212,7 +212,7 @@ class Test_InvalidGroupSizeError(System):
         self.externals['func'] = Variable('func', external=True)
         self.variables['pop'] = Variable('pop')
         
-        src = Merge([Function.call(VariableRef(self.externals['func']), {})])
+        src = Merge([Function.call(self.externals['func'], {})])
         stmt = Store(src, [GroupRef(self.variables['pop'], limit=self.variables['pop'])])
         
         statements.append(stmt)
@@ -244,9 +244,9 @@ class Test_RepeatedDestinationGroupError(System):
         n = self.variables['n'] = Variable(10, constant=True)
         
         stmt = Store(Merge([GroupRef(pop)]),
-                     [GroupRef(pop, limit=VariableRef(n), span=Token(1, 10, '')), GroupRef(pop, span=Token(1, 15, ''))])
+                     [GroupRef(pop, limit=n, span=Token(1, 10, '')), GroupRef(pop, span=Token(1, 15, ''))])
         statements.append(stmt)
 
         stmt = Store(Join([GroupRef(pop), GroupRef(pop)]),
-                     [GroupRef(pop, limit=VariableRef(n), span=Token(2, 10, '')), GroupRef(pop, span=Token(2, 15, ''))])
+                     [GroupRef(pop, limit=n, span=Token(2, 10, '')), GroupRef(pop, span=Token(2, 15, ''))])
         statements.append(stmt)

@@ -220,7 +220,7 @@ class ExpectedParameterValueError(ESDLSyntaxErrorBase):
 class UnmatchedBracketError(ESDLSyntaxErrorBase):
     '''Returned when brackets or parentheses are unmatched.'''
     code = "E1013"
-    default_message = "Matching '%s' not found"
+    default_message = "Closing for '%s' not found"
 
 class ExpectedCommaError(ESDLSyntaxErrorBase):
     '''Returned when a comma separator is not found.'''

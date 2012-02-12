@@ -21,11 +21,11 @@ def parse_RPN(code):
         else:
             try:
                 value = float(token)
-                stack.append(VariableRef(Variable(value=value, constant=True)))
+                stack.append(Variable(value=value, constant=True))
             except ValueError:
                 var = variables.get(token)
                 if not var: var = variables[token] = Variable(name=token)
-                stack.append(VariableRef(var))
+                stack.append(var)
     return stack[0]
 
 def check_operations(code, expected, vars):
@@ -64,16 +64,16 @@ def test_generator():
     def int_counter(length):
         i = 0
         while True:
-            yield [i] * length
+            yield [i] * int(length)
             i += 1
 
     gen = Variable('int_counter', external=True)
     grp = Variable('population')
     
-    args = { 'length': VariableRef(Variable(value=2, constant=True)) }
-    stmt = Merge([Function.call(VariableRef(gen), args)])
+    args = { 'length': Variable(value=2, constant=True) }
+    stmt = Merge([Function.call(gen, args)])
     
-    limit = VariableRef(Variable(value=6, constant=True))
+    limit = Variable(value=6, constant=True)
     stmt = Store(stmt, [GroupRef(grp, limit)])
     
     context = { 'int_counter': int_counter, 'population': [] }
@@ -96,7 +96,7 @@ def test_filter():
     }
 
     stmt = Merge([GroupRef(Variable('pop'))])
-    stmt = Operator(stmt, Function.call(VariableRef(Variable('if_over_n', external=True)), { 'n': VariableRef(Variable(value=5, constant=True)) }))
+    stmt = Operator(stmt, Function.call(Variable('if_over_n', external=True), { 'n': Variable(value=5, constant=True) }))
     stmt = Store(stmt, [GroupRef(Variable('dest'))])
 
     stmt.execute(context)

@@ -1,26 +1,8 @@
-'''Provides the `VariableRef`, `GroupRef`, `UnaryOp`, `BinaryOp` and
-`Pragma` objects for the semantic model.
+'''Provides the `GroupRef`, `UnaryOp`, `BinaryOp` and `Pragma` objects
+for the semantic model.
 '''
 
-__all__ = ['VariableRef', 'GroupRef', 'UnaryOp', 'BinaryOp', 'Pragma']
-
-class VariableRef(object):
-    '''Represents a reference to a given variable.'''
-    tag = 'variableref'
-
-    def __init__(self, var_id, span=None):
-        self.id = var_id
-        '''The referenced variable.'''
-        self.id.references.append(self)
-        self.span = span
-        '''A list of tokens constituting this reference.'''
-
-    def __str__(self):
-        return str(self.id)
-
-    def execute(self, context):
-        '''Returns the current value of this variable.'''
-        return self.id.execute(context)
+__all__ = ['GroupRef', 'UnaryOp', 'BinaryOp', 'Pragma']
 
 class GroupRef(object):
     '''Represents a reference to a given group.'''
@@ -30,7 +12,7 @@ class GroupRef(object):
         self.id = group_id
         '''The referenced variable. Groups are stored in non-constant,
         non-internal variables and may be referenced by either
-        `GroupRef` or `VariableRef` depending on context.
+        `GroupRef` or used directly depending on context.
         '''
         self.limit = limit
         '''The maximum number of individuals to store into this group.
@@ -42,6 +24,8 @@ class GroupRef(object):
     
     def __str__(self):
         if self.limit:
+            if self.limit.tag == 'variable' and self.limit.constant:
+                return '(%d) %s' % (self.limit.value, self.id)
             return '(%s) %s' % (self.limit, self.id)
         else:
             return str(self.id)

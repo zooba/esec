@@ -1,8 +1,8 @@
 from esdlc.ast.lexer import Token, tokenise
 
 def test_Token():
-    t1 = Token('tag', 'type', 'value', 0, 1)
-    t2 = Token('tag', 'type', 'value', 0, 1)
+    t1 = Token('tag', 'value', 0, 1)
+    t2 = Token('tag', 'value', 0, 1)
     
     assert t1 == t2
     
@@ -30,11 +30,11 @@ def test_tokenise_number():
     tokens = tokenise(source)
     
     print tokens
-    assert tokens[-1].tag == 'EOS'
+    assert tokens[-1].tag == 'eos'
     tokens = tokens[:-1]
     
     assert len(tokens) == len(values)
-    assert all(t.tag == 'NUMBER' for t in tokens)
+    assert all(t.tag == 'number' for t in tokens)
     
     actual = [float(t.value) for t in tokens]
     print actual
@@ -47,13 +47,13 @@ def test_tokenise_constant():
     tokens = tokenise(source)
     
     print tokens
-    assert tokens[-1].tag == 'EOS'
+    assert tokens[-1].tag == 'eos'
     tokens = tokens[:-1]
     
     assert len(tokens) == len(values)
-    assert all(t.type == 'literal' for t in tokens)
+    assert all(t.tag == 'name' for t in tokens)
     
-    actual = [t.value.lower() for t in tokens]
+    actual = [t.value for t in tokens]
     print actual
     print values
     assert actual == values
@@ -69,7 +69,7 @@ def test_tokenise_comment():
         tokens = tokenise(source)
         
         print tokens
-        assert [t.tag for t in tokens] == ['NAME', 'COMMENTS', 'EOS']
+        assert [t.tag for t in tokens] == ['name', 'comment', 'eos']
         
         assert tokens[1].value == comment
 
@@ -83,56 +83,52 @@ def test_tokenise_commands():
     yield check_tags, \
         "from FROM select SELECT using USING join JOIN into INTO yield YIELD begin " + \
         "BEGIN repeat REPEAT end END eval EVAL evaluate EVALUATE", \
-        "FROM FROM SELECT SELECT USING USING JOIN JOIN INTO INTO YIELD YIELD BEGIN " + \
-        "BEGIN REPEAT REPEAT END END EVAL EVAL EVAL EVAL EOS"
+        "name "*22 + "eos"
     
 def test_tokenise_continue():
     yield check_tags, \
         "name 2.3 \\ \n name 4.6", \
-        "NAME NUMBER NAME NUMBER EOS"
+        "name number name number eos"
 
 def test_tokenise_line_ending():
     yield check_tags, \
         'name \n  name \r\n name \r\r\n  name \r  name', \
-        'NAME EOS NAME EOS  NAME EOS EOS NAME EOS NAME EOS'
+        'name eos name eos  name eos eos name eos name eos'
     
     yield check_tags, \
         'name \n  name \r \n   name \r\r \n     name \n\r    name', \
-        'NAME EOS NAME EOS EOS NAME EOS EOS EOS NAME EOS EOS NAME EOS'
+        'name eos name eos eos name eos eos eos name eos eos name eos'
     
     yield check_tags, \
         '', \
-        'EOS'
+        'eos'
     
 def test_tokenise_operator():
     yield check_tags, \
         '+ - * / % ^ ( ) { } [ ] = . , +-*/%^(){}[]=.,', \
-        'ADD SUB MUL DIV MOD POW OPEN_PAR CLOSE_PAR OPEN_BRACE CLOSE_BRACE OPEN_BRACKET CLOSE_BRACKET ASSIGN DOT COMMA ' + \
-        'ADD SUB MUL DIV MOD POW OPEN_PAR CLOSE_PAR OPEN_BRACE CLOSE_BRACE OPEN_BRACKET CLOSE_BRACKET ASSIGN DOT COMMA EOS'
+        ('operator '*6 + 'open close '*3 + 'assign operator comma ')*2 + 'eos'
     
     # each of these should be separate operators
     yield check_tags, \
         '+-+ -+- -- ++ *- ^- %+', \
-        'ADD SUB ADD SUB ADD SUB SUB SUB ADD ADD MUL SUB POW SUB MOD ADD EOS'
+        'operator '*16 + 'eos'
 
 def test_tokenise_equation():
     yield check_tags, \
         'y = (-b + sqrt(b^2 - 4*a*c)) / (2 * a)', \
-        'NAME ASSIGN OPEN_PAR SUB NAME ADD NAME OPEN_PAR NAME POW NUMBER SUB NUMBER MUL NAME MUL NAME ' + \
-            'CLOSE_PAR CLOSE_PAR DIV OPEN_PAR NUMBER MUL NAME CLOSE_PAR EOS'
+        'name assign open operator name operator name open name operator number operator number ' + \
+        'operator name operator name close close operator open number operator name close eos'
 
 def test_tokenise_functioncall():
     yield check_tags, \
         'class.method(param=value,   param = value[index+2],         param =   2.3 )', \
-        'NAME DOT NAME OPEN_PAR NAME ASSIGN NAME COMMA NAME ASSIGN NAME OPEN_BRACKET NAME ADD NUMBER ' + \
-            'CLOSE_BRACKET COMMA NAME ASSIGN NUMBER CLOSE_PAR EOS'
+        'name operator name open name assign name comma name assign name open name operator number ' + \
+        'close comma name assign number close eos'
 
 CODE = r'''FROM random_real(length=cfg.length,lowest=-2.0,highest=2.0) SELECT (size) population
 YIELD population
 
 BEGIN GENERATION
-    targets = population
-    
     # Stochastic Universal Sampling for bases
     FROM population SELECT (size) bases USING fitness_sus(mu=size)
     
@@ -152,61 +148,57 @@ BEGIN GENERATION
 END GENERATION'''
 
 CODE_TOKENS = [
-    'FROM NAME OPEN_PAR NAME ASSIGN NAME DOT NAME COMMA NAME ASSIGN SUB NUMBER COMMA NAME ASSIGN NUMBER CLOSE_PAR ' + \
-        'SELECT OPEN_PAR NAME CLOSE_PAR NAME EOS',
-    'YIELD NAME EOS',
-    'EOS',
-    'BEGIN NAME EOS',
-    'NAME ASSIGN NAME EOS',
-    'EOS',
-    'COMMENTS EOS',
-    'FROM NAME SELECT OPEN_PAR NAME CLOSE_PAR NAME USING NAME OPEN_PAR NAME ASSIGN NAME CLOSE_PAR EOS',
-    'EOS',
-    'COMMENTS EOS',
-    'JOIN NAME COMMA NAME COMMA NAME INTO NAME USING NAME OPEN_PAR NAME ASSIGN TRUE CLOSE_PAR EOS',
-    'EOS',
-    'FROM NAME SELECT NAME USING NAME OPEN_PAR NAME ASSIGN NAME CLOSE_PAR EOS',
-    'EOS',
-    'JOIN NAME COMMA NAME INTO NAME USING NAME EOS',
-    'FROM NAME SELECT NAME USING NAME OPEN_PAR NAME ASSIGN NAME OPEN_BRACKET NUMBER CLOSE_BRACKET CLOSE_PAR EOS',
-    'EOS',
-    'JOIN NAME COMMA NAME INTO NAME USING NAME EOS',
-    'FROM NAME SELECT NAME USING NAME EOS',
-    'EOS',
-    'YIELD NAME EOS',
-    'END NAME EOS',
+    'name name open name assign name operator name comma name assign operator number comma name assign number close ' + \
+        'name open name close name eos',
+    'name name eos',
+    'eos',
+    'name name eos',
+    'comment eos',
+    'name name name open name close name name name open name assign name close eos',
+    'eos',
+    'comment eos',
+    'name name comma name comma name name name name name open name assign name close eos',
+    'eos',
+    'name name name name name name open name assign name close eos',
+    'eos',
+    'name name comma name name name name name eos',
+    'name name name name name name open name assign name open number close close eos',
+    'eos',
+    'name name comma name name name name name eos',
+    'name name name name name name eos',
+    'eos',
+    'name name eos',
+    'name name eos',
 ]
 
 CODE_VALUES = [
-    'FROM random_real ( length = cfg . length , lowest = - 2.0 , highest = 2.0 ) SELECT ( size ) population',
-    'YIELD population',
+    'from random_real ( length = cfg . length , lowest = - 2.0 , highest = 2.0 ) select ( size ) population',
+    'yield population',
     '',
-    'BEGIN GENERATION',
-    'targets = population',
-    '',
+    'begin generation',
     '# Stochastic Universal Sampling for bases',
-    'FROM population SELECT ( size ) bases USING fitness_sus ( mu = size )',
+    'from population select ( size ) bases using fitness_sus ( mu = size )',
     '',
     '# Ensure r0 != r1 != r2, but any may equal i',
-    'JOIN bases , population , population INTO mutators USING random_tuples ( distinct = true )',
+    'join bases , population , population into mutators using random_tuples ( distinct = true )',
     '',
-    'FROM mutators SELECT mutants USING mutate_DE ( scale = F )',
+    'from mutators select mutants using mutate_de ( scale = f )',
     '',
-    'JOIN targets , mutants INTO target_mutant_pairs USING tuples',
-    'FROM target_mutant_pairs SELECT trials USING crossover_tuple ( per_gene_rate = CR [ 2 ] )',
+    'join targets , mutants into target_mutant_pairs using tuples',
+    'from target_mutant_pairs select trials using crossover_tuple ( per_gene_rate = cr [ 2 ] )',
     '',
-    'JOIN targets , trials INTO targets_trial_pairs USING tuples',
-    'FROM targets_trial_pairs SELECT population USING best_of_tuple',
+    'join targets , trials into targets_trial_pairs using tuples',
+    'from targets_trial_pairs select population using best_of_tuple',
     '',
-    'YIELD population',
-    'END GENERATION',
+    'yield population',
+    'end generation',
 ]
 
 def split_at_eos(src):
     result = []
     for i in src:
         result.append(i)
-        if i.tag == 'EOS':
+        if i.tag == 'eos':
             yield result
             result = []
             

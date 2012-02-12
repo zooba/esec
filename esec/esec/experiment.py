@@ -169,13 +169,15 @@ class Experiment(object):
             self.lscape = self._load(cfg, 'landscape', landscape.Landscape, 'eval')
             cfg.landscape = self.lscape
         
+            # -- Pass full configuration to monitor --
+            self.monitor.notify('Experiment', 'Configuration', cfg)
+
             # -- System --
             self.system = System(cfg, self.lscape, self.monitor)
 
-            # -- Pass full configuration to monitor --
+            # -- Pass compiled system and landscape to monitor --
             self.monitor.notify('Experiment', 'System', self.system)
             if self.lscape: self.monitor.notify('Experiment', 'Landscape', self.lscape)
-            self.monitor.notify('Experiment', 'Configuration', cfg)
         except KeyboardInterrupt:
             raise
         except:

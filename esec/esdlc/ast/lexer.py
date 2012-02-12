@@ -7,64 +7,36 @@ def _re(expr):
     '''Shortcut for compiling regular expressions.'''
     return re.compile(expr, re.IGNORECASE)
 
+def _escape(s):
+    return ('\\' + s) if s in r'()[]{}.,!@#$%^&*/=\?+|' else s
+
+def _any(strings):
+    '''Shortcut for compiling regular expressions from a list of
+    strings.'''
+    return re.compile('(' + '|'.join(_escape(s) for s in strings) + ')', re.IGNORECASE)
+
 TOKENS = [
-    ("FROM",        'statement', _re(r"from\b")),
-    ("SELECT",      'statement', _re(r"select\b")),
-    ("JOIN",        'statement', _re(r"join\b")),
-    ("INTO",        'statement', _re(r"into\b")),
-    ("USING",       'statement', _re(r"using\b")),
-    ("YIELD",       'statement', _re(r"yield\b")),
-    ("EVAL",        'statement', _re(r"eval(uate)?\b")),
-    ("BEGIN",       'statement', _re(r"begin\b")),
-    ("REPEAT",      'statement', _re(r"repeat\b")),
-    ("END",         'statement', _re(r"end\b")),
-    ("TRUE",        'literal', _re(r"true\b")),
-    ("FALSE",       'literal', _re(r"false\b")),
-    ("NULL",        'literal', _re(r"(null|none)\b")),
-#    ("IN",          'operator', _re(r"in\b")),
-#    ("NOT",         'operator', _re(r"not\b")),
-#    ("ASSERT",      'statement', _re(r"assert\b")),
-#    ("AND",         'operator', _re(r"and\b")),
-#    ("OR",          'operator', _re(r"or\b")),
-#    ("LT",          'operator', _re(r"\<")),
-#    ("LE",          'operator', _re(r"(\<=|=\<)")),
-#    ("NE",          'operator', _re(r"!=")),
-#    ("EQ",          'operator', _re(r"==")),
-#    ("GT",          'operator', _re(r"\>")),
-#    ("GE",          'operator', _re(r"(\>=|=\>)")),
-    ("COMMENTS",    'comment', _re(r"(#|;|//).*")),
-    ("NAME",        'name', _re(r"(?!\d)\w+")),
-    ("NUMBER",      'number', _re(r"(\d+\.\d*|\d+|\.\d+)(e[-+]?\d+)?")),
-    ("DOT",         'operator', _re(r"\.")),
-    ("OPEN_PAR",    'operator', _re(r"\(")),
-    ("CLOSE_PAR",   'operator', _re(r"\)")),
-    ("OPEN_BRACKET", 'operator', _re(r"\[")),
-    ("CLOSE_BRACKET", 'operator', _re(r"\]")),
-    ("OPEN_BRACE",  'operator', _re(r"\{")),
-    ("CLOSE_BRACE", 'operator', _re(r"\}")),
-    ("ADD",         'operator', _re(r"\+")),
-    ("SUB",         'operator', _re(r"-")),
-    ("ASSIGN",      'operator', _re(r"=")),
-    ("COMMA",       'operator', _re(r"\,")),
-    ("MUL",         'operator', _re(r"\*")),
-    ("DIV",         'operator', _re(r"\/")),
-    ("MOD",         'operator', _re(r"\%")),
-    ("POW",         'operator', _re(r"\^")),
-    ("`",           'special', _re(r"`.*$")),
-    ("CONTINUATION",'special', _re(r"\\\s*((#|;|//).*)?$")),
+    ('comment', _re(r"(#|;|//).*")),
+    #('comparison', _any(('<=', '=<', '<', '!=', '==', '>', '>=', '=>'))),
+    ('operator', _any('+-*/%^.')),
+    ('assign', _re('\\=')),
+    ('comma', _re('\\,')),
+    ('name', _re(r"(?!\d)\w+")),
+    ('number', _re(r"(\d+\.\d*|\d+|\.\d+)(e[-+]?\d+)?")),
+    ('open', _any('([{')),
+    ('close', _any(')]}')),
+    ('pragma', _re(r"`.*$")),
+    ('skip_eos', _re(r"\\\s*((#|;|//).*)?$")),
 ]
 
 class Token(object):
     '''Represents a parsed token from an ESDL definition.'''
-    def __init__(self, tag, ttype, value, line, col):
+    def __init__(self, tag, value, line, col):
         '''Creates a token.
         
         :Parameters:
           tag : string
             An identifier for the type of token.
-          
-          ttype : string
-            The general type of the token.
           
           value : string
             The raw text parsed into this token.
@@ -79,10 +51,11 @@ class Token(object):
         '''
         self.tag = tag
         '''A string identifier for the type of the token.'''
-        self.type = ttype
-        '''The general type of the token.'''
         self.value = value
         '''The text parsed into this token.'''
+        if self.tag not in ('pragma', 'comment'):
+            self.value = self.value.lower()
+
         self.line = line
         '''The line of the original source file where this token was
         found. The first line of a file is line 1.'''
@@ -98,16 +71,10 @@ class Token(object):
     def __lt__(self, other): return (self.line, self.col) < (other.line, other.col)
     
     def __str__(self):
-        if self.type == 'eos':
-            return '<eos> (%d:%d)' % (self.line+1, self.col+1)
-        else:
-            return '%s (%d:%d)' % (self.value, self.line+1, self.col+1)
+        return '%s (%d:%d)' % (self.value, self.line+1, self.col+1)
     
     def __repr__(self):
-        if self.type == 'eos':
-            return '<eos> (%d:%d)' % (self.line+1, self.col+1)
-        else:
-            return '<%s>%s (%d:%d)' % (self.tag, self.value, self.line+1, self.col+1)
+        return '<%s>%s (%d:%d)' % (self.tag, self.value, self.line+1, self.col+1)
     
     @classmethod
     def parse(cls, line, lineno, col):
@@ -133,13 +100,13 @@ class Token(object):
         if col >= len(line):
             return None, col
         
-        for token_name, token_type, token_regex in TOKENS:
+        for token_tag, token_regex in TOKENS:
             match = token_regex.match(line, col)
             if match:
                 start_col, end_col = match.span()
-                return cls(token_name, token_type, match.group(), lineno, start_col), end_col
+                return cls(token_tag, match.group(), lineno, start_col), end_col
         
-        return cls('error', 'error', line[col:], lineno, col), col
+        return cls('error', line[col:], lineno, col), col
 
 
 class TokenReader(object):
@@ -151,6 +118,7 @@ class TokenReader(object):
         self.i = 0
         self.skip_comments = skip_comments
         self.i_stack = []
+        self.token_stack = []
         
         if self.skip_comments:
             self.i = -1
@@ -176,15 +144,22 @@ class TokenReader(object):
         '''
         return self.tokens[-1] if self.tokens else None
     
-    def move_next(self):
+    def move_next(self, update_stacks=True):
         '''Advances to the next token. Returns `self` after advancing.
         If ``skip_comments`` was ``True``, tokens with tags beginning
         with ``'COMMENT'`` are skipped.
         '''
         self.i += 1
         if self.skip_comments:
-            while self and self.current.tag.startswith('COMMENT'):
+            while self and self.current.tag.startswith('comment'):
+                if update_stacks:
+                    for stack in self.token_stack:
+                        stack.append(self.current)
                 self.i += 1
+
+        if self and update_stacks:
+            for stack in self.token_stack:
+                stack.append(self.current)
         return self
     
     @property
@@ -193,7 +168,7 @@ class TokenReader(object):
         ``self.move_next().current`` without modifying the position.
         '''
         self.push_location()
-        tok = self.move_next().current
+        tok = self.move_next(False).current
         self.pop_location()
         return tok
     
@@ -208,6 +183,18 @@ class TokenReader(object):
     def drop_location(self):
         '''Forgets the topmost location on the stack.'''
         self.i_stack.pop()
+    
+    def push_tokenset(self):
+        '''Starts caching tokens from here onwards.'''
+        self.token_stack.append([self.current])
+    
+    def pop_tokenset(self):
+        '''Returns the most recent token set.'''
+        return self.token_stack.pop()
+    
+    def drop_tokenset(self):
+        '''Forgets the most recent token set.'''
+        self.token_stack.pop()
 
 
 def tokenise(source):
@@ -216,13 +203,13 @@ def tokenise(source):
     '''
     
     if not source:
-        return [Token('EOS', 'end', '\\n', 1, 1)]
+        return [Token('eos', '', 1, 1)]
     
     if isinstance(source, str):
         source = iter(source.splitlines())
     
     if not hasattr(source, '__iter__'):
-        return [Token('EOS', 'end', '\\n', 1, 1)]
+        return [Token('eos', '', 1, 1)]
     
     tokens = []
     for lineno, line in enumerate(source):
@@ -230,14 +217,14 @@ def tokenise(source):
         tok, col = Token.parse(line, lineno, col)
         while tok:
             tokens.append(tok)
-            if tok.type == 'error': col += 1
+            if tok.tag == 'error': col += 1
             tok, col = Token.parse(line, lineno, col)
         
-        if tokens and tokens[-1].tag == 'CONTINUATION':
+        if tokens and tokens[-1].tag == 'skip_eos':
             tokens.pop()
             continue
         
-        tokens.append(Token('EOS', 'end', '\\n', lineno, col))
+        tokens.append(Token('eos', '', lineno, col))
     return tokens
 
 if __name__ == '__main__':
@@ -266,5 +253,9 @@ BEGIN GENERATION
 END GENERATION
     ''')
     
-    print code
+    for i in code:
+        if i.tag == 'eos':
+            print
+        else:
+            print repr(i),
         

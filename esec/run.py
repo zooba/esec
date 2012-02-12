@@ -663,6 +663,8 @@ def esec_batch(options):
         # Write the summary to the super summary file.
         if summary_file and not batch_cfg.dry_run:
             summary_lines = summary_buffer.getvalue().splitlines()[:2]
+            if len(summary_lines) != 2:
+                summary_lines = ['-', '-']
             if batch_cfg.csv:
                 if i == 0:
                     summary_file.write('#,' + summary_lines[0] + '\n')
