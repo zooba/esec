@@ -608,7 +608,7 @@ def RankProportionalNormal(_source, with_replacement=True, expectation=1.1, neta
     
     if neta is not None: expectation = neta
     size = len(group)
-    wheel = [(expectation - 2.0*(expectation-1.0)*(i-1.0)/(size-1.0), j) for i, j in enumerate(group)]
+    wheel = [(expectation - 2.0*(expectation-1.0)*i/(size-1.0), j) for i, j in enumerate(group)]
     total = sum(i[0] for i in wheel)
     
     while wheel:
@@ -677,7 +677,7 @@ def RankProportionalSUS(_source, mu=None, expectation=1.1, neta=None, invert=Fal
     
     if neta is not None: expectation = neta
     size = len(group)
-    wheel = [(expectation - 2.0*(expectation-1.0)*(i-1.0)/(size-1.0), j) for i, j in enumerate(group)]
+    wheel = [(expectation - 2.0*(expectation-1.0)*i/(size-1.0), j) for i, j in enumerate(group)]
     total = sum(i[0] for i in wheel)
     
     mu = int(mu or size)
