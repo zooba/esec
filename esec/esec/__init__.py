@@ -172,6 +172,10 @@ class esdl_eval(object):
         '''
         return "<%s evaluator at 0x%08x>" % (self._eval.__name__, id(self))
 
+    def __call__(self):
+        '''Returns ourself, in case someone tries to reinstantiate us.'''
+        return self
+
     def __str__(self):
         '''Displays the evaluator using the str of the underlying
         function.
