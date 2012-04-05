@@ -18,7 +18,7 @@ class RealIndividual(Individual):
     gene is stored with the individual so it may be used during mutation
     operations without being respecified.
     '''
-    def __init__(self, genes, parent, lower_bounds=None, upper_bounds=None, statistic=None):
+    def __init__(self, genes, parent, lower_bounds=None, upper_bounds=None, strategy=None, statistic=None):
         '''Initialises a new `RealIndividual`. Instances are generally
         created using the initialisation methods provided by `RealSpecies`.
         
@@ -50,6 +50,10 @@ class RealIndividual(Individual):
             These values are used in mutation operations and for value
             validation.
           
+          strategy : any
+            An extra variable to associate with the individual. Values
+            are not inherited from `parent` and must be respecified.
+          
           statistic : dict [optional]
             A set of statistic values associated with this individual.
             These are accumulated with ``parent.statistic`` and allow
@@ -67,13 +71,18 @@ class RealIndividual(Individual):
         assert isinstance(self.upper_bounds, (list, tuple)), \
             "Upper bounds must be a tuple, not " + str(type(self.upper_bounds))
         
+        self.strategy = strategy
+        
         super(RealIndividual, self).__init__(genes, parent, statistic)
     
     @property
     def genome_string(self):
         '''Returns a string representation of the genes of this individual.
         '''
-        return '[' + ', '.join(['%g' % g for g in self.genome]) + ']'
+        if self.strategy:
+            return '[' + ', '.join(['%g' % g for g in self.genome]) + '] & ' + str(self.strategy)
+        else:
+            return '[' + ', '.join(['%g' % g for g in self.genome]) + ']'
     
     @property
     def phenome_string(self):

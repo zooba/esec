@@ -6,6 +6,8 @@ from esec.individual import OnIndividual
 
 def test_selectors_max():
     population = make_pop_max()
+    yield check_selectors_Repeated, population
+    yield check_selectors_RepeatEach, population
     yield check_selectors_All, population
     yield check_selectors_Best_max, population
     yield check_selectors_Worst_max, population
@@ -22,6 +24,8 @@ def test_selectors_max():
     
 def test_selectors_min():
     population = make_pop_min()
+    yield check_selectors_Repeated, population
+    yield check_selectors_RepeatEach, population
     yield check_selectors_All, population
     yield check_selectors_Best_min, population
     yield check_selectors_Worst_min, population
@@ -35,6 +39,26 @@ def test_selectors_min():
     yield check_selectors_RankProportional, population
     yield check_selectors_RankProportionalSUS, population
     yield check_selectors_BestOfTuple, population, make_best_pop_min()
+
+def check_selectors_Repeated(population):
+    _gen = selectors.Repeat(_source=iter(population))
+    offspring = [next(_gen) for _ in xrange(100)]
+    print "len(offspring) = %d, expected = 100" % len(offspring)
+    assert len(offspring) == 100, "Did not select expected number of individuals"
+    assert all([i in population for i in offspring]), "Some individuals not in original population"
+
+def check_selectors_RepeatEach(population):
+    _gen = selectors.RepeatEach(_source=iter(population), count=2)
+    offspring = list(_gen)
+    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
+    assert len(offspring) == len(population) * 2, "Did not select all individials"
+    assert all([i in population for i in offspring]), "Some individuals not in original population"
+
+    _gen = selectors.RepeatEach(_source=iter(population), count=4)
+    offspring = list(_gen)
+    print "len(offspring) = %d, len(population) = %d" % (len(offspring), len(population))
+    assert len(offspring) == len(population) * 4, "Did not select all individials"
+    assert all([i in population for i in offspring]), "Some individuals not in original population"
 
 def check_selectors_All(population):
     _gen = selectors.All(_source=iter(population))

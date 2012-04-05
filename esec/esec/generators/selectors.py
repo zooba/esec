@@ -41,6 +41,25 @@ def Repeat(_source):
     group = list(_source)
     return cycle(group)
 
+@esdl_func('repeat_each')
+def RepeatEach(_source, count=2):
+    '''Returns each individual `count` times before returning the next.
+    
+    :Parameters:
+      _source : iterable(`Individual`)
+        A sequence of individuals. Some or all individuals are returned
+        from this sequence, depending on the selection criteria.
+      
+      count : int
+        The number of times to return each individual.
+    '''
+    assert count is not True, "count has no value"
+    count = int(count)
+    assert count > 0, "count must be greater than zero"
+    for indiv in _source:
+        for _ in xrange(count):
+            yield indiv
+
 @esdl_func('best')
 def Best(_source, only=False):
     '''Returns the individuals in decreasing fitness order.
@@ -615,13 +634,14 @@ def RankProportionalNormal(_source, with_replacement=True, expectation=1.1, neta
         prob = frand() * total
         
         i = 0
-        while i < size and prob > wheel[i][0]:
-            prob -= wheel[i][0]
-            i += 1
-        # Fall back on uniform selection if wheel fails
-        if i >= size:
-            warn('Rank proportional selection wheel failed.')
-            i = irand(size)
+        if size > 1:
+            while i < size and prob > wheel[i][0]:
+                prob -= wheel[i][0]
+                i += 1
+            # Fall back on uniform selection if wheel fails
+            if i >= size:
+                warn('Rank proportional selection wheel failed.')
+                i = irand(size)
         
         # WITH REPLACEMENT
         if with_replacement:
